@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/*
+ * Copyright (c) 2008 CO-CONV, Corp.
+ * Copyright (C) 2010 Bruce Cran.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<?include config.wxi ?>
+
+	<Product Id="$(var.ProductId)" UpgradeCode="$(var.UpgradeCode)" Name="SctpDrv 1.1"
+		Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)" Manufacturer="Bruce Cran"
+		Language="$(var.Language)" Codepage="$(var.Codepage)">
+
+		<Package
+			Description="SctpDrv" InstallPrivileges="elevated" InstallScope="perMachine"
+			Comments="SCTP Driver" InstallerVersion="301"
+			Platform="$(var.Platform)" Manufacturer="Bruce Cran"
+			Keywords="Installer,MSI,Database" Languages="$(var.Language)" Compressed="yes" SummaryCodepage="$(var.Codepage)" />
+
+		<Condition Message='SctpDrv runs only on Windows XP SP2 and newer'>
+			(VersionNT = 501 AND ServicePackLevel >= "2") OR
+			(VersionNT   AND (VersionNT   >  "501")) OR
+			(VersionNT64 AND (VersionNT64 > "501"))
+		</Condition>
+
+		<?if $(var.Platform)=x86 ?>
+		<CustomAction Id="CA_Err32BitMsiOn64BitOS" Error="The 32-bit version of this product cannot be installed on a 64-bit version of Microsoft Windows."/>
+		<?endif ?>
+
+		<Media Id="1" Cabinet="Product.cab" EmbedCab="yes" />
+		<UIRef Id="WixUI_Minimal" />
+		<Property Id='ARPCONTACT'>sctpdrv@bluestop.org</Property>
+		<Property Id='ARPHELPLINK'>http://www.bluestop.org/SctpDrv/doc/</Property>
+		<Property Id='ARPURLINFOABOUT'>http://www.bluestop.org/SctpDrv/</Property>
+		<Property Id='ARPURLUPDATEINFO'>http://www.bluestop.org/SctpDrv/releases/</Property>
+
+		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="$(var.PlatformProgramFilesFolder)">
+				<Directory Id="SctpDrv" Name="SctpDrv">
+					<Directory Id="bin" Name="bin"/>
+					<Directory Id='lib' Name='lib'/>
+					<Directory Id='inc' Name='inc'/>
+					<Directory Id='src' Name='src'/>
+				</Directory>
+			</Directory>
+			<?if $(var.Platform)=x64 ?>
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="SctpDrv32" Name="SctpDrv">
+					<Directory Id="bin32" Name="bin"/>
+					<Directory Id="lib32" Name="lib"/>
+				</Directory>
+			</Directory>
+			<?endif ?>
+		</Directory>
+
+		<Feature Id="Complete" Title='SctpDrv' Description='The complete package.'
+				Display='expand' Level='1'>
+			<ComponentGroupRef Id="root"/>
+			<ComponentGroupRef Id="bin"/>
+			<ComponentGroupRef Id="inc"/>
+			<ComponentGroupRef Id="lib"/>
+			<ComponentGroupRef Id="src"/>
+		</Feature>
+
+		<InstallExecuteSequence>
+			<?if $(var.Platform)=x64 ?>
+			<Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+			<Custom Action="SctpInstallProviderSysWow64" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+			<Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+			<Custom Action="SctpUninstallProviderSysWow64" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+			<?endif ?>
+			<?if $(var.Platform)=x86 ?>
+			<Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+			<Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+
+			<Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
+				<![CDATA[MsiAMD64 OR Intel64]]>
+			</Custom>
+			<?endif ?>
+
+			<?if $(env.DDK_TARGET_OS)!=WinNET and $(env.DDK_TARGET_OS)!=WinXP ?>
+			<Custom Action="SctpAddFirewallRule" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
+			<?endif ?>
+		</InstallExecuteSequence>
+
+		<InstallUISequence>
+			<!-- Only schedule this custom action for the 32-bit MSI.-->
+			<?if $(var.Platform)=x86 ?>
+			<Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
+				<![CDATA[MsiAMD64 OR Intel64]]>
+			</Custom>
+			<?endif ?>
+		</InstallUISequence>
+	</Product>
+</Wix>

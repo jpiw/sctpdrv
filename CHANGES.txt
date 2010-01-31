@@ -1,0 +1,113 @@
+Version 1.1.4 -
+Bug fixes and new features since 1.1.3
+    * sctp.sys is now signed with a test certificate, which allows SctpDrv to be
+      used with test-signing enabled.
+    * SctpDrv.chm, a HTML Help file, is now installed on the target system.
+
+
+Version 1.1.3 - 7th January 2010
+Bug fixes and new features since 1.1.2
+
+    * Fixed more memory leaks during driver unload.
+    * Fixed mangled Japanese strings in the message file
+    * Updated the installer so each component contains a single file.
+      Files are installed into "C:\Program Files\SctpDrv" instead of
+      "C:\Program Files\SctpDriver". Winsock and NetShell helper DLLs
+      are installed under Program Files, not System32.
+    * The libsctpsp.a Cygwin/MinGW library file is now installed onto
+      the target system
+    * README.txt is now installed onto the target system
+    * Converted sysctl interface to Unicode to simplify NetShell helper DLL
+    * Added a custom action to the installer which configures the Windows Firewall 
+      with a new SCTP rule to allow inbound SCTP traffic through
+
+
+Version 1.1.2 - 2nd December 2009
+Bug fixes and new features since 1.1.1
+
+    * Fixed PROCESS_HAS_LOCKED_PAGES crash: an MDL wasn't being unlocked if a receive operation was cancelled
+    * Added support for 32-bit processes on Windows x64
+    * Events are now recognised in the Event Viewer
+    * The netshell (netsh) helper is now installed: use "netsh sctp" to make changes to sysctl values etc.
+    * Fixed a bug in the sysctl handler code that caused the nodes to be truncated
+
+
+Version 1.1.1 - 30th November 2009
+Bug fixes and new features since 1.0.0
+
+    * Support for Windows x64 (requires driver signing verification to be disabled)
+    * Fixed many bugs which caused kernel and application crashes
+    * Fixed per-connection kernel memory leaks
+    * Improved the installer: driver is now installed using a .inf file and DIFx, which should improve reliability
+    * Both English and Japanese installers are now built
+
+
+
+See http://www.bluestop.org/viewvc/repos/sctpDrv/?view=log for a complete list of changes per-revision.
+
+* r17
+- Fixed a bug in sctpsp.c where the sockets weren't being kept track of.
+- Updated the build script to build both en-us and ja-jp installers.
+* r16
+- Fixed the api test app so it checks for WSAEINVAL instead of EINVAL.
+* r15
+- Made big changes to the userland winsock provider functions for sctpsp.dll. Fixed various bugs
+  and improved the userland to kernel IOCTL interface.
+- Fixed NTSTATUS definitions: the customer bit wasn't set.
+- Fixed IOCTL definitions: they were in the range reserved for Microsoft.
+* r13
+- Fixed use-after-free bug due to a reference count reaching 0 when it shouldn't.
+- Corrected values in handle validation functions: KernelMode was specified when the handles were UserMode.
+* r12
+- Do some checks to make sure the build is going to work
+- Improved the installation: the driver is installed via a .inf file using DIFx.
+- Added a license page to the installer
+* r11
+- Fixed 3 minor memory leaks: memory used by globals wasn't being freed. 
+There are 5 functions which still leak a total of 3KB memory when the driver is unloaded.
+* r9 to r10
+- Fixed 2 more memory leaks:
+ - In SCTPCloseSocket, the memory allocated to socketContext->protocolInfo wasn't being freed. 
+   This caused a large amount of memory to be leaked when a socket was closed.
+ - In ifnet_create_by_index, the memory allocated to ifEntry wasn't being freed.
+- Improved the build script: it now prints an error message if it can't find the WDK.
+* CHANGES from r4 to r5
+- Fixed various errors found with the Driver Verifier (verifier.exe)
+- Substituted call to RtlRandomEx with random implementation from FreeBSD since
+  RtlRandomEx shouldn't be called at DISPATCH_LEVEL.
+- Updated the installer to build packages for 32-bit XP and Win7 as well as 64-bit Win7
+- Added annotations suggested by OACR. SctpDrv can now only be built with WDK 7.0.0.
+- Removed checks that all locks have been released when exiting from the firewall functions.
+  Since they can be entered from the sctpDrv output path, locks may still be held.
+* CHANGES from r3 to r4
+- Updated the WiX installer files:
+ - It now builds using WiX 3.0 and runs using MSI 3.1.
+ - It now runs on 64-bit Windows.
+ - Renamed files and components to change the differentiation from xp/vista to 32-bit/64-bit.
+ - Updated GUIDs to show that it's installing very different components now.
+ - Bumped the product version to 1.1.
+* CHANGES from r2 to r3
+- Fixed various 64-bit warnings found when using the Windows 7 x64 build environment.
+- Updated the netsh/sctpmon sources file to select the correct version of netsh.lib depending on the target architecture.
+- Fixed calls to GetNameInfoW which were passing in the number of bytes instead of characters.
+* CHANGES from r1 to r2
+- Fixed build problems when using the Checked build environment:
+    - Use ExAllocatePoolWithTag instead of ExAllocatePool
+    - Use NdisAcquireReadWriteLock instead of the undocumented NdisDprAcquireReadWriteLock.
+---- Repository moved from http://svn.sctp.jp/sctpDrv to https://svn.bluestop.org/svn/sctpDrv ----
+* CHANGES from Revision 221 to Revision 222
+- fix shutdown()
+* CHANGES from Revision 220 to Revision 221
+- Fix some bugs which may trigger BSOD or deadlock on the SMP environment. These bugs had existed on revision 219 and 220. Please upgrade your driver if you use these revisions.
+* CHANGES from Revision 219 to Revision 220
+- Fix connect() in the case of non-blocikng.
+- Some event objects are converted to notification ones.
+* CHANGES from Revision 206 to Revision 219
+- Implement non-blocking operation. Only accept() is tested.
+- Raise IRQL when needed. Some problems may occur because of this change (Not comprehensively tested yet).
+* CHANGES from Revision 187(sctpDrv 1.0.0.0) to Revision 206
+- Import LOCK_PROFILING(9) from the latest FreeBSD.
+- Use the eventlog to notify users of the status. Users can view them via Event Viewer.
+- SctpDrv works even if IpFilterDriver does not work to receive SCTP packets (On Windows XP).
+  In this case, users may not receive SCTP packets. Please use UDP Encapsulation.
+- Use WPP for event tracing.

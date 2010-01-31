@@ -1,0 +1,77 @@
+CANDLE="$(WIX)bin\candle.exe" -nologo
+LIGHT="$(WIX)bin\light.exe" -nologo
+
+# Change these paths if needed
+TREE=bin\$(BUILD_ALT_DIR)
+SYMBOL=symbol\$(BUILD_ALT_DIR)
+SYMSTORE=..\..\sctpDrv_symstore
+SYMSTORE_PUBLIC=..\..\sctpDrv_symstore_pub
+
+.SUFFIXES: .wxs
+
+! If "$(_BUILDARCH)"=="AMD64"
+ARCHDIR=amd64
+MSIARCH=x64
+! Else
+ARCHDIR=i386
+MSIARCH=x86
+! Endif
+
+! If "$(MSICULTURE)"=="ja-jp"
+LANGID=1042
+CODEPAGE=932
+! Else
+LANGID=1033
+CODEPAGE=1252
+! Endif
+
+all: \
+	clean \
+	binplace \
+	SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
+
+binplace:
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\drv\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctp.sys
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.dll
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\netsh\sctpmon\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpmon.dll
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\sp\spinstall\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\spinstall.exe
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_client\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_client.exe
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server.exe
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server2\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server2.exe
+	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\iperf\src\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\iperf.exe
+
+symstore:
+	-symstore add /o /l /r /f $(SYMBOL)\*.pdb /s $(SYMSTORE) /compress /t "SctpDrv for $(DDK_TARGET_OS) $(_BUILDARCH)" /z pri
+	-symstore add /o /l /r /f $(SYMBOL)\*.pdb /s $(SYMSTORE_PUBLIC) /compress /t "SctpDrv for $(DDK_TARGET_OS) $(_BUILDARCH)" /z pub
+
+clean:
+	-rmdir /S /Q $(TREE)
+	-rmdir /S /Q $(SYMBOL)
+	-del /Q *.wixobjx86
+	-del /Q *.wixobjx64
+	-del /Q *.wixpdb
+	-del /Q $(MSICULTURE)\sctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
+	-if not exist $(MSICULTURE) mkdir $(MSICULTURE)
+
+.wxs.wixobj$(MSIARCH):
+	$(CANDLE) -dPlatform=$(MSIARCH) -dLanguage=$(LANGID) -dCodepage=$(CODEPAGE) -ext WixDifxAppExtension -out $(@B).wixobj$(MSIARCH)  $<
+	
+SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH) sctpDrv.wixobj$(MSIARCH) \
+		module-common.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) \
+		$(TREE)\sctpsp.dll ..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.lib $(TREE)\sctpmon.dll $(TREE)\sctp.sys \
+		$(TREE)\spinstall.exe $(TREE)\echo_client.exe $(TREE)\echo_server.exe $(TREE)\iperf.exe
+	$(LIGHT) -ext WixUIExtension -cultures:$(MSICULTURE) -dPlatform=$(MSIARCH) sctpDrv.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-common.wixobj$(MSIARCH) \
+		module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) -ext WixDifxAppExtension "$(WIX)bin\difxapp_$(MSIARCH).wixlib" \
+		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
+
+sctpCat-winxp-x86: sctp-winxp.inf
+	copy /Y sctp-winxp.inf $(TREE)\Sctp.inf
+	inf2cat /driver:$(TREE) /os:XP_X86,Server2003_X86
+	
+sctpCat-win7-x86: sctp-win7.inf
+	copy /Y sctp-win7.inf $(TREE)\Sctp.inf
+	inf2cat /driver:$(TREE) /os:7_X86,Vista_X86,Server2008_X86
+	
+sctpCat-win7-AMD64: sctp-win7.inf
+	copy /Y sctp-win7.inf $(TREE)\Sctp.inf
+	inf2cat /driver:$(TREE) /os:7_X64,Vista_X64,Server2008_X64,Server2008R2_X64

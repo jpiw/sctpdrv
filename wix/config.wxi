@@ -1,0 +1,30 @@
+<Include>
+	<?define VersionMajor = 1 ?>
+	<?define VersionMinor = 1 ?>
+	<?define VersionRev   = 4 ?>
+
+	<?if $(var.Platform)=x64 ?>
+
+	<?define ProductId="b6591148-670d-4d18-bcc2-89fa47fac32b"?>
+	<?define UpgradeCode="5ac22676-703e-4b34-9789-1bba695329a1"?>
+	<?define Win64 = "yes" ?>
+	<?define ARCHDIR = amd64 ?>
+	<?define MSIARCH = x64 ?>
+	<?define PlatformProgramFilesFolder="ProgramFiles64Folder"?>
+
+	<?elseif $(var.Platform)=x86 ?>
+
+	<?define ProductId="2b453398-e116-4501-9b00-23666ddb2a99"?>
+	<?define UpgradeCode="ccdedca2-cc58-449d-80ab-86655678c4ce"?>
+	<?define Win64 = "no" ?>
+	<?define ARCHDIR = i386 ?>
+	<?define MSIARCH = x86 ?>
+	<?define PlatformProgramFilesFolder="ProgramFilesFolder"?>
+
+	<?else ?>
+
+	<?define ARCHDIR=unsupported_arch ?>
+	<?define MSIARCH=unsupported_arch ?>
+
+	<?endif ?>
+</Include>

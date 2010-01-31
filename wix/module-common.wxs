@@ -1,0 +1,167 @@
+<?xml version='1.0'?>
+<!--
+/*
+ * Copyright (c) 2008 CO-CONV, Corp.
+ * Copyright (C) 2010 Bruce Cran.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+-->
+
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
+	xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
+	<Fragment>
+		<?include config.wxi ?>
+
+		<ComponentGroup Id='root'>			
+			<ComponentRef Id='README.txt'/>
+			<ComponentRef Id='CHANGES.txt'/>
+			<ComponentRef Id='SctpDrv.chm'/>
+			<ComponentRef Id='SctpDrv.pfx'/>
+		</ComponentGroup>
+
+		<ComponentGroup Id='bin'>
+			<ComponentRef Id='spinstall.exe'/>
+			<ComponentRef Id='echo_client.exe'/>
+			<ComponentRef Id='echo_server.exe'/>
+			<?if not $(env.DDK_TARGET_OS)=WinXP ?>
+			<ComponentRef Id='iperf.exe'/>
+			<?endif ?>
+			<ComponentRef Id='sctpsp32.dll'/>
+			<?if $(var.Platform)=x64 ?>
+			<ComponentRef Id='sctpsp64.dll'/>
+			<?endif ?>
+			<ComponentRef Id='sctpmon.dll'/>
+			<ComponentRef Id='sctp.inf'/>
+			<ComponentRef Id='sctp.cat'/>
+			<ComponentRef Id='sctp.sys'/>
+		</ComponentGroup>
+
+		<ComponentGroup Id='inc'>
+			<ComponentRef Id='ws2sctp.h'/>
+		</ComponentGroup>
+
+		<ComponentGroup Id='lib'>
+			<ComponentRef Id='sctpsp32.lib'/>
+			<?if $(var.Platform)=x64 ?>
+			<ComponentRef Id='sctpsp64.lib'/>
+			<?endif ?>
+			<ComponentRef Id='libsctpsp.a'/>
+		</ComponentGroup>
+
+		<ComponentGroup Id='src'>
+			<ComponentRef Id='echo_client.c'/>
+			<ComponentRef Id='echo_server.c'/>
+			<ComponentRef Id='echo_server2.c'/>
+		</ComponentGroup>
+
+		<DirectoryRef Id='inc'>
+			<Component Id="ws2sctp.h" Guid="a85ec122-dada-4678-9fbf-ae37f1212732" Win64="$(var.Win64)">
+				<File Id="ws2sctp.h" Name="ws2sctp.h" KeyPath="yes"
+					Source="..\apps\inc\ws2sctp.h" />
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id='src'>
+			<Component Id="echo_client.c" Guid="2139e483-8bd0-42f5-a645-c5ce24bdadba" Win64="$(var.Win64)">
+				<File Id="echo_client.c" Name="echo_client.c" KeyPath="yes" 
+					Source="..\apps\echo_client\echo_client.c" />
+			</Component>
+
+			<Component Id="echo_server.c" Guid="e8220ce0-a650-4fff-86bf-d39e9d15706d" Win64="$(var.Win64)">
+				<File Id="echo_server.c" Name="echo_server.c" KeyPath="yes"
+					Source="..\apps\echo_server\echo_server.c" />
+			</Component>
+
+			<Component Id="echo_server2.c" Guid="a262c81c-b2e9-4466-8eaa-109373bd784b" Win64="$(var.Win64)">
+				<File Id="echo_server2.c" Name="echo_server2.c" KeyPath="yes"
+					Source="..\apps\echo_server2\echo_server2.c" />
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id='bin'>
+			<Component Id="spinstall.exe" Win64="$(var.Win64)" Guid="a9555e78-fcf9-4087-843f-f02605d6a375">
+				<File Id="spinstall.exe" Name="spinstall.exe" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\spinstall.exe" />
+			</Component>
+			<Component Id="echo_client.exe" Win64="$(var.Win64)" Guid="bbddeac9-838a-41f8-98a9-4bc1d0e175e3">
+				<File Id="echo_client.exe" Name="echo_client.exe" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\echo_client.exe" />
+			</Component>
+			<Component Id="echo_server.exe" Win64="$(var.Win64)" Guid="d14aea0a-e7e1-4707-9914-994dbf984182">
+				<File Id="echo_server.exe" Name="echo_server.exe" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\echo_server.exe" />
+			</Component>
+			<Component Id="sctpmon.dll" Win64="$(var.Win64)" Guid="96042ac3-2fd7-46f9-8ed5-3abe5d883d1d">
+				<File Id="sctpmon.dll" Name="sctpmon.dll" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctpmon.dll" />
+				<RegistryKey Id='sctpmon' Root='HKLM' Key='SOFTWARE\Microsoft\NetSh'
+						Action='createAndRemoveOnUninstall'>
+					<RegistryValue Type='string' Name='sctpmon' Value='[!sctpmon.dll]'/>
+				</RegistryKey>
+			</Component>
+			<Component Id="sctp.inf" Win64="$(var.Win64)" Guid="d799f999-2dc6-4f01-a873-d6d3b42d0f5f">
+				<File Id="sctp.inf" Name="sctp.inf" KeyPath="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctp.inf" />
+			</Component>
+			<Component Id="sctp.cat" Win64="$(var.Win64)" Guid="826f42a9-ca8e-4ba1-8c8f-57e56ebbcaeb">
+				<File Id="sctp.cat" Name="sctp.cat" KeyPath="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctp.cat" />
+			</Component>
+			<Component Id="sctp.sys" Win64="$(var.Win64)" Guid="fa538c80-6b0b-4736-b479-a3dce8f8a6a8">
+				<File Id="sctp.sys" Name="sctp.sys" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctp.sys" />
+				<RegistryKey Action='createAndRemoveOnUninstall' Id='eventlog' Root='HKLM'
+						Key='System\CurrentControlSet\Services\Eventlog\System\sctp'>
+					<RegistryValue Id='EventMessageFile' Name='EventMessageFile' Type='expandable'
+						Value='%SystemRoot%\System32\drivers\sctp.sys'/>
+					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
+				</RegistryKey>
+				<difx:Driver Legacy="yes"/>
+				<ServiceControl Id="sctp_service" Name="Sctp" Start="install" Stop="both" Remove="uninstall" Wait="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id='lib'>
+			<Component Id="libsctpsp.a" Win64="$(var.Win64)" Guid="0c095fe8-b486-4df5-8a30-c8874e254e3b">
+				<File Id="libsctpsp.a" Name="libsctpsp.a" KeyPath="yes"
+					Source="..\mingw\libsctpsp.a" />
+			</Component>
+		</DirectoryRef>
+		
+		<DirectoryRef Id='SctpDrv'>
+			<Component Id="README.txt" Win64="$(var.Win64)" Guid="26eb124f-b750-4716-b09a-9fbfe5f2e84c">
+				<File Id="README.txt" Name="README.txt" KeyPath="yes" Source="README.txt"/>
+			</Component>
+			<Component Id="CHANGES.txt" Win64="$(var.Win64)" Guid="1c0dd2b4-e9b0-4379-aa4d-a85a93852aa6">
+				<File Id="CHANGES.txt" Name="CHANGES.txt" KeyPath="yes" Source="..\CHANGES.txt"/>
+			</Component>
+			<Component Id="SctpDrv.chm" Win64="$(var.Win64)" Guid="0e7fdaeb-cbc1-4050-99e1-d1e7479fb27e">
+				<File Id="SctpDrv.chm" Name="SctpDrv.chm" KeyPath="yes" Source="..\doc\SctpDrv.chm"/>
+			</Component>
+			<Component Id="SctpDrv.pfx" Win64="$(var.Win64)" Guid="fc96b3c8-2e01-4073-8568-95848f8e2668">
+				<File Id="SctpDrv.pfx" Name="SctpDrv.pfx" KeyPath="yes" Source="..\drv\SctpDrv.pfx"/>
+			</Component>
+		</DirectoryRef>
+	</Fragment>
+</Wix>

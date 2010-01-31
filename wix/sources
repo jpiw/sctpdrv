@@ -1,0 +1,42 @@
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+BUFFER_OVERFLOW_CHECKS=0
+USE_MSVCRT=1
+USE_VCCOM=1
+USE_NATIVE_EH=1
+USE_STATIC_ATL=1
+ATL_VER=71
+MSC_WARNING_LEVEL=/W4 /WX
+
+TARGETNAME=setup
+TARGETTYPE=DYNLINK
+
+UMTYPE=windows
+
+!if "$(_BUILDARCH)"=="IA64"
+LIBARCHSUFFIX=_ia64
+!else 
+!if "$(_BUILDARCH)"=="AMD64"
+LIBARCHSUFFIX=_x64
+!else
+LIBARCHSUFFIX=
+!endif
+!endif
+
+TARGETLIBS= $(TARGETLIBS) \
+	$(SDK_LIB_PATH)\kernel32.lib \
+	$(SDK_LIB_PATH)\ws2_32.lib \
+	$(SDK_LIB_PATH)\user32.lib \
+	$(SDK_LIB_PATH)\ole32.lib \
+	$(SDK_LIB_PATH)\oleaut32.lib \
+	$(SDK_LIB_PATH)\msi.lib \
+	$(SDK_LIB_PATH)\advapi32.lib \
+	..\lib\wcautil$(LIBARCHSUFFIX).lib \
+	..\lib\dutil$(LIBARCHSUFFIX).lib
+
+INCLUDES= $(INCLUDES); \
+	..\sp; \
+	..\inc; \
+	..\lib
+
+SOURCES= \
+    setup.cpp

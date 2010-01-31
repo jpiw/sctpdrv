@@ -1,0 +1,6 @@
+LIBRARY		SETUP
+
+EXPORTS
+	SctpInstallProvider
+	SctpUninstallProvider
+	SctpAddFirewallRule

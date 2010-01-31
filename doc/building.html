@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html dir="ltr" lang="en">
+<head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+  <title>Getting the source and building SctpDrv</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta content="Bruce Cran" name="author">
+  <meta content="Instructions for getting the SctpDrv source from the Subversion repository and
+    building the code" name="description">
+  <meta content="sctpdrv, sctp, compiling, subversion, building, source" name="keywords">
+  <meta content="Copyright &copy; 2010 Bruce Cran">
+</head>
+<body>
+<div id="wrap">
+<!-- Navigation menu -->
+<div id="nav">
+<h3>Navigation</h3>
+<ul>
+  <li><a href="http://www.bluestop.org/SctpDrv/">Home</a></li>
+</ul>
+
+<h4>Documentation</h4>
+<ul>
+  <li><a href="index.html">Introduction</a></li>
+  <li><a href="sctp.4.html">SCTP stack overview</a></li>
+  <li><a href="development.html">Development using SctpDrv</a></li>
+  <li>Source code and building</li>
+  <li><a href="debugging.html">Debugging SctpDrv</a></li>
+</ul>
+
+<h4>SCTP API</h4>
+<ul>
+  <li><a href="sctp_bindx.3.html">sctp_bindx</a></li>
+  <li><a href="sctp_connectx.3.html">sctp_connectx</a></li>
+  <li><a href="sctp_freepaddrs.3.html">sctp_freepaddrs</a></li>
+  <li><a href="sctp_freepaddrs.3.html">sctp_freeladdrs</a></li>
+  <li><a href="sctp_getaddrlen.3.html">sctp_getaddrlen</a></li>
+  <li><a href="sctp_getassocid.3.html">sctp_getassocid</a></li>
+  <li><a href="sctp_getpaddrs.3.html">sctp_getpaddrs</a></li>
+  <li><a href="sctp_getpaddrs.3.html">sctp_getladdrs</a></li>
+  <li><a href="sctp_opt_info.3.html">sctp_opt_info</a></li>
+  <li><a href="sctp_peeloff.2.html">sctp_peeloff</a></li>
+  <li><a href="sctp_recvmsg.3.html">sctp_recvmsg</a></li>
+  <li><a href="sctp_send.3.html">sctp_send</a></li>
+  <li><a href="sctp_send.3.html">sctp_sendx</a></li>
+  <li><a href="sctp_sendmsg.3.html">sctp_sendmsg</a></li>
+  <li><a href="sctp_sendmsg.3.html">sctp_sendmsgx</a></li>
+</ul>
+</div>
+
+
+<div id="main">
+<h2>Getting and building the code</h2>
+<span style="font-weight: bold;">Getting the source code</span>
+<p>
+The latest source code is available from the <a href="http://subversion.tigris.org/">Subversion</a> server at
+<a href="https://svn.bluestop.org/svn/sctpDrv/">https://svn.bluestop.org/svn/sctpDrv/</a> :<br><br>
+<code>svn export https://svn.bluestop.org/svn/sctpDrv</code>
+<br><br>
+On Windows, <a href="http://tortoisesvn.tigris.org/">TortoiseSVN</a>
+provides a much more user-friendly interface to Subversion repositories
+than using the command line.
+</p><p>
+Weekly source snapshots from SVN HEAD can be found in <a href="http://www.bluestop.org/SctpDrv/weekly/">http://www.bluestop.org/SctpDrv/weekly/</a>.
+</p><p>
+A web interface is also available which allows you to browse the files,
+see the history etc. without installing a Subversion client. It
+can be found at <a href="http://www.bluestop.org/viewvc/repos/">http://www.bluestop.org/viewvc/repos/</a>.
+</p>
+
+<h3>Building SctpDrv</h3>
+<h4>Prerequisites</h4>
+<ul>
+  <li>Microsoft WDK (Windows Driver Kit) 7.0. It can be downloaded from
+    <a href="http://www.microsoft.com/whdc/DevTools/WDK/WDKpkg.mspx">http://www.microsoft.com/whdc/DevTools/WDK/WDKpkg.mspx</a></li>
+  <li><a href="http://wix.sourceforge.net/">WiX</a> (Windows Installer
+XML) 3.x. It can be downloaded from <a href="http://wix.sourceforge.net/downloadv3.html">http://wix.sourceforge.net/downloadv3.html</a>.
+Set the <code>WIX</code> environment variable to the root of the installation (without the <code>bin</code> directory).</li>
+</ul>
+
+<h4>Building</h4>
+<p>
+To build the driver and
+userland library, you'll need to run the <em>Command Prompt</em>.<br>
+'cd' into the top-level directory (the one containing the README file)
+and run the command:
+<br><br>
+<code>makerelease.bat</code>
+</p><p>
+To install the driver on 64-bit Windows (Vista or newer) the driver
+must be digitally signed. For testing and development it's
+possible to test-sign the driver and enable Windows to load drivers
+which have been self-signed. The steps involved are:
+</p>
+<ol>
+  <li>Enable Windows to load test-signed drivers: <a href="http://msdn.microsoft.com/en-us/library/dd419901.aspx">http://msdn.microsoft.com/en-us/library/dd419901.aspx</a></li>
+  <li>Create a test certificate: <a href="http://msdn.microsoft.com/en-us/library/dd406676.aspx">http://msdn.microsoft.com/en-us/library/dd406676.aspx</a></li>
+  <li>Test-sign the driver file: <a href="http://msdn.microsoft.com/en-us/library/dd419908.aspx">http://msdn.microsoft.com/en-us/library/dd419908.aspx</a></li>
+</ol>
+<p>
+For SctpDrv, the file that needs to be test-signed in <em>sctpDrv\drv\objfre_win7_amd64\amd64\sctp.sys</em><br>
+<em>Note that test-signing should be used
+only for test and development, and not for production use.</em>
+</p><p>
+Once the build has completed successfully, there should be 3 MSI
+files in the <code>wix\en-us and wix\jp-jp</code> directories
+named <code>SctpDrv-WinXP_x86.msi</code>, <code>SctpDrv-Win7_x86</code> and <code>SctpDrv-Win7_x64.msi</code>.
+Run the WinXP_x86 version on 32-bit Windows, and the Win7_x64 version on 64-bit Windows Vista or newer.
+</p>
+
+<h4>Known Build Errors</h4>
+<h5>Cannot open include file: 'netsh.h': No such file or directory</h5>
+<p>
+If you get an error reporting that <code>netsh.h</code>
+couldn't be found - such as:
+<br><br>
+<em>1&gt;c:\sctpdrv\netsh\sctpmon\sctpmon.c(27): error C1083: Cannot open include file: 'netsh.h': No such file or directory</em>
+<br><br>
+then you'll need to edit <code>sctpDrv\netsh\sctpmon\sources</code>
+and update the lines containing the paths:
+<br><br>
+<code>C:\PROGRA~1\MICROS~2\Windows\v6.0\Lib\Netsh.lib</code> and <br>
+<code>C:\PROGRA~1\MICROS~2\Windows\v6.0\Include</code>
+</p><p>
+The reason for this is that the Windows Driver Kit doesn't support
+filenames with spaces, and we need to reference <code>netsh.h</code>
+and <code>netsh.lib</code>
+from within "C:\Program Files\Microsoft SDKs". To find what the
+short path on your computer is, open a <span style="font-style: italic;">Command Prompt </span>window and type:
+</p>
+<pre>
+REM make sure we're at the top level
+cd /D C:\
+REM show long and short directory names.
+REM Take a note of the short name that appears beside "Program Files"
+dir/x
+cd "Program Files"
+REM show long and short directory names.
+REM Take a note of the short name that appears beside "Microsoft SDKs"
+dir/x</pre>
+
+<h5>error LNK2019: unresolved external symbol __imp__GetNameInfoW@28 referenced in function _wmain</h5>
+<p>
+If you see error like the following:
+<br><br>
+1&gt;errors in directory c:\sctpdrv\apps\echo_client<br>
+1&gt;c:\sctpdrv\apps\echo_client\echo_client.obj: error LNK2019: unresolved external symbol __imp__GetNameInfoW@28 referenced in function _wmain<br>
+1&gt;c:\sctpdrv\apps\echo_client\echo_client.obj: error LNK2019: unresolved external symbol __imp__GetAddrInfoW@16 referenced in function _wmain<br>
+1&gt;c:\sctpdrv\apps\echo_client\objfre_wxp_x86\i386\echo_client.exe: error LNK1120: 2 unresolved externals<br>
+1&gt;errors in directory c:\sctpdrv\apps\echo_server<br>
+1&gt;c:\sctpdrv\apps\echo_server\echo_server.obj: error LNK2019: unresolved external symbol __imp__GetNameInfoW@28 referenced in function _wmain<br>
+1&gt;c:\sctpdrv\apps\echo_server\echo_server.obj: error LNK2019: unresolved external symbol __imp__GetAddrInfoW@16 referenced in function _wmain<br>
+1&gt;c:\sctpdrv\apps\echo_server\objfre_wxp_x86\i386\echo_server.exe: error LNK1120: 2 unresolved externals<br>
+<br>
+That means you're using the copy of ws2_32.lib from the <span style="font-style: italic;">Windows XP Build Environment </span>that
+came with the 7.0.0 WDK. There's a bug in that version whereby the
+GetAddrInfo and GetNameInfo functions have been mangled (see <a href="https://connect.microsoft.com/site148/feedback/ViewFeedback.aspx?FeedbackID=507153">https://connect.microsoft.com/site148/feedback/ViewFeedback.aspx?FeedbackID=507153</a>).
+To work around this, we need to copy the file from <code>C:\WinDDK\7600.16385.0\lib\win7\i386</code>
+to <code>C:\WinDDK\7600.16385.0\lib\wxp\i386</code>.
+</p>
+</div>
+
+<div id="footer">
+<hr style="width: 100%; height: 2px;">
+Copyright (C) 2010 Bruce Cran.
+</div>
+</div>
+
+</body>
+</html>

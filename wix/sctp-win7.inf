@@ -1,0 +1,54 @@
+; SctpDrv driver setup file
+; Copyright (c) 2010 Bruce Cran
+[Version]
+Signature      = "$WINDOWS NT$"
+Class          = System
+ClassGUID      = {4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider       = %BruceCran%
+DriverVer      = 01/20/2010,1.1.4
+DriverPackageType        = KernelService
+DriverPackageDisplayName = %SctpDesc%
+CatalogFile    = sctp.cat
+
+[DestinationDirs]
+DefaultDestDir = 11
+Sctp.DriverFile= 12
+
+[SourceDisksNames]
+1              = %Disk1%
+
+[SourceDisksFiles]
+sctp.sys       = 1
+
+[DefaultInstall]
+OptionDesc     = %SctpDesc%
+CopyFiles      = Sctp.DriverFile
+
+[Sctp.DriverFile]
+sctp.sys,,,2
+
+[DefaultInstall.Services]
+AddService     = Sctp,,DriverService
+
+; Driver specification for NT >= 6 (Vista/Win7)
+; Use AutoStart StartType because BFE isn't a boot-time service
+[DriverService]
+DisplayName    = %SctpDesc%
+Description    = %SctpDesc%
+ServiceBinary  = %12%\sctp.sys
+ServiceType    = 1 ; SERVICE_KERNEL_DRIVER
+StartType      = 2 ; SERVICE_AUTO_START
+ErrorControl   = 1 ; SERVICE_ERROR_NORMAL
+LoadOrderGroup = NetworkProvider
+Dependencies   = Tcpip,BFE,Afd
+
+[DefaultUninstall]
+DelFiles       = Sctp.DriverFile
+
+[DefaultUninstall.Services]
+DelService     = Sctp,0x200
+
+[Strings]
+BruceCran      = "Bruce Cran"
+SctpDesc       = "SCTP Driver"
+Disk1          = "SctpDrv Source Media"

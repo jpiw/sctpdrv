@@ -1,0 +1,31 @@
+C_DEFINES=$(C_DEFINES) -D__Windows__
+MSC_WARNING_LEVEL=/W4 /WX
+
+TARGETNAME=sctpmon
+TARGETTYPE=DYNLINK
+
+USE_MSVCRT=1
+UMTYPE=windows
+
+!if "$(_BUILDARCH)"=="IA64"
+TARGETLIBS=..\..\lib\ia64\Netsh.lib
+!else 
+!if "$(_BUILDARCH)"=="AMD64"
+TARGETLIBS=..\..\lib\x64\netsh.lib
+!else
+TARGETLIBS=..\..\lib\netsh.lib
+!endif
+!endif
+
+TARGETLIBS= $(TARGETLIBS) \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\ws2_32.lib
+
+
+INCLUDES=..\..; \
+    ..\..\inc; \
+    ..\..\drv
+
+SOURCES= \
+    sctpmon.c \
+    sctpmon.rc

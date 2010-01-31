@@ -1,0 +1,67 @@
+<?xml version='1.0'?>
+<!--
+/*
+ * Copyright (c) 2008 CO-CONV, Corp.
+ * Copyright (C) 2009 Bruce Cran.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+-->
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
+		xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
+
+<Fragment>
+	<?include config.wxi ?>
+
+	<DirectoryRef Id="bin32">
+		<Component Id="sctpsp32.dll" Guid="22408cd8-b619-4b67-aa74-528b51806b30">
+			<File Id="sctpsp32.dll" Name="sctpsp.dll" KeyPath="yes"
+				Source="bin\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\sctpsp.dll" />
+		</Component>
+	</DirectoryRef>
+	<DirectoryRef Id="lib32">
+		<Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
+			<File Id="sctpsp32.lib" Name="sctpsp.lib" KeyPath="yes"
+				Source="..\sp\dll\obj$(env.DDKBUILDENV)_win7_x86\i386\sctpsp.lib" />
+		</Component>
+	</DirectoryRef>
+
+	<DirectoryRef Id="bin">
+		<Component Id="sctpsp64.dll" Win64="$(var.Win64)" Guid="1c5ea8c6-3b72-4cb0-932c-0859a3f9dc25">
+			<File Id="sctpsp64.dll" Name="sctpsp.dll" KeyPath="yes" Checksum="yes"
+				Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
+		</Component>
+		<Component Id="iperf.exe" Win64="$(var.Win64)" Guid="9978642d-1669-49a6-a4e8-d266a69d3325">
+			<File Id="iperf.exe" Name="iperf.exe" KeyPath="yes" Checksum="yes"
+				Source="bin\$(env.BUILD_ALT_DIR)\iperf.exe" />
+		</Component>
+	</DirectoryRef>
+	
+	<DirectoryRef Id="lib">
+		<Component Id="sctpsp64.lib" Win64="$(var.Win64)" Guid="21765fed-6174-4a7e-b8f1-44829c2de3f0">
+			<File Id="sctpsp64.lib" Name="sctpsp.lib" KeyPath="yes"
+				Source="..\sp\dll\obj$(env.BUILD_ALT_DIR)\$(var.ARCHDIR)\sctpsp.lib" />
+		</Component>
+	</DirectoryRef>
+</Fragment>
+</Wix>
