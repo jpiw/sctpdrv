@@ -84,13 +84,13 @@ data where an association identification needs to be passed into the operating s
 The <b>sctp_opt_info()</b> function can return the following errors:
 
 <dl>
-  <dt>[EINVAL]</dt>
+  <dt>[WSAEINVAL]</dt>
   <dd>The argument <span class="param">arg</span> value was invalid.</dd>
-  <dt>[EOPNOTSUPP]</dt>
+  <dt>[WSAEOPNOTSUPP]</dt>
   <dd>The argument <span class="param">opt</span> was not one of the above listed SCTP socket options.</dd>
-  <dt>[EBADF]</dt>
+  <dt>[WSAEBADF]</dt>
   <dd>The argument <span class="param">s</span> is not a valid descriptor.</dd>
-  <dt>[ENOTSOCK]</dt>
+  <dt>[WSAENOTSOCK]</dt>
   <dd>The argument <span class="param">s</span> is not a socket.</dd>
 </dl>
 
@@ -99,7 +99,8 @@ The <b>sctp_opt_info()</b> function can return the following errors:
 <a href="http://msdn.microsoft.com/en-us/library/ms738544%28VS.85%29.aspx">getsockopt(msdn)</a>,
 <a href="sctp.4.html">sctp(4)</a><br>
 
-<hr>Time: 14:47:19 GMT, January 10, 2010<br><br>
+<hr>
+Time: 11:22:30 GMT, January 31, 2010<br><br>
 <em>Adapted for SctpDrv from the FreeBSD manual page <a href="http://www.freebsd.org/cgi/man.cgi?query=sctp_opt_info&manpath=FreeBSD+8.0-RELEASE">sctp_opt_info(3)</a><br>
 <a href="http://www.freebsd.org/copyright/">Legal Notices</a> | © 1995-2010 The FreeBSD Project. All rights reserved.</em>
 </div>

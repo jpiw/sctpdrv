@@ -137,7 +137,7 @@
 						Value='%SystemRoot%\System32\drivers\sctp.sys'/>
 					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
 				</RegistryKey>
-				<difx:Driver Legacy="yes"/>
+				<difx:Driver Legacy="yes" AddRemovePrograms="no"/>
 				<ServiceControl Id="sctp_service" Name="Sctp" Start="install" Stop="both" Remove="uninstall" Wait="no"/>
 			</Component>
 		</DirectoryRef>

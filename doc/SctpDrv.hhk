@@ -6,6 +6,36 @@
 </HEAD><BODY>
 <UL>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="building">
+		<param name="Name" value="Getting the source and building SctpDrv">
+		<param name="Local" value="building.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="debugging">
+		<param name="Name" value="Debugging SctpDrv">
+		<param name="Local" value="debugging.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="development">
+		<param name="Name" value="Developing SCTP applications using SctpDrv">
+		<param name="Local" value="development.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="introduction">
+		<param name="Name" value="Introduction to SctpDrv">
+		<param name="Local" value="introduction.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="netsh">
+		<param name="Name" value="Introduction to SctpDrv">
+		<param name="Local" value="index.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="overview">
+		<param name="Name" value="Man page of SCTP">
+		<param name="Local" value="sctp.4.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="sctp_bindx">
 		<param name="Name" value="Man page of SCTP_BINDX">
 		<param name="Local" value="sctp_bindx.3.html">
@@ -31,11 +61,6 @@
 		<param name="Local" value="sctp_getaddrlen.3.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="overview">
-		<param name="Name" value="Man page of SCTP">
-		<param name="Local" value="sctp.4.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="sctp_getassocid">
 		<param name="Name" value="Man page of SCTP_GETASSOCID">
 		<param name="Local" value="sctp_getassocid.3.html">
@@ -54,6 +79,11 @@
 		<param name="Name" value="sctp_opt_info">
 		<param name="Name" value="Man page of SCTP_OPT_INFO">
 		<param name="Local" value="sctp_opt_info.3.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="sctp_peeloff">
+		<param name="Name" value="Man page of SCTP_PEELOFF">
+		<param name="Local" value="sctp_peeloff.2.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="sctp_recvmsg">
@@ -81,24 +111,9 @@
 		<param name="Local" value="sctp_sendmsg.3.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="sctp_peeloff">
-		<param name="Name" value="Man page of SCTP_PEELOFF">
-		<param name="Local" value="sctp_peeloff.2.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="development">
-		<param name="Name" value="Developing SCTP applications using SctpDrv">
-		<param name="Local" value="development.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="introduction">
-		<param name="Name" value="Introduction to SctpDrv">
-		<param name="Local" value="introduction.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="debugging">
-		<param name="Name" value="Debugging SctpDrv">
-		<param name="Local" value="debugging.html">
+		<param name="Name" value="source">
+		<param name="Name" value="Getting the source and building SctpDrv">
+		<param name="Local" value="building.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="subversion">
@@ -106,19 +121,9 @@
 		<param name="Local" value="building.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="source">
+		<param name="Name" value="svn">
 		<param name="Name" value="Getting the source and building SctpDrv">
 		<param name="Local" value="building.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="building">
-		<param name="Name" value="Getting the source and building SctpDrv">
-		<param name="Local" value="building.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="netsh">
-		<param name="Name" value="Introduction to SctpDrv">
-		<param name="Local" value="index.html">
 		</OBJECT>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="sysctl">

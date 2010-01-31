@@ -405,8 +405,8 @@ struct sctp_event_subscribe {
  * ancillary data structures
  */
 struct sctp_initmsg {
-	unsigned long sinit_num_ostreams;
-	unsigned long sinit_max_instreams;
+	unsigned short sinit_num_ostreams;
+	unsigned short sinit_max_instreams;
 	unsigned short sinit_max_attempts;
 	unsigned short sinit_max_init_timeo;
 };

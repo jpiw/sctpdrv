@@ -3,7 +3,12 @@ Bug fixes and new features since 1.1.3
     * sctp.sys is now signed with a test certificate, which allows SctpDrv to be
       used with test-signing enabled.
     * SctpDrv.chm, a HTML Help file, is now installed on the target system.
-
+    * Fixed WOW64 support: 32 bit applications can now use SctpDrv on 64-bit Windows.
+    * Fixed race in SCTPDispatchConnectRequest: the connect function would appear to
+      succeed despite no server listening.
+    * Fixed ABI mismatch between kernel and userland: the sctp_initmsg struct was updated 
+      for FreeBSD 8.0 to have 4 16-bit fields, but the Windows userland still had 2 32-bit 
+      fields and 2 16-bit fields.
 
 Version 1.1.3 - 7th January 2010
 Bug fixes and new features since 1.1.2
@@ -43,7 +48,7 @@ Bug fixes and new features since 1.0.0
 
 
 
-See http://www.bluestop.org/viewvc/repos/sctpDrv/?view=log for a complete list of changes per-revision.
+See http://www.bluestop.org/viewvc/repos/sctpDrv/?view=log for a complete list of changes per revision.
 
 * r17
 - Fixed a bug in sctpsp.c where the sockets weren't being kept track of.

@@ -81,13 +81,13 @@ system call.
 
 <h2>RETURN VALUES</h2>
 The call returns the number of bytes that the operating
-system expects for the specific address family or -1.
+system expects for the specific address family or SOCKET_ERROR (-1).
 
 <h2>ERRORS</h2>
 The <b>sctp_getaddrlen()</b> function can return the following errors:
 
 <dl>
-  <dt>[EINVAL]</dt>
+  <dt>[WSAEINVAL]</dt>
   <dd>The address family specified does NOT exist.</dd>
 </dl>
 
@@ -95,7 +95,8 @@ The <b>sctp_getaddrlen()</b> function can return the following errors:
 <a href="http://msdn.microsoft.com/en-us/library/ms738544%28VS.85%29.aspx">getsockopt(msdn)</a>,
 <a href="http://msdn.microsoft.com/en-us/library/ms740506%28VS.85%29.aspx">socket(msdn)</a>,
 <a href="sctp.4.html">sctp(4)</a><br>
-<hr>Time: 14:46:50 GMT, January 10, 2010<br><br>
+<hr>
+Time: 11:22:30 GMT, January 31, 2010<br><br>
 <em>Adapted for SctpDrv from the FreeBSD manual page <a href="http://www.freebsd.org/cgi/man.cgi?query=sctp_getaddrlen&manpath=FreeBSD+8.0-RELEASE">sctp_getaddrlen(3)</a><br>
 <a href="http://www.freebsd.org/copyright/">Legal Notices</a> | © 1995-2010 The FreeBSD Project. All rights reserved.</em>
 </div>

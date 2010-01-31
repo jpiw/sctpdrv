@@ -228,7 +228,7 @@ sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 	cpto = ((caddr_t)buf + sizeof(int));
 	/* validate all the addresses and get the size */
 	for (i = 0; i < addrcnt; i++) {
-		if (at->sa_family == AF_INET) { 
+		if (at->sa_family == AF_INET) {
 #if !defined(__Windows__)
 			if (at->sa_len != sizeof(struct sockaddr_in)) {
 				errno = EINVAL;
@@ -262,6 +262,8 @@ sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 		} else {
 #if !defined(__Windows__)
 			errno = EINVAL;
+#else
+			WSASetLastError(WSAEINVAL);
 #endif
 			return (-1);
 		}
@@ -269,6 +271,8 @@ sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 			/* Never enough memory */
 #if !defined(__Windows__)
 			errno = E2BIG;
+#else
+			WSASetLastError(WSAEFAULT);
 #endif
 			return (-1);
 		}
@@ -283,6 +287,8 @@ sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 	if (cnt == 0) {
 #if !defined(__Windows__)
 		errno = EINVAL;
+#else
+		WSASetLastError(WSAEINVAL);
 #endif
 		return (-1);
 	}
@@ -396,8 +402,8 @@ sctp_bindx(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
 			/* invalid address family specified */
 			goto out_error;
 		}
-		
-		
+
+
 	}
 	sa = addrs;
 	/* Now if there was a port mentioned, assure that
@@ -473,6 +479,8 @@ sctp_opt_info(SOCKET sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size)
 	if (arg == NULL) {
 #if !defined(__Windows__)
 		errno = EINVAL;
+#else
+		WSASetLastError(WSAEINVAL);
 #endif
 		return (-1);
 	}
@@ -663,12 +671,15 @@ sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 #else
 	if (getsockopt(sd, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDR_SIZE,
 	    (char *)&size_of_addresses, &siz) == SOCKET_ERROR) {
+		WSASetLastError(WSAENOBUFS);
 #endif
 		return (-1);
 	}
 	if (size_of_addresses == 0) {
 #if !defined(__Windows__)
 		errno = ENOTCONN;
+#else
+		WSASetLastError(WSAENOTCONN);
 #endif
 		return (-1);
 	}
@@ -678,6 +689,8 @@ sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 	if (addrs == NULL) {
 #if !defined(__Windows__)
 		errno = ENOMEM;
+#else
+		WSASetLastError(WSAENOBUFS);
 #endif
 		return (-1);
 	}
@@ -690,6 +703,7 @@ sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 #else
 	if (getsockopt(sd, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDRESSES, (char *)addrs,
 	    &siz) == SOCKET_ERROR) {
+		WSASetLastError(WSAENOBUFS);
 #endif
 		free(addrs);
 		return (-1);
@@ -727,7 +741,7 @@ sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 	return (cnt);
 }
 
-void 
+void
 sctp_freeladdrs(struct sockaddr *addrs)
 {
 	/* Take away the hidden association id */
@@ -781,7 +795,7 @@ sctp_sendmsg(int s,
 		errno = EINVAL;
 		return -1;
 	}
-		
+
 	if (to && (tolen > 0)) {
 		if (to->sa_family == AF_INET) {
 			if (tolen != sizeof(struct sockaddr_in)) {
@@ -813,7 +827,7 @@ sctp_sendmsg(int s,
 		}
 		who = (struct sockaddr *)&addr;
 	}
-	 
+
 	iov[0].iov_base = (char *)data;
 	iov[0].iov_len = len;
 	iov[1].iov_base = NULL;
@@ -1021,6 +1035,8 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 	if (addrs == NULL) {
 #if !defined(__Windows__)
 		errno = EINVAL;
+#else
+		WSASetLastError(WSAEINVAL);
 #endif
 		return (-1);
 	}
@@ -1066,6 +1082,8 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 		} else {
 #if !defined(__Windows__)
 			errno = EINVAL;
+#else
+			WSASetLastError(WSAEINVAL);
 #endif
 			return (-1);
 		}
@@ -1077,6 +1095,8 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 	if (cnt == 0) {
 #if !defined(__Windows__)
 		errno = EINVAL;
+#else
+		WSASetLastError(WSAEINVAL);
 #endif
 		return (-1);
 	}
@@ -1095,7 +1115,7 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 	if (ret != 0) {
 #if !defined(__Windows__)
 		if (errno == EALREADY) {
-			no_end_cx = 1;;
+			no_end_cx = 1;
 			goto continue_send;
 		}
 #endif
@@ -1108,6 +1128,8 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 		(void)setsockopt(sd, IPPROTO_SCTP, SCTP_CONNECT_X_COMPLETE, (void *)addrs,
 		    (socklen_t) addrs->sa_len);
 		errno = ENOENT;
+#else
+		WSASetLastError(WSAENETUNREACH);
 #endif
 		switch (addrs->sa_family) {
 		case AF_INET:
@@ -1126,6 +1148,8 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 	ret = sctp_send(sd, msg, msg_len, sinfo, flags);
 #if !defined(__Windows__)
 	saved_errno = errno;
+#else
+	saved_errno = WSAGetLastError();
 #endif
 	if (no_end_cx == 0)
 #if !defined(__Windows__)
@@ -1148,6 +1172,7 @@ sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
 		(void)setsockopt(sd, IPPROTO_SCTP, SCTP_CONNECT_X_COMPLETE, (void *)addrs,
 		    (socklen_t) salen);
 	}
+	WSASetLastError(saved_errno);
 #endif
 	return (ret);
 }
@@ -1218,6 +1243,8 @@ sctp_recvmsg(int s,
 	if (msg_flags == NULL) {
 #if !defined(__Windows__)
 		errno = EINVAL;
+#else
+		WSASetLastError(WSAEINVAL);
 #endif
 		return (-1);
 	}
@@ -1337,7 +1364,7 @@ sctp_peeloff(SOCKET sd, sctp_assoc_t assoc_id)
 	peeloff.assoc_id = assoc_id;
 	optlen = sizeof(peeloff);
 	result = getsockopt(sd, IPPROTO_SCTP, SCTP_PEELOFF, (void *)&peeloff, &optlen);
-	
+
 	if (result < 0) {
 		return (-1);
 	} else {

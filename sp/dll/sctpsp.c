@@ -211,7 +211,7 @@ SetErrorCode(LPINT lpErrno)
 	case ERROR_NO_SYSTEM_RESOURCES:
 	case ENOMEM:
 	case ENOBUFS:
-		winsockErr = WSAEMFILE;
+		winsockErr = WSAENOBUFS;
 		break;
 	case ERROR_NOACCESS:
 	case EFAULT:
@@ -261,6 +261,7 @@ SetErrorCode(LPINT lpErrno)
 	case ENOENT:
 		winsockErr = WSANO_DATA;
 		break;
+	case EPIPE:
 	case EMSGSIZE:
 		winsockErr = WSAEMSGSIZE;
 		break;

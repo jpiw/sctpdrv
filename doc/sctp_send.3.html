@@ -219,35 +219,35 @@ The call returns the number of characters sent, or -1 if an error occurred.
 
 The <b>sctp_send()</b> system call fails if:
 <dl>
-  <dt>[EBADF]</dt>
+  <dt>[WSAEBADF]</dt>
   <dd>An invalid descriptor was specified.</dd>
-  <dt>[ENOTSOCK]</dt>
+  <dt>[WSAENOTSOCK]</dt>
   <dd>The argument <span class="param">s</span> is not a socket.</dd>
-  <dt>[EFAULT]</dt>
+  <dt>[WSAEFAULT]</dt>
   <dd>An invalid user space address was specified for an argument.</dd>
-  <dt>[EMSGSIZE]</dt>
+  <dt>[WSAEMSGSIZE]</dt>
   <dd>The socket requires that message be sent atomically,
 and the size of the message to be sent made this impossible.</dd>
-  <dt>[EAGAIN]</dt>
+  <dt>[WSAEWOULDBLOCK]</dt>
   <dd>The socket is marked non-blocking and the requested operation would block.</dd>
-  <dt>[ENOBUFS]</dt>
+  <dt>[WSAENOBUFS]</dt>
   <dd>The system was unable to allocate an internal buffer.
 The operation may succeed when buffers become available.</dd>
-  <dt>[ENOBUFS]</dt>
+  <dt>[WSAENOBUFS]</dt>
   <dd>The output queue for a network interface was full.
 This generally indicates that the interface has stopped sending,
 but may be caused by transient congestion.</dd>
-  <dt>[EHOSTUNREACH]</dt>
+  <dt>[WSAEHOSTUNREACH]</dt>
   <dd>The remote host was unreachable.</dd>
-  <dt>[ENOTCON]</dt>
+  <dt>[WSAENOTCONN]</dt>
   <dd>On a one-to-one style socket no association exists.</dd>
-  <dt>[ECONNRESET]</dt>
+  <dt>[WSAECONNRESET]</dt>
   <dd>An abort was received by the stack while the user was attempting to send data to the peer.</dd>
-  <dt>[ENOENT]</dt>
+  <dt>[WSANO_DATA]</dt>
   <dd>On a one-to-many style socket no address is specified
 so that the association cannot be located or the
 SCTP_ABORT flag was specified on a non-existing association.</dd>
-  <dt>[EPIPE]</dt>
+  <dt>[WSAEMSGSIZE]</dt>
   <dd>The socket is unable to send anymore data (SBS_CANTSENDMORE has been set on the socket).
 This typically means that the socket is not connected and is a one-to-one style socket.</dd>
 </dl>
@@ -272,7 +272,7 @@ Because <b>sctp_send()</b> may have multiple associations under one endpoint, a
 select on write will only work for a one-to-one style socket.<br>
 
 <hr>
-Time: 14:47:39 GMT, January 10, 2010<br><br>
+Time: 11:22:30 GMT, January 31, 2010<br><br>
 <em>Adapted for SctpDrv from the FreeBSD manual page <a href="http://www.freebsd.org/cgi/man.cgi?query=sctp_send&manpath=FreeBSD+8.0-RELEASE">sctp_send(3)</a><br>
 <a href="http://www.freebsd.org/copyright/">Legal Notices</a> | © 1995-2010 The FreeBSD Project. All rights reserved.</em>
 </div>

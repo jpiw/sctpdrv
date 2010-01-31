@@ -306,9 +306,8 @@ SCTPDispatchConnectRequest(
 	sa = (struct sockaddr *)irp->AssociatedIrp.SystemBuffer;
 
 	error = soconnect(so, sa, NULL);
-	if (error != 0) {
+	if (error != 0)
 		goto done;
-	}
 
 	if ((so->so_state & SS_NBIO) && (so->so_state & SS_ISCONNECTING)) {
 		error = EWOULDBLOCK;
@@ -326,7 +325,12 @@ SCTPDispatchConnectRequest(
 		    UserMode, FALSE, so->so_timeo > 0 ? &timeout : NULL);
 		SOCK_LOCK(so);
 		error = so->so_error;
+	} else if ((so->so_state & SS_ISCONNECTING) == 0 && (so->so_state & SS_ISCONNECTED) == 0) {
+		/* if we're not connecting or connected, the connection
+		 * must have been refused */
+		error = ECONNREFUSED;
 	}
+
 	SOCK_UNLOCK(so);
 done:
 	if (NT_SUCCESS(status) && error != 0)
