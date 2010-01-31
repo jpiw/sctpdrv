@@ -30,7 +30,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.h 185694 2008-12-06 13:19:54Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.h 202782 2010-01-22 07:53:41Z tuexen $");
 #endif
 
 #ifndef __SCTP_AUTH_H__
@@ -39,7 +39,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.h 185694 2008-12-06 13:19:54Z rrs
 
 /* digest lengths */
 #define SCTP_AUTH_DIGEST_LEN_SHA1	20
-#define SCTP_AUTH_DIGEST_LEN_MD5	16
 #define SCTP_AUTH_DIGEST_LEN_SHA224	28
 #define SCTP_AUTH_DIGEST_LEN_SHA256	32
 #define SCTP_AUTH_DIGEST_LEN_SHA384	48
@@ -54,7 +53,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.h 185694 2008-12-06 13:19:54Z rrs
 /* union of all supported HMAC algorithm contexts */
 typedef union sctp_hash_context {
 	SHA1_CTX sha1;
-	MD5_CTX md5;
 #ifdef HAVE_SHA2
 	SHA256_CTX sha256;
 	SHA384_CTX sha384;
@@ -64,7 +62,7 @@ typedef union sctp_hash_context {
 
 typedef struct sctp_key {
 	uint32_t keylen;
-	uint8_t key[0];
+	uint8_t key[];
 } sctp_key_t;
 
 typedef struct sctp_shared_key {
@@ -87,7 +85,7 @@ typedef struct sctp_auth_chklist {
 typedef struct sctp_hmaclist {
 	uint16_t max_algo;	/* max algorithms allocated */
 	uint16_t num_algo;	/* num algorithms used */
-	uint16_t hmac[0];
+	uint16_t hmac[];
 } sctp_hmaclist_t;
 
 /* authentication info */
@@ -214,8 +212,8 @@ extern void sctp_initialize_auth_params(struct sctp_inpcb *inp,
     struct sctp_tcb *stcb);
 
 /* test functions */
+#ifdef SCTP_HMAC_TEST
 extern void sctp_test_hmac_sha1(void);
-extern void sctp_test_hmac_md5(void);
 extern void sctp_test_authkey(void);
-
+#endif
 #endif /* __SCTP_AUTH_H__ */
