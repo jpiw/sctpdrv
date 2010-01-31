@@ -325,7 +325,8 @@ SCTPDispatchConnectRequest(
 		    UserMode, FALSE, so->so_timeo > 0 ? &timeout : NULL);
 		SOCK_LOCK(so);
 		error = so->so_error;
-	} else if ((so->so_state & SS_ISCONNECTING) == 0 && (so->so_state & SS_ISCONNECTED) == 0) {
+	} else if (so->so_type == SOCK_STREAM &&
+	  (so->so_state & SS_ISCONNECTING) == 0 && (so->so_state & SS_ISCONNECTED) == 0) {
 		/* if we're not connecting or connected, the connection
 		 * must have been refused */
 		error = ECONNREFUSED;
