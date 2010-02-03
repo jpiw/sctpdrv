@@ -41,22 +41,26 @@
 #include <string.h>
 
 #define MAX_CLIENTS	32
+#define BUFSIZE 1024
 
 #if defined(__Windows__)
 
-#include <tchar.h>
+void err(int eval, const char *fmt, ...);
+void errx(int eval, const char *fmt, ...);
+void warn(const char *fmt, ...);
+void warnx(const char *fmt, ...);
 
 void
 err(
     int eval,
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 	LPSTR lpMsgBuf;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	FormatMessageA(
@@ -75,13 +79,13 @@ err(
 void
 errx(
     int eval,
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	exit(eval);
@@ -89,14 +93,14 @@ errx(
 
 void
 warn(
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 	LPSTR lpMsgBuf;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	FormatMessageA(
@@ -111,94 +115,36 @@ warn(
 	LocalFree(lpMsgBuf);
 }
 
-#if (_WIN32_WINNT <= 0x0501)
-WINSOCK_API_LINKAGE
-INT
-WSAAPI
-GetAddrInfoW(
-    IN PCWSTR pNodeName OPTIONAL,
-    IN PCWSTR pServiceName OPTIONAL,
-    IN const ADDRINFOW *pHints OPTIONAL,
-    OUT PADDRINFOW *ppResult
-    );
-#ifdef UNICODE
-#define GetAddrInfo     GetAddrInfoW
 #else
-#define GetAddrInfo     getaddrinfo
-#endif
-
-WINSOCK_API_LINKAGE
-VOID
-WSAAPI
-FreeAddrInfoW(
-    IN PADDRINFOW pAddrInfo OPTIONAL
-    );
-
-#ifdef UNICODE
-#define FreeAddrInfo    FreeAddrInfoW
-#else
-#define FreeAddrInfo    freeaddrinfo
-#endif
-
-WINSOCK_API_LINKAGE
-INT
-WSAAPI
-GetNameInfoW(
-    IN const SOCKADDR *pSockaddr,
-    IN socklen_t SockaddrLength,
-    OUT PWCHAR pNodeBuffer OPTIONAL,
-    IN DWORD NodeBufferSize,
-    OUT PWCHAR pServiceBuffer OPTIONAL,
-    DWORD ServiceBufferSize,
-    IN INT Flags
-    );
-
-#ifdef UNICODE
-#define GetNameInfo     GetNameInfoW
-#else
-#define GetNameInfo     getnameinfo
-#endif
-#endif
-
-#else
-typedef char TCHAR;
-typedef struct addrinfo ADDRINFOT;
-#define _T(str)		str
-#define GetAddrInfo	getaddrinfo
-#define FreeAddrInfo	freeaddrinfo
-#define GetNameInfo	getnameinfo
-#define _ftprintf	fprintf
-#define _fgetts		fgets
-#define _tcslen		strlen
+#define closesocket close
+#define INVALID_SOCKET (-1)
+#define __cdecl
+typedef int SOCKET;
 #endif
 
 void
 usage(
-    TCHAR *argv0)
+    char *argv0)
 {
-	_ftprintf(stderr, _T("Usage: %s serv\n"), argv0);
+	fprintf(stderr, "Usage: %s serv\n", argv0);
 	exit(1);
 }
 
 int
-#if defined(__Windows__)
 __cdecl
-_tmain(
-#else
 main(
-#endif
     int argc,
     TCHAR *argv[])
 {
 	int error = 0;
 	struct servent *servent;
-	ADDRINFOT hints, *res, *res0;
+	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
-	TCHAR hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 	struct sctp_event_subscribe events;
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
-	char buf[1024];
+	char buf[BUFSIZE];
 	int n, len, i;
 #if defined(__Windows__)
 	DWORD bytes;
@@ -219,12 +165,15 @@ main(
 	int ret = 0;
 	ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (ret != 0) {
-		err(1, _T("WSAStartup"));
+		err(1, "WSAStartup");
 		/*NOTREACHED*/
 	}
 #endif
 
 	if (argc < 2) {
+#if defined(__Windows__)
+		WSACleanup();
+#endif
 		usage(argv[0]);
 		/*NOTREACHED*/
 	}
@@ -234,103 +183,90 @@ main(
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	error = GetAddrInfo(NULL,
+	error = getaddrinfo(NULL,
 	    argv[1],
 	    &hints, &res0);
 
 	if (error) {
-#if defined(__Windows__)
-		err(1, _T("GetAddrInfo"));
-#else
-		errx(1, _T("%s"), gai_strerror(error));
-#endif
+		errx(1, "%s", gai_strerror(error));
 		/*NOTREACHED*/
 	}
 
 	for (res = res0; res; res = res->ai_next) {
 		res->ai_socktype = SOCK_SEQPACKET;
 		res->ai_protocol = IPPROTO_SCTP;
+
 		sfd = socket(res->ai_family,
 		    res->ai_socktype,
 		    res->ai_protocol);
+
 		if (sfd == INVALID_SOCKET) {
-			warn(_T("socket(domain=%d,type=%d,protocol=%d)"),
+			warn("socket(domain=%d,type=%d,protocol=%d)",
 			    res->ai_family,
 			    res->ai_socktype,
 			    res->ai_protocol);
 			continue;
 		}
 
-		error = GetNameInfo(res->ai_addr, res->ai_addrlen,
+		error = getnameinfo(res->ai_addr, res->ai_addrlen,
 		    hbuf, NI_MAXHOST,
 		    sbuf, NI_MAXSERV,
 		    NI_NUMERICHOST | NI_NUMERICSERV);
+
 		if (error) {
-#if defined(__Windows__)
-			err(1, _T("GetNameInfo"));
-#else
-			errx(1, _T("%s"), gai_strerror(error));
-#endif
+			errx(1, "%s", gai_strerror(error));
 			/*NOTREACHED*/
 		}
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSARecvMsg_GUID, sizeof(WSARecvMsg_GUID),
 			&WSARecvMsg, sizeof(WSARecvMsg),
-			&bytes, NULL, NULL) != 0
-		    ) {
-			err(1, _T("WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSARecvMsg)"));
+			&bytes, NULL, NULL) != 0) {
+			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSARecvMsg)");
 			/*NOTREACHED*/
 		}
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSASendMsg_GUID, sizeof(WSASendMsg_GUID),
 			&WSASendMsg, sizeof(WSASendMsg),
-			&bytes, NULL, NULL) != 0
-		    ) {
-			err(1, _T("WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSASendMsg)"));
+			&bytes, NULL, NULL) != 0) {
+			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSASendMsg)");
 			/*NOTREACHED*/
 		}
 
 		memset(&events, 0, sizeof(events));
 		events.sctp_data_io_event = 1;
 		if (setsockopt(sfd, IPPROTO_SCTP, SCTP_EVENTS,
-			(char *)&events, sizeof(events)) < 0
-		    ) {
-			err(1, _T("setsockopt(IPPROTO_SCTP, SCTP_EVENTS)"));
+			(char *)&events, sizeof(events)) < 0) {
+			err(1, "setsockopt(IPPROTO_SCTP, SCTP_EVENTS)");
 			/*NOTREACHED*/
 		}
-		_ftprintf(stderr, _T("Binding to [%s]:%s ...\n"), hbuf, sbuf);
+		fprintf(stderr, "Binding to [%s]:%s ...\n", hbuf, sbuf);
 
-		if (bind(sfd,
-			res->ai_addr,
-			res->ai_addrlen)
-		    < 0) {
-			warn(_T("Bind to [%s]:%s"), hbuf, sbuf);
-#if defined(__Windows__)
+		if (bind(sfd, res->ai_addr, res->ai_addrlen) < 0) {
+			warn("Bind to [%s]:%s", hbuf, sbuf);
 			closesocket(sfd);
-#else
-			close(sfd);
-#endif
-			sfd = -1;
+			sfd = INVALID_SOCKET;
 			continue;
 		}
 
 		if (listen(sfd, 5) < 0) {
-			warn(_T("Listen to [%s]:%s"), hbuf, sbuf);
-#if defined(__Windows__)
+			warn("Listen to [%s]:%s", hbuf, sbuf);
 			closesocket(sfd);
-#else
-			close(sfd);
-#endif
 			sfd = INVALID_SOCKET;
 			continue;
 		}
 					
-		_ftprintf(stderr, _T("Listening Completed.\n"));
+		fprintf(stderr, "Listening Completed.\n");
 		break;
 	}
+
+	freeaddrinfo(res0);
+
 	if (sfd == INVALID_SOCKET) {
+#if defined(__Windows)
+		WSACleanup();
+#endif
 		return 1;
 	}
 
@@ -356,9 +292,8 @@ main(
 
 	for (;;) {
 		if (WSARecvMsg(sfd, &msg, &len,
-			NULL, NULL) < 0
-		    ) {
-			warn(_T("WSARecvMsg"));
+			NULL, NULL) < 0) {
+			warn("WSARecvMsg");
 			continue;
 		}
 		error = GetNameInfo(msg.name, msg.namelen,
@@ -366,16 +301,12 @@ main(
 		    sbuf, NI_MAXSERV,
 		    NI_NUMERICHOST | NI_NUMERICSERV);
 		if (error) {
-#if defined(__Windows__)
-			err(1, _T("GetNameInfo"));
-#else
-			errx(1, _T("%s"), gai_strerror(error));
-#endif
+			errx(1, "%s", gai_strerror(error));
 			/*NOTREACHED*/
 		}
 		assoc_id = srcv->sinfo_assoc_id;
 
-		_ftprintf(stderr, _T("WSARecvMsg from [%s]:%s,sinfo_assoc_id=%x\n"),
+		fprintf(stderr, "WSARecvMsg from [%s]:%s,sinfo_assoc_id=%x\n",
 		    hbuf, sbuf,
 		    assoc_id);
 
@@ -384,22 +315,20 @@ main(
 
 #if 0
 		if (WSASendMsg(sfd, &msg, 0, &len,
-			NULL, NULL) < 0
-		    ) {
+			NULL, NULL) < 0) {
 #else
 		if (sctp_send(sfd, buf, sizeof(buf), srcv, 0) < 0) {
 #endif
-			warn(_T("WSASendMsg"));
+			warn("WSASendMsg");
 			continue;
 		}
 	}
 
-#if defined(__Windows__)
 	closesocket(sfd);
-#else
-	close(sfd);
+
+#if defined(__Windows__)
+	WSACleanup();
 #endif
-	FreeAddrInfo(res0);
 
 	return 0;
 }

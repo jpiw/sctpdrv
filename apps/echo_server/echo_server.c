@@ -41,26 +41,32 @@
 #include <string.h>
 
 #define MAX_CLIENTS	32
+#define BUFSIZE 1024
+
+void usage(char *argv0);
 
 #if defined(__Windows__)
 
-#include <tchar.h>
+void err(int eval, const char *fmt, ...);
+void errx(int eval, const char *fmt, ...);
+void warn(const char *fmt, ...);
+void warnx(const char *fmt, ...);
 
 void
 err(
     int eval,
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 	LPSTR lpMsgBuf;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	FormatMessageA(
-	    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+	    FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	    FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    WSAGetLastError(),
@@ -75,13 +81,13 @@ err(
 void
 errx(
     int eval,
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	exit(eval);
@@ -89,18 +95,18 @@ errx(
 
 void
 warn(
-    const TCHAR *fmt,
+    const char *fmt,
     ...)
 {
 	va_list ap;
 	LPSTR lpMsgBuf;
 
 	va_start(ap, fmt);
-	_vftprintf(stderr, fmt, ap);
+	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 
 	FormatMessageA(
-	    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+	    FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	    FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    WSAGetLastError(),
@@ -111,98 +117,52 @@ warn(
 	LocalFree(lpMsgBuf);
 }
 
-#if (_WIN32_WINNT <= 0x0501)
-WINSOCK_API_LINKAGE
-INT
-WSAAPI
-GetAddrInfoW(
-    IN PCWSTR pNodeName OPTIONAL,
-    IN PCWSTR pServiceName OPTIONAL,
-    IN const ADDRINFOW *pHints OPTIONAL,
-    OUT PADDRINFOW *ppResult
-    );
-#ifdef UNICODE
-#define GetAddrInfo     GetAddrInfoW
-#else
-#define GetAddrInfo     getaddrinfo
-#endif
+void
+warnx(
+    const char *fmt,
+    ...)
+{
+	va_list ap;
 
-WINSOCK_API_LINKAGE
-VOID
-WSAAPI
-FreeAddrInfoW(
-    IN PADDRINFOW pAddrInfo OPTIONAL
-    );
-
-#ifdef UNICODE
-#define FreeAddrInfo    FreeAddrInfoW
-#else
-#define FreeAddrInfo    freeaddrinfo
-#endif
-
-WINSOCK_API_LINKAGE
-INT
-WSAAPI
-GetNameInfoW(
-    IN const SOCKADDR *pSockaddr,
-    IN socklen_t SockaddrLength,
-    OUT PWCHAR pNodeBuffer OPTIONAL,
-    IN DWORD NodeBufferSize,
-    OUT PWCHAR pServiceBuffer OPTIONAL,
-    DWORD ServiceBufferSize,
-    IN INT Flags
-    );
-
-#ifdef UNICODE
-#define GetNameInfo     GetNameInfoW
-#else
-#define GetNameInfo     getnameinfo
-#endif
-#endif
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+}
 
 #else
-typedef char TCHAR;
-typedef struct addrinfo ADDRINFOT;
-#define _T(str)		str
-#define GetAddrInfo	getaddrinfo
-#define FreeAddrInfo	freeaddrinfo
-#define GetNameInfo	getnameinfo
-#define _ftprintf	fprintf
-#define _fgetts		fgets
-#define _tcslen		strlen
+#define closesocket close
+#define INVALID_SOCKET (-1)
+#define __cdecl
+typedef int SOCKET;
 #endif
 
 void
 usage(
-    TCHAR *argv0)
+    char *argv0)
 {
-	_ftprintf(stderr, _T("Usage: %s serv\n"), argv0);
+	fprintf(stderr, "Usage: %s serv\n", argv0);
 	exit(1);
 }
 
 int
-#if defined(__Windows__)
 __cdecl
-_tmain(
-#else
 main(
-#endif
     int argc,
-    TCHAR *argv[])
+    char *argv[])
 {
 	int error = 0;
 	struct servent *servent;
-	ADDRINFOT hints, *res, *res0;
+	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
 	SOCKET s = INVALID_SOCKET;
 	SOCKET sfds[MAX_CLIENTS];
 	SOCKET maxsfd = INVALID_SOCKET;
 	int num_sfds = 0;
-	TCHAR hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 	struct fd_set readfds, oreadfds;
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
-	TCHAR buf[1024];
+	char buf[BUFSIZE];
 	int n, len, i;
 	struct sctp_sndrcvinfo sinfo;
 	int msg_flags = 0;
@@ -211,91 +171,84 @@ main(
 	int ret = 0;
 	ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (ret != 0) {
-		err(1, _T("WSAStartup"));
+		err(1, "WSAStartup");
 		/*NOTREACHED*/
 	}
 #endif
 
 	if (argc < 2) {
+#if defined(__Windows)
+		WSACleanup();
+#endif
 		usage(argv[0]);
 		/*NOTREACHED*/
 	}
 
+	/* Set up the server socket, sfd */
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_SCTP;
 	hints.ai_flags = AI_PASSIVE;
 
-	error = GetAddrInfo(NULL,
-	    argv[1],
-	    &hints, &res0);
+	error = getaddrinfo(NULL,
+	    argv[1], &hints, &res0);
 
 	if (error) {
-#if defined(__Windows__)
-		err(1, _T("GetAddrInfo"));
-#else
-		errx(1, _T("%s"), gai_strerror(error));
-#endif
+		errx(1, "%s", gai_strerror(error));
 		/*NOTREACHED*/
 	}
 
 	for (res = res0; res; res = res->ai_next) {
-		res->ai_protocol = IPPROTO_SCTP;
 		sfd = socket(res->ai_family,
 		    res->ai_socktype,
 		    res->ai_protocol);
+
 		if (sfd == INVALID_SOCKET) {
-			warn(_T("socket(domain=%d,type=%d,protocol=%d)"),
+			warn("socket(domain=%d,type=%d,protocol=%d)",
 			    res->ai_family,
 			    res->ai_socktype,
 			    res->ai_protocol);
 			continue;
 		}
 
-		error = GetNameInfo(res->ai_addr, res->ai_addrlen,
+		error = getnameinfo(res->ai_addr, res->ai_addrlen,
 		    hbuf, NI_MAXHOST,
 		    sbuf, NI_MAXSERV,
 		    NI_NUMERICHOST | NI_NUMERICSERV);
+
 		if (error) {
-#if defined(__Windows__)
-			err(1, _T("GetNameInfo"));
-#else
-			errx(1, _T("%s"), gai_strerror(error));
-#endif
+			errx(1, "%s", gai_strerror(error));
 			/*NOTREACHED*/
 		}
 
-		_ftprintf(stderr, _T("Binding to [%s]:%s ...\n"), hbuf, sbuf);
+		fprintf(stderr, "Binding to [%s]:%s ...\n", hbuf, sbuf);
 
-		if (bind(sfd,
-			res->ai_addr,
-			res->ai_addrlen)
-		    < 0) {
-			warn(_T("Bind to [%s]:%s"), hbuf, sbuf);
-#if defined(__Windows__)
+		if (bind(sfd, res->ai_addr, res->ai_addrlen) < 0) {
+			warn("Bind to [%s]:%s", hbuf, sbuf);
 			closesocket(sfd);
-#else
-			close(sfd);
-#endif
 			sfd = INVALID_SOCKET;
 			continue;
 		}
 
 		if (listen(sfd, 5) < 0) {
-			warn(_T("Listen to [%s]:%s"), hbuf, sbuf);
-#if defined(__Windows__)
+			warn("Listen to [%s]:%s", hbuf, sbuf);
 			closesocket(sfd);
-#else
-			close(sfd);
-#endif
 			sfd = INVALID_SOCKET;
 			continue;
 		}
-					
-		_ftprintf(stderr, _T("Listening Completed.\n"));
+
+		fprintf(stderr, "Listening Completed.\n");
 		break;
 	}
+
+	freeaddrinfo(res0);
+
 	if (sfd == INVALID_SOCKET) {
+#if defined(__Windows__)
+		WSACleanup();
+#endif
 		return 1;
 	}
 
@@ -306,122 +259,99 @@ main(
 	num_sfds = 0;
 	for (;;) {
 		for (i = 0; i < num_sfds; i++) {
-			if (sfds[i] == -1) {
+			if (sfds[i] == INVALID_SOCKET)
 				break;
-			}
 		}
-		if (i < num_sfds && i < MAX_CLIENTS - 1) {
+		if (i < num_sfds && i < MAX_CLIENTS - 1)
 			memmove(&sfds[i], &sfds[i + 1], MAX_CLIENTS - 1 - i);
-		}
+
 		readfds = oreadfds;
 		n = select((int)maxsfd + 1, &readfds, NULL, NULL, NULL);
 		if (n < 0) {
-			err(1, _T("select"));
+			err(1, "select");
 			/*NOTREACHED*/
 		}
 
+		/* if the server fd is set, we have a new connection. */
 		if (FD_ISSET(sfd, &readfds)) {
 			memset(&addr, 0, sizeof(addr));
 			addrlen = sizeof(addr);
 			s = accept(sfd, (struct sockaddr *)&addr, &addrlen);
 			if (s == INVALID_SOCKET) {
-				warn(_T("accept"));
+				warn("accept");
 				continue;
 			}
 
-			error = GetNameInfo((struct sockaddr *)&addr, addrlen,
+			error = getnameinfo((struct sockaddr *)&addr, addrlen,
 			    hbuf, NI_MAXHOST,
 			    sbuf, NI_MAXSERV,
 			    NI_NUMERICHOST | NI_NUMERICSERV);
 			if (error) {
-#if defined(__Windows__)
-				err(1, _T("GetNameInfo"));
-#else
-				errx(1, _T("%s"), gai_strerror(error));
-#endif
+				errx(1, "%s", gai_strerror(error));
 				/*NOTREACHED*/
 			}
 
-			_ftprintf(stderr, _T("accept from [%s]:%s,s=%x\n"), hbuf, sbuf, s);
+			fprintf(stderr, "accept from [%s]:%s,s=%x\n", hbuf, sbuf, s);
 
-			if (num_sfds < 32) {
+			if (num_sfds < MAX_CLIENTS) {
 				FD_SET(s, &oreadfds);
 				sfds[num_sfds] = s;
 				num_sfds++;
-				if (maxsfd < s) {
+				if (maxsfd < s)
 					maxsfd = s;
-				}
 			} else {
-#if defined(__Windows__)
+				warnx("too many clients");
 				closesocket(s);
-#else
-				close(s);
-#endif
 			}
 		} else {
+			/* otherwise, an existing connection has data */
 			for (i = 0; i < num_sfds; i++) {
-				if (!FD_ISSET(sfds[i], &readfds)) {
+				if (!FD_ISSET(sfds[i], &readfds))
 					continue;
-				}
 
 #if 0
-				len = recv(sfds[i], (char *)buf, sizeof(TCHAR) * 1024, 0);
+				len = recv(sfds[i], (char *)buf, sizeof(char) * BUFSIZE, 0);
 #else
 				addrlen = sizeof(addr);
 				memset(&sinfo, 0, sizeof(sinfo));
-				len = sctp_recvmsg(sfds[i], buf, sizeof(TCHAR) * 1024, (struct sockaddr *)&addr, &addrlen, &sinfo, &msg_flags);
+				len = sctp_recvmsg(sfds[i], buf, sizeof(char) * BUFSIZE, (struct sockaddr *)&addr, &addrlen, &sinfo, &msg_flags);
 #endif
-				if (len < 0) {
-					warn(_T("recv"));
-					_ftprintf(stderr, _T("close,s=%x\n"), sfds[i]);
-#if defined(__Windows__)
+				if (len <= 0) {
+					if (len < 0)
+						warn("recv");
+
+					fprintf(stderr, "close,s=%x\n", sfds[i]);
 					closesocket(sfds[i]);
-#else
-					close(sfds[i]);
-#endif
 					FD_CLR(sfds[i], &oreadfds);
 					sfds[i] = INVALID_SOCKET;
-					continue;
-				} else if (
-				    len == 0) {
-					_ftprintf(stderr, _T("close,s=%x\n"), sfds[i]);
-#if defined(__Windows__)
-					closesocket(sfds[i]);
-#else
-					close(sfds[i]);
-#endif
-					FD_CLR(sfds[i], &oreadfds);
-					sfds[i] = INVALID_SOCKET;
+					num_sfds--;
 					continue;
 				}
-				_ftprintf(stderr, _T("len=%d,sinfo_stream=%d,sinfo_assoc_id=%x\n"), len, sinfo.sinfo_stream, sinfo.sinfo_assoc_id);
+
+				fprintf(stderr, "len=%d,sinfo_stream=%d,sinfo_assoc_id=%x\n", len, sinfo.sinfo_stream, sinfo.sinfo_assoc_id);
 
 #if 0
-				if (send(sfds[i], (char *)buf, sizeof(buf), 0) < 0) {
+				if (send(sfds[i], buf, len, 0) < 0) {
 #else
-				if (sctp_sendmsg(sfds[i], (char *)buf, sizeof(buf), NULL, 0, 0, 0, 1, 0, 0) < 0) {
+				if (sctp_sendmsg(sfds[i], buf, len, NULL, 0, 0, 0, 1, 0, 0) < 0) {
 #endif
-					warn(_T("send"));
-					_ftprintf(stderr, _T("close,s=%x\n"), sfds[i]);
-#if defined(__Windows__)
+					warn("send");
+					fprintf(stderr, "close,s=%x\n", sfds[i]);
 					closesocket(sfds[i]);
-#else
-					close(sfds[i]);
-#endif
 					FD_CLR(sfds[i], &oreadfds);
-					sfds[i] = -1;
+					sfds[i] = INVALID_SOCKET;
+					num_sfds--;
 					continue;
 				}
 			}
 		}
 	}
 
-#if defined(__Windows__)
 	closesocket(sfd);
-#else
-	close(sfd);
+
+#if defined(__Windows__)
+	WSACleanup();
 #endif
-	FreeAddrInfo(res0);
 
 	return 0;
 }

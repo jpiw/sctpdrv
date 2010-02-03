@@ -4,5 +4,4 @@ DIRS = \
 	echo_server2 \
 	file_sender \
 	file_receiver \
-	iperf \
 	apitester
