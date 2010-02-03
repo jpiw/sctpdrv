@@ -38,7 +38,6 @@ binplace:
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_client\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_client.exe
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server.exe
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server2\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server2.exe
-	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\iperf\src\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\iperf.exe
 
 symstore:
 	-symstore add /o /l /r /f $(SYMBOL)\*.pdb /s $(SYMSTORE) /compress /t "SctpDrv for $(DDK_TARGET_OS) $(_BUILDARCH)" /z pri
@@ -59,7 +58,7 @@ clean:
 SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH) sctpDrv.wixobj$(MSIARCH) \
 		module-common.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) \
 		$(TREE)\sctpsp.dll ..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.lib $(TREE)\sctpmon.dll $(TREE)\sctp.sys \
-		$(TREE)\spinstall.exe $(TREE)\echo_client.exe $(TREE)\echo_server.exe $(TREE)\iperf.exe
+		$(TREE)\spinstall.exe $(TREE)\echo_client.exe $(TREE)\echo_server.exe
 	$(LIGHT) -ext WixUIExtension -cultures:$(MSICULTURE) -dPlatform=$(MSIARCH) sctpDrv.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-common.wixobj$(MSIARCH) \
 		module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) -ext WixDifxAppExtension "$(WIX)bin\difxapp_$(MSIARCH).wixlib" \
 		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi

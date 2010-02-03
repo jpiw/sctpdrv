@@ -51,10 +51,6 @@
 			<File Id="sctpsp64.dll" Name="sctpsp.dll" KeyPath="yes" Checksum="yes"
 				Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
 		</Component>
-		<Component Id="iperf.exe" Win64="$(var.Win64)" Guid="9978642d-1669-49a6-a4e8-d266a69d3325">
-			<File Id="iperf.exe" Name="iperf.exe" KeyPath="yes" Checksum="yes"
-				Source="bin\$(env.BUILD_ALT_DIR)\iperf.exe" />
-		</Component>
 	</DirectoryRef>
 	
 	<DirectoryRef Id="lib">

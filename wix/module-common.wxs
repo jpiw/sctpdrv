@@ -44,9 +44,6 @@
 			<ComponentRef Id='spinstall.exe'/>
 			<ComponentRef Id='echo_client.exe'/>
 			<ComponentRef Id='echo_server.exe'/>
-			<?if not $(env.DDK_TARGET_OS)=WinXP ?>
-			<ComponentRef Id='iperf.exe'/>
-			<?endif ?>
 			<ComponentRef Id='sctpsp32.dll'/>
 			<?if $(var.Platform)=x64 ?>
 			<ComponentRef Id='sctpsp64.dll'/>
