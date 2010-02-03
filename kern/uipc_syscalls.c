@@ -114,6 +114,7 @@ LockWsabuf(
 					MmProbeAndLockPages(mdls[i], KernelMode, operation);
 				} __except (EXCEPTION_EXECUTE_HANDLER) {
 					IoFreeMdl(mdls[i]);
+					mdls[i] = NULL;
 					status = GetExceptionCode();
 					DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#2\n");
 					goto error;
@@ -654,6 +655,7 @@ SCTPDispatchSendRequest(
 	int error = 0;
 	PSOCKET_SEND_REQUEST sendReq = NULL;
 	PSOCKET_SEND_REQUEST localReq = NULL;
+	PSOCKET_WSABUF localWsabuf = NULL;
 	PSOCKET_SEND_PARAM sendParam = NULL;
 	ULONG inBufferLen;
 	ULONG outBufferLen;
@@ -684,15 +686,22 @@ SCTPDispatchSendRequest(
 			goto done;
 		}
 
-		sendReq = localReq;
+		localWsabuf = ExAllocatePoolWithTag(NonPagedPool, sizeof(SOCKET_WSABUF), 'ptcs');
+		if (localWsabuf == NULL) {
+			status = STATUS_INSUFFICIENT_RESOURCES;
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendRequest - leave#0-1\n");
+			goto done;
+		}
+
 		sendReq32 = (PSOCKET_SEND_REQUEST32)irp->AssociatedIrp.SystemBuffer;
-		sendReq->lpBuffers		= ULongToPtr((ULONG)sendReq32->lpBuffers);
+		sendReq = localReq;
+		sendReq->lpBuffers		= localWsabuf;
 		sendReq->dwBufferCount	= sendReq32->dwBufferCount;
 		sendReq->lpTo			= ULongToPtr((ULONG)sendReq32->lpTo);
 		sendReq->iTolen			= sendReq32->iTolen;
 		sendReq->dwFlags		= sendReq32->dwFlags;
 
-		if (sendReq->lpBuffers == NULL) {
+		if (sendReq32->lpBuffers == NULL) {
 			status = STATUS_INVALID_PARAMETER;
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendRequest - leave#0\n");
 			goto done;
@@ -700,7 +709,7 @@ SCTPDispatchSendRequest(
 
 		wsabuf32 = ULongToPtr((ULONG)sendReq32->lpBuffers);
 
-		for (i = 0; i < sendReq32->dwBufferCount; i++) {
+		for (i = 0; i < sendReq->dwBufferCount; i++) {
 			sendReq->lpBuffers[i].len = wsabuf32[i].len;
 			sendReq->lpBuffers[i].buf = ULongToPtr((ULONG)wsabuf32[i].buf);
 		}
@@ -785,14 +794,14 @@ SCTPDispatchSendRequest(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_WRITE) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_snd);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (sowriteable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_WRITE;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_snd);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_snd);
 	}
 
 	if (error == 0 && outBufferLen >= sizeof(ULONG)) {
@@ -808,8 +817,12 @@ done:
 	if (sendParam != NULL)
 		free(sendParam, M_SYSCALL);
 
-	if (localReq != NULL)
+	if (localReq != NULL) {
+		if (localReq->lpBuffers != NULL)
+			ExFreePool(localReq->lpBuffers);
+
 		ExFreePool(localReq);
+	}
 
 	if (NT_SUCCESS(status) && error != 0)
 		status = (NTSTATUS)(0xE0FF0000 | error);
@@ -868,14 +881,14 @@ SCTPDispatchSendRequestDeferred(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_WRITE) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_snd);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (sowriteable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_WRITE;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_snd);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_snd);
 	}
 
 	if (error == 0 && outBufferLen >= sizeof(DWORD)) {
@@ -1094,14 +1107,14 @@ SCTPDispatchSendMsgRequest(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_WRITE) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_snd);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (sowriteable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_WRITE;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_snd);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_snd);
 	}
 
 	if (error == 0 && outBufferLen >= sizeof(ULONG)) {
@@ -1187,14 +1200,14 @@ SCTPDispatchSendMsgRequestDeferred(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_WRITE) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_snd);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (sowriteable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_WRITE;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_snd);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_snd);
 	}
 
 	if (error == 0 && outBufferLen >= sizeof(ULONG)) {
@@ -1573,14 +1586,14 @@ SCTPDispatchRecvRequest(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_READ) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_rcv);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (soreadable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_READ;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_rcv);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_rcv);
 	}
 
 	if (error == 0) {
@@ -1696,14 +1709,14 @@ SCTPDispatchRecvRequestDeferred(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_READ) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_rcv);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (soreadable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_READ;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_rcv);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_rcv);
 	}
 
 	if (error == 0) {
@@ -2009,14 +2022,14 @@ SCTPDispatchRecvMsgRequest(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_READ) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_rcv);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (soreadable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_READ;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_rcv);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_rcv);
 	}
 
 	if (error == 0) {
@@ -2162,14 +2175,14 @@ SCTPDispatchRecvMsgRequestDeferred(
 	}
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_READ) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_rcv);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (soreadable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_READ;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_rcv);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_rcv);
 	}
 
 	if (error == 0) {
@@ -2371,14 +2384,14 @@ SCTPDispatchSctpRecvRequest(
 	error = sctp_sorecvmsg(so, &uio, NULL, (struct sockaddr *)&from_ss, fromlen, &msg_flags, &sinfo, 1);
 
 	if (so->so_event.se_Event != NULL && (so->so_event.se_Events & FD_READ) != 0) {
-		SOCKEVENT_LOCK(&so->so_event);
 		SOCKBUF_LOCK(&so->so_rcv);
+		SOCKEVENT_LOCK(&so->so_event);
 		if (soreadable(so)) {
 			so->so_event.se_EventsRet.lNetworkEvents |= FD_READ;
 			KeSetEvent(so->so_event.se_Event, 0, FALSE);
 		}
-		SOCKBUF_UNLOCK(&so->so_rcv);
 		SOCKEVENT_UNLOCK(&so->so_event);
+		SOCKBUF_UNLOCK(&so->so_rcv);
 	}
 
 	UnlockBuffer(mdl);
@@ -2868,7 +2881,7 @@ SCTPDispatchEventSelectRequest(
 		goto done;
 	}
 	status = ObReferenceObjectByHandle(selEventReq->hEventObject,
-	    EVENT_ALL_ACCESS,
+	    EVENT_MODIFY_STATE,
 	    *ExEventObjectType,
 	    UserMode,
 	    &selEvent,
@@ -2983,7 +2996,7 @@ SCTPDispatchEnumNetworkEventsRequest(
 		goto done;
 	}
 	status = ObReferenceObjectByHandle(enumEventsReq->hEventObject,
-	    FILE_ALL_ACCESS,
+	    EVENT_MODIFY_STATE,
 	    *ExEventObjectType,
 	    UserMode,
 	    &selEvent,
