@@ -38,14 +38,14 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 203847 2010-02-13 21:38:15Z t
 #ifndef __sctp_header_h__
 #define __sctp_header_h__
 
+#if defined(__Windows__)
+#include <packon.h>
+#endif
 #include <sys/time.h>
 #include <netinet/sctp.h>
 #include <netinet/sctp_constants.h>
 
 #define SCTP_PACKED __attribute__((packed))
-#if defined(__Windows__)
-#pragma pack(1)
-#endif
 
 /*
  * Parameter structures
@@ -574,10 +574,6 @@ struct sctp_auth_invalid_hmac {
 	uint16_t padding;
 } SCTP_PACKED ;
 
-#if defined(__Windows__)
-#pragma pack()
-#endif
-
 /*
  * we pre-reserve enough room for a ECNE or CWR AND a SACK with no missing
  * pieces. If ENCE is missing we could have a couple of blocks. This way we
@@ -627,5 +623,8 @@ struct sctp_auth_invalid_hmac {
 #define SCTP_MIN_V4_OVERHEAD (sizeof(struct ip) + \
 			      sizeof(struct sctphdr))
 
+#if defined(__Windows__)
+#include <packoff.h>
+#endif
 #undef SCTP_PACKED
 #endif				/* !__sctp_header_h__ */
