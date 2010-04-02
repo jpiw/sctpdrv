@@ -3,7 +3,7 @@ set PROJDIR=%CD%
 set SIGNCMD=signtool sign -p "Stream Control Transmission Protocol" /f drv\sctpDrv.pfx
 if [%DEBUG%]==[1] (set BUILDTYPE=chk) else (set BUILDTYPE=fre)
 if not exist "%WINDOWSSDKDIR%\Include\msi.h" set WINDOWSSDKDIR=C:\Program Files\Microsoft SDKs\Windows\v7.0
-if not exist "%WDKPATH%\bin\setenv.bat" set WDKPATH=C:\WinDDK\7600.16385.0
+if not exist "%WDKPATH%\bin\setenv.bat" set WDKPATH=C:\WinDDK\7600.16385.1
 if not exist "%WDKPATH%\bin\setenv.bat" goto missingfiles
 if not exist "%WIX%bin\candle.exe" goto missingfiles
 if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles

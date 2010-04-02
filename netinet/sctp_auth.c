@@ -1,30 +1,30 @@
 /*-
  * Copyright (c) 2001-2008, by Cisco Systems, Inc. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * a) Redistributions of source code must retain the above copyright notice, 
+ *
+ * a) Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  *
- * b) Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in 
+ * b) Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the distribution.
  *
- * c) Neither the name of Cisco Systems, Inc. nor the names of its 
- *    contributors may be used to endorse or promote products derived 
+ * c) Neither the name of Cisco Systems, Inc. nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -584,10 +584,10 @@ void
 sctp_auth_key_acquire(struct sctp_tcb *stcb, uint16_t key_id)
 {
 	sctp_sharedkey_t *skey;
-	
+
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
- 	
+
 	/* bump the ref count */
 	if (skey) {
 		atomic_add_int(&skey->refcount, 1);
@@ -601,10 +601,10 @@ void
 sctp_auth_key_release(struct sctp_tcb *stcb, uint16_t key_id)
 {
 	sctp_sharedkey_t *skey;
-	
+
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
-	
+
 	/* decrement the ref count */
 	if (skey) {
 		sctp_free_sharedkey(skey);
@@ -772,7 +772,7 @@ sctp_negotiate_hmacid(sctp_hmaclist_t *peer, sctp_hmaclist_t *local)
 		for (j = 0; j < local->num_algo; j++) {
 			if (peer->hmac[i] == local->hmac[j]) {
 				/* found the "best" one */
-				SCTPDBG(SCTP_DEBUG_AUTH1, 
+				SCTPDBG(SCTP_DEBUG_AUTH1,
 					"SCTP: negotiated peer HMAC id %u\n",
 					peer->hmac[i]);
 				return (peer->hmac[i]);
@@ -806,7 +806,7 @@ sctp_serialize_hmaclist(sctp_hmaclist_t *list, uint8_t *ptr)
 
 int
 sctp_verify_hmac_param (struct sctp_auth_hmac_algo *hmacs, uint32_t num_hmacs)
-{ 
+{
 	uint32_t i;
 	uint16_t hmac_id;
 	uint32_t sha1_supported = 0;
@@ -1543,7 +1543,7 @@ sctp_auth_get_cookie_params(struct sctp_tcb *stcb, struct mbuf *m,
 		} else if (ptype == SCTP_HMAC_LIST) {
 			int num_hmacs;
 			int i;
-    
+
 			if (plen > sizeof(hmacs_store))
 				break;
 			phdr = sctp_get_next_param(m, offset,
@@ -1872,7 +1872,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 		/* event not enabled */
 		return;
 
-	m_notify = sctp_get_mbuf_for_msg(sizeof(struct sctp_authkey_event), 
+	m_notify = sctp_get_mbuf_for_msg(sizeof(struct sctp_authkey_event),
 					  0, M_DONTWAIT, 1, MT_HEADER);
 	if (m_notify == NULL)
 		/* no space left */
@@ -1968,7 +1968,7 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 			/* enforce the random length */
 			if (plen != (sizeof(struct sctp_auth_random) +
 				     SCTP_AUTH_RANDOM_SIZE_REQUIRED)) {
-				SCTPDBG(SCTP_DEBUG_AUTH1, 
+				SCTPDBG(SCTP_DEBUG_AUTH1,
 					"SCTP: invalid RANDOM len\n");
 				return (-1);
 			}
@@ -2005,7 +2005,7 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 				return (-1);
 
 			/*-
-			 * Flip through the list and mark that the  
+			 * Flip through the list and mark that the
 			 * peer supports asconf/asconf_ack.
 			 */
 			chunks = (struct sctp_auth_chunk_list *)phdr;

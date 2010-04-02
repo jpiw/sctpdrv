@@ -1,30 +1,30 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * a) Redistributions of source code must retain the above copyright notice, 
+ *
+ * a) Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  *
- * b) Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in 
+ * b) Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the distribution.
  *
- * c) Neither the name of Cisco Systems, Inc. nor the names of its 
- *    contributors may be used to endorse or promote products derived 
+ * c) Neither the name of Cisco Systems, Inc. nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 202782 2010-01-22 07:53:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 203847 2010-02-13 21:38:15Z tuexen $");
 #endif
 
 #ifndef __sctp_header_h__
@@ -67,7 +67,8 @@ struct sctp_ipv6addr_param {
 struct sctp_cookie_perserve_param {
 	struct sctp_paramhdr ph;/* type=SCTP_COOKIE_PRESERVE, len=8 */
 	uint32_t time;		/* time in ms to extend cookie */
-};
+} SCTP_PACKED;
+
 #define SCTP_ARRAY_MIN_LEN 1
 /* Host Name Address */
 struct sctp_host_name_param {
@@ -75,8 +76,8 @@ struct sctp_host_name_param {
 	char name[SCTP_ARRAY_MIN_LEN];		/* host name */
 } SCTP_PACKED ;
 
-/* 
- * This is the maximum padded size of a s-a-p 
+/*
+ * This is the maximum padded size of a s-a-p
  * so paramheadr + 3 address types (6 bytes) + 2 byte pad = 12
  */
 #define SCTP_MAX_ADDR_PARAMS_SIZE 12
@@ -295,12 +296,12 @@ struct sctp_nr_sack {
 	uint16_t reserved;	/* not currently used*/
 	/* struct sctp_gap_ack_block's follow */
 	/* uint32_t duplicate_tsn's follow */
-}         SCTP_PACKED;
+} SCTP_PACKED;
 
 struct sctp_nr_sack_chunk {
 	struct sctp_chunkhdr ch;
 	struct sctp_nr_sack nr_sack;
-}               SCTP_PACKED;
+} SCTP_PACKED;
 
 
 /* Heartbeat Request (HEARTBEAT) */
@@ -497,7 +498,7 @@ struct sctp_stream_reset_add_strm {
   uint32_t request_seq;
   uint16_t number_of_streams;
   uint16_t reserved;
-};
+} SCTP_PACKED;
 
 #define SCTP_STREAM_RESET_NOTHING   0x00000000	/* Nothing for me to do */
 #define SCTP_STREAM_RESET_PERFORMED 0x00000001	/* Did it */

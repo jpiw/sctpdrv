@@ -1,30 +1,30 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * a) Redistributions of source code must retain the above copyright notice, 
+ *
+ * a) Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  *
- * b) Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in 
+ * b) Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the distribution.
  *
- * c) Neither the name of Cisco Systems, Inc. nor the names of its 
- *    contributors may be used to endorse or promote products derived 
+ * c) Neither the name of Cisco Systems, Inc. nor the names of its
+ *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -566,7 +566,7 @@ sctp_recover_sent_list(struct sctp_tcb *stcb)
 		  chk, chk->rec.data.TSN_seq, stcb->asoc.last_acked_seq);
       TAILQ_REMOVE(&asoc->sent_queue, chk, sctp_next);
       if (chk->pr_sctp_on) {
-	if(asoc->pr_sctp_cnt != 0) 
+	if(asoc->pr_sctp_cnt != 0)
 	  asoc->pr_sctp_cnt--;
       }
       if (chk->data) {
@@ -793,10 +793,10 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 				net->marked_retrans++;
 				stcb->asoc.marked_retrans++;
 				if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_FLIGHT_LOGGING_ENABLE) {
-					sctp_misc_ints(SCTP_FLIGHT_LOG_DOWN_RSND_TO, 
+					sctp_misc_ints(SCTP_FLIGHT_LOG_DOWN_RSND_TO,
 						       chk->whoTo->flight_size,
-						       chk->book_size, 
-						       (uintptr_t)chk->whoTo, 
+						       chk->book_size,
+						       (uintptr_t)chk->whoTo,
 						       chk->rec.data.TSN_seq);
 				}
 				sctp_flight_size_decrease(chk);
@@ -903,10 +903,10 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 		TAILQ_FOREACH(chk, &stcb->asoc.sent_queue, sctp_next) {
 			if (chk->sent < SCTP_DATAGRAM_RESEND) {
 				if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_FLIGHT_LOGGING_ENABLE) {
-					sctp_misc_ints(SCTP_FLIGHT_LOG_UP, 
+					sctp_misc_ints(SCTP_FLIGHT_LOG_UP,
 						       chk->whoTo->flight_size,
-						       chk->book_size, 
-						       (uintptr_t)chk->whoTo, 
+						       chk->book_size,
+						       (uintptr_t)chk->whoTo,
 						       chk->rec.data.TSN_seq);
 				}
 
@@ -1078,8 +1078,8 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
 					 * no recent feed back in an RTO or
 					 * more, request a RTT update
 					 */
-					if(sctp_send_hb(stcb, 1, net) < 0) 
-					    /* Less than 0 means we lost the assoc */					    
+					if(sctp_send_hb(stcb, 1, net) < 0)
+					    /* Less than 0 means we lost the assoc */
 						return (1);
 				}
 			}
@@ -1112,7 +1112,7 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
  		net->src_addr_selected = 0;
 
 		/* Force a route allocation too */
-		if (net->ro.ro_rt) { 
+		if (net->ro.ro_rt) {
 			RTFREE(net->ro.ro_rt);
 			net->ro.ro_rt = NULL;
 		}
@@ -1595,7 +1595,7 @@ sctp_audit_stream_queues_for_size(struct sctp_inpcb *inp,
 			 * and add fragments allowed
 			 */
 			if (being_filled == 0) {
-				SCTP_PRINTF("Still nothing moved %d chunks are stuck\n", 
+				SCTP_PRINTF("Still nothing moved %d chunks are stuck\n",
 					    chks_in_queue);
 			}
 		}
@@ -1767,9 +1767,9 @@ sctp_pathmtu_timer(struct sctp_inpcb *inp,
 				}
 #endif
 
-				net->ro._s_addr = sctp_source_address_selection(inp, 
+				net->ro._s_addr = sctp_source_address_selection(inp,
 										stcb,
-										(sctp_route_t *)&net->ro, 
+										(sctp_route_t *)&net->ro,
 										net, 0, stcb->asoc.vrf_id);
 #if defined(INET6) && defined(SCTP_EMBEDDED_V6_SCOPE)
 				if (net->ro._l_addr.sa.sa_family == AF_INET6) {
@@ -1943,8 +1943,8 @@ select_a_new_ep:
 	SCTP_INP_RUNLOCK(it->inp);
 	if((inp_skip) || it->stcb == NULL) {
 		if(it->function_inp_end != NULL) {
-			inp_skip = (*it->function_inp_end)(it->inp, 
-							   it->pointer, 
+			inp_skip = (*it->function_inp_end)(it->inp,
+							   it->pointer,
 							   it->val);
 		}
 		goto no_stcb;
@@ -1967,7 +1967,7 @@ select_a_new_ep:
 		if (iteration_count > SCTP_ITERATOR_MAX_AT_ONCE) {
 	start_timer_return:
 			/* set a timer to continue this later */
-			if(it->stcb) 
+			if(it->stcb)
 				SCTP_TCB_UNLOCK(it->stcb);
 			sctp_timer_start(SCTP_TIMER_TYPE_ITERATOR,
 			    (struct sctp_inpcb *)it, NULL, NULL);
@@ -1989,8 +1989,8 @@ select_a_new_ep:
 		it->stcb = LIST_NEXT(it->stcb, sctp_tcblist);
 		if(it->stcb == NULL) {
 			if(it->function_inp_end != NULL) {
-				inp_skip = (*it->function_inp_end)(it->inp, 
-								   it->pointer, 
+				inp_skip = (*it->function_inp_end)(it->inp,
+								   it->pointer,
 								   it->val);
 			}
 		}

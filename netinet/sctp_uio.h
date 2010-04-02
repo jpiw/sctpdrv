@@ -31,7 +31,7 @@
 /* $KAME: sctp_uio.h,v 1.11 2005/03/06 16:04:18 itojun Exp $	 */
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 202782 2010-01-22 07:53:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 205629 2010-03-24 20:02:40Z rrs $");
 #endif
 
 #ifndef __sctp_uio_h__
@@ -432,18 +432,18 @@ union sctp_notification {
 };
 
 /* notification types */
-#define SCTP_ASSOC_CHANGE		0x0001
-#define SCTP_PEER_ADDR_CHANGE		0x0002
-#define SCTP_REMOTE_ERROR		0x0003
-#define SCTP_SEND_FAILED		0x0004
-#define SCTP_SHUTDOWN_EVENT		0x0005
-#define SCTP_ADAPTATION_INDICATION	0x0006
+#define SCTP_ASSOC_CHANGE			0x0001
+#define SCTP_PEER_ADDR_CHANGE			0x0002
+#define SCTP_REMOTE_ERROR			0x0003
+#define SCTP_SEND_FAILED			0x0004
+#define SCTP_SHUTDOWN_EVENT			0x0005
+#define SCTP_ADAPTATION_INDICATION		0x0006
 /* same as above */
-#define SCTP_ADAPTION_INDICATION	0x0006
-#define SCTP_PARTIAL_DELIVERY_EVENT	0x0007
-#define SCTP_AUTHENTICATION_EVENT	0x0008
-#define SCTP_STREAM_RESET_EVENT		0x0009
-#define SCTP_SENDER_DRY_EVENT           0x000a
+#define SCTP_ADAPTION_INDICATION		0x0006
+#define SCTP_PARTIAL_DELIVERY_EVENT		0x0007
+#define SCTP_AUTHENTICATION_EVENT		0x0008
+#define SCTP_STREAM_RESET_EVENT			0x0009
+#define SCTP_SENDER_DRY_EVENT			0x000a
 #define SCTP__NOTIFICATIONS_STOPPED_EVENT	0x000b /* we dont send this*/
 /*
  * socket option structs
@@ -950,9 +950,13 @@ struct sctpstat {
 
 #define SCTP_STAT_INCR(_x) SCTP_STAT_INCR_BY(_x,1)
 #define SCTP_STAT_DECR(_x) SCTP_STAT_DECR_BY(_x,1)
+#if defined(__FreeBSD__) && defined(SMP) && defined(SCTP_USE_PERCPU_STAT)
+#define SCTP_STAT_INCR_BY(_x,_d) (SCTP_BASE_STATS[PCPU_GET(cpuid)]._x += _d)
+#define SCTP_STAT_DECR_BY(_x,_d) (SCTP_BASE_STATS[PCPU_GET(cpuid)]._x -= _d)
+#else
 #define SCTP_STAT_INCR_BY(_x,_d) atomic_add_int(&SCTP_BASE_STAT(_x), _d)
 #define SCTP_STAT_DECR_BY(_x,_d) atomic_subtract_int(&SCTP_BASE_STAT(_x), _d)
-
+#endif
 /* The following macros are for handling MIB values, */
 #define SCTP_STAT_INCR_COUNTER32(_x) SCTP_STAT_INCR(_x)
 #define SCTP_STAT_INCR_COUNTER64(_x) SCTP_STAT_INCR(_x)

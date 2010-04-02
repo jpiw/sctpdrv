@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 202449 2010-01-16 20:04:17Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 205629 2010-03-24 20:02:40Z rrs $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -3027,9 +3027,9 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 					/* unlock info */
 					if ((sctp_is_feature_on(inp, SCTP_PCB_FLAGS_PORTREUSE)) &&
 					    (sctp_is_feature_on(inp_tmp, SCTP_PCB_FLAGS_PORTREUSE))) {
-					  /* Ok, must be one-2-one and allowing port re-use */
-					  port_reuse_active = 1;
-					  goto continue_anyway;
+						/* Ok, must be one-2-one and allowing port re-use */
+						port_reuse_active = 1;
+						goto continue_anyway;
 					}
 					SCTP_INP_DECR_REF(inp);
 					SCTP_INP_INFO_WUNLOCK();
@@ -3053,9 +3053,9 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 				/* unlock info */
 				if ((sctp_is_feature_on(inp, SCTP_PCB_FLAGS_PORTREUSE)) &&
 				    (sctp_is_feature_on(inp_tmp, SCTP_PCB_FLAGS_PORTREUSE))) {
-				  /* Ok, must be one-2-one and allowing port re-use */
-				  port_reuse_active = 1;
-				  goto continue_anyway;
+					/* Ok, must be one-2-one and allowing port re-use */
+					port_reuse_active = 1;
+					goto continue_anyway;
 				}
 				SCTP_INP_DECR_REF(inp);
 				SCTP_INP_INFO_WUNLOCK();
@@ -3073,13 +3073,13 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 				/* Sorry someone already has this one bound */
 				if ((sctp_is_feature_on(inp, SCTP_PCB_FLAGS_PORTREUSE)) &&
 				    (sctp_is_feature_on(inp_tmp, SCTP_PCB_FLAGS_PORTREUSE))) {
-				  port_reuse_active = 1;
+					port_reuse_active = 1;
 				} else {
-				  SCTP_INP_DECR_REF(inp);
-				  SCTP_INP_WUNLOCK(inp);
-				  SCTP_INP_INFO_WUNLOCK();
-				  SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EADDRINUSE);
-				  return (EADDRINUSE);
+					SCTP_INP_DECR_REF(inp);
+					SCTP_INP_WUNLOCK(inp);
+					SCTP_INP_INFO_WUNLOCK();
+					SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EADDRINUSE);
+					return (EADDRINUSE);
 				}
 			}
 		}
@@ -5895,8 +5895,13 @@ sctp_pcb_init()
 #endif
 #endif
 	(void)SCTP_GETTIME_TIMEVAL(&tv);
+#if defined(__FreeBSD__) && defined(SMP) && defined(SCTP_USE_PERCPU_STAT)
+	SCTP_BASE_STATS[PCPU_GET(cpuid)].sctps_discontinuitytime.tv_sec = (uint32_t)tv.tv_sec;
+	SCTP_BASE_STATS[PCPU_GET(cpuid)].sctps_discontinuitytime.tv_usec = (uint32_t)tv.tv_usec;
+#else
 	SCTP_BASE_STAT(sctps_discontinuitytime).tv_sec = (uint32_t)tv.tv_sec;
 	SCTP_BASE_STAT(sctps_discontinuitytime).tv_usec = (uint32_t)tv.tv_usec;
+#endif
 	/* init the empty list of (All) Endpoints */
 	LIST_INIT(&SCTP_BASE_INFO(listhead));
 #if defined(__APPLE__)
@@ -6059,7 +6064,6 @@ sctp_pcb_init()
 /*
  * Assumes that the SCTP_BASE_INFO() lock is NOT held.
  */
-__drv_maxIRQL(APC_LEVEL)
 void
 sctp_pcb_finish(void)
 {
@@ -6899,30 +6903,30 @@ sctp_is_vtag_good(struct sctp_inpcb *inp, uint32_t tag, uint16_t lport, uint16_t
 	    SCTP_BASE_INFO(hashasocmark))];
 	if (head == NULL) {
 		/* invalid vtag */
-	  goto skip_vtag_check;
+		goto skip_vtag_check;
 	}
 	LIST_FOREACH(stcb, head, sctp_asocs) {
-	  /* We choose not to lock anything here. TCB's can't be
-	   * removed since we have the read lock, so they can't
-	   * be freed on us, same thing for the INP. I may
-	   * be wrong with this assumption, but we will go
-	   * with it for now :-)
-	   */
-	  if (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_ALLGONE) {
-	    continue;
-	  }
-	  if (stcb->asoc.my_vtag == tag) {
-	    /* candidate */
-	    if (stcb->rport != rport) {
-	      continue;
-	    }
-	    if (stcb->sctp_ep->sctp_lport != lport) {
-	      continue;
-	    }
-	    /* Its a used tag set */
-	    SCTP_INP_INFO_WUNLOCK();
-	    return (0);
-	  }
+		/* We choose not to lock anything here. TCB's can't be
+		 * removed since we have the read lock, so they can't
+		 * be freed on us, same thing for the INP. I may
+		 * be wrong with this assumption, but we will go
+		 * with it for now :-)
+		 */
+		if (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_ALLGONE) {
+			continue;
+		}
+		if (stcb->asoc.my_vtag == tag) {
+			/* candidate */
+			if (stcb->rport != rport) {
+				continue;
+			}
+			if (stcb->sctp_ep->sctp_lport != lport) {
+				continue;
+			}
+			/* Its a used tag set */
+			SCTP_INP_INFO_WUNLOCK();
+			return (0);
+		}
 	}
  skip_vtag_check:
 
