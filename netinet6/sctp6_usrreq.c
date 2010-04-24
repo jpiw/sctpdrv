@@ -31,7 +31,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 197288 2009-09-17 15:11:12Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -326,7 +326,7 @@ sctp6_input(struct mbuf **i_pak, int *offp, int proto)
 			init_chk = (struct sctp_init_chunk *)sctp_m_getptr(m,
 									   iphlen + sizeof(*sh), sizeof(*init_chk),
 									   (uint8_t *) & chunk_buf);
-			if(init_chk)
+			if (init_chk)
 				sh->v_tag = init_chk->init.initiate_tag;
 			else
 				sh->v_tag = 0;
@@ -509,7 +509,7 @@ sctp6_notify(struct sctp_inpcb *inp,
 
 	if ((inp == NULL) || (stcb == NULL) || (net == NULL) ||
 	    (sh == NULL) || (to == NULL)) {
-		if(stcb)
+		if (stcb)
 			SCTP_TCB_UNLOCK(stcb);
 		return;
 	}
@@ -548,7 +548,7 @@ sctp6_notify(struct sctp_inpcb *inp,
 				    net->error_count,
 				    net->failure_threshold,
 				    net);
-
+			
 			net->dest_state &= ~SCTP_ADDR_REACHABLE;
 			net->dest_state |= SCTP_ADDR_NOT_REACHABLE;
 			/*
@@ -955,14 +955,14 @@ sctp6_bind(struct socket *so, struct mbuf *nam, struct proc *p)
 		return EINVAL;
 	}
 
-	if(addr) {
+	if (addr) {
 #if !defined(__Windows__)
-		if((addr->sa_family == AF_INET6) &&
+		if ((addr->sa_family == AF_INET6) &&
 		   (addr->sa_len != sizeof(struct sockaddr_in6))) {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 			return EINVAL;
 		}
-		if((addr->sa_family == AF_INET) &&
+		if ((addr->sa_family == AF_INET) &&
 		   (addr->sa_len != sizeof(struct sockaddr_in))) {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 			return EINVAL;
@@ -1252,7 +1252,7 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 		return (ECONNRESET);	/* I made the same as TCP since we are
 					 * not setup? */
 	}
-	if(addr == NULL) {
+	if (addr == NULL) {
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP6_USRREQ, EINVAL);
 		return (EINVAL);
 	}
@@ -1354,7 +1354,7 @@ sctp6_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 		return (EALREADY);
 	}
 	/* We are GOOD to go */
-	stcb = sctp_aloc_assoc(inp, addr, 1, &error, 0, vrf_id, p);
+	stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id, p);
 	SCTP_ASOC_CREATE_UNLOCK(inp);
 	if (stcb == NULL) {
 		/* Gak! no memory */
@@ -1738,7 +1738,7 @@ struct pr_usrreqs sctp6_usrreqs = {
 	.pru_close = sctp6_close,
 	.pru_detach = sctp6_close,
 	.pru_sopoll = sopoll_generic,
-	.pru_flush = sctp_flush,
+	.pru_flush = sctp_flush,	
 #else
 	.pru_detach = sctp6_detach,
 	.pru_sopoll = sopoll,

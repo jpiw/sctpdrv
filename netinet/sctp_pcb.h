@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 205629 2010-03-24 20:02:40Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #ifndef __sctp_pcb_h__
@@ -755,16 +755,16 @@ void sctp_inpcb_free(struct sctp_inpcb *, int, int);
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-    int, int *, uint32_t, uint32_t, struct thread *);
+                int *, uint32_t, uint32_t, struct thread *);
 #elif defined(__Windows__)
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-    int, int *, uint32_t, uint32_t, PKTHREAD);
+                int *, uint32_t, uint32_t, PKTHREAD);
 #else
 /* proc will be NULL for __Userspace__ */
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
-    int, int *, uint32_t, uint32_t, struct proc *);
+                int *, uint32_t, uint32_t, struct proc *);
 #endif
 
 int sctp_free_assoc(struct sctp_inpcb *, struct sctp_tcb *, int, int);

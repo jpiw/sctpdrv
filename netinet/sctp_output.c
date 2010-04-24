@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 205627 2010-03-24 19:45:36Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 206151 2010-04-03 23:51:41Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -3527,7 +3527,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 		sctp_route_t iproute;
 		uint8_t tos_value;
 		int len;
-
+		
 		len = sizeof(struct ip) + sizeof(struct sctphdr);
 		if (port) {
 			len += sizeof(struct udphdr);
@@ -3660,7 +3660,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			udp = (struct udphdr *)((caddr_t)ip + sizeof(struct ip));
 			udp->uh_sport = htons(SCTP_BASE_SYSCTL(sctp_udp_tunneling_port));
 			udp->uh_dport = port;
-			udp->uh_ulen = htons(packet_length - sizeof(struct ip));
+			udp->uh_ulen = htons(packet_length - sizeof(struct ip));	
 #if !defined(__Windows__) && !defined(__Userspace__)
 			udp->uh_sum = in_pseudo(ip->ip_src.s_addr, ip->ip_dst.s_addr, udp->uh_ulen + htons(IPPROTO_UDP));
 #else
@@ -3786,7 +3786,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			     (stcb->asoc.loopback_scope))) {
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 				m->m_pkthdr.csum_flags = CSUM_SCTP;
-				m->m_pkthdr.csum_data = 0; /* FIXME MT */
+				m->m_pkthdr.csum_data = 0;
 				SCTP_STAT_INCR(sctps_sendhwcrc);
 #else
 				sctphdr->checksum = sctp_calculate_cksum(m, sizeof(struct ip));
@@ -3802,7 +3802,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			so = SCTP_INP_SO(inp);
 			SCTP_SOCKET_UNLOCK(so, 0);
 		}
-#endif
+#endif		
 		SCTP_IP_OUTPUT(ret, o_pak, ro, stcb, vrf_id);
 #if defined (__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
 		if ((SCTP_BASE_SYSCTL(sctp_output_unlocked)) && (so_locked)) {
@@ -3812,7 +3812,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			SCTP_TCB_LOCK(stcb);
 			atomic_subtract_int(&stcb->asoc.refcnt, 1);
 		}
-#endif
+#endif		
 		SCTP_STAT_INCR(sctps_sendpackets);
 		SCTP_STAT_INCR_COUNTER64(sctps_outpackets);
 		if (ret)
@@ -4162,7 +4162,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			}
 #if defined(__Windows__)
 			udp->uh_sum = 0;
-#elif !defined(__Userspace__) /* UDP __Userspace__ - missing Linux fields */
+#elif !defined(__Userspace__)
 			if ((udp->uh_sum = in6_cksum(o_pak, IPPROTO_UDP, sizeof(struct ip6_hdr), packet_length - sizeof(struct ip6_hdr))) == 0) {
 				udp->uh_sum = 0xffff;
 			}
@@ -4173,7 +4173,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			     (stcb->asoc.loopback_scope))) {
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 				m->m_pkthdr.csum_flags = CSUM_SCTP;
-				m->m_pkthdr.csum_data = 0; /* FIXME MT */
+				m->m_pkthdr.csum_data = 0;
 				SCTP_STAT_INCR(sctps_sendhwcrc);
 #else
 				sctphdr->checksum = sctp_calculate_cksum(m, sizeof(struct ip6_hdr));
@@ -4189,7 +4189,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			so = SCTP_INP_SO(inp);
 			SCTP_SOCKET_UNLOCK(so, 0);
 		}
-#endif
+#endif		
 		SCTP_IP6_OUTPUT(ret, o_pak, (struct route_in6 *)ro, &ifp, stcb, vrf_id);
 #if defined (__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
 		if ((SCTP_BASE_SYSCTL(sctp_output_unlocked)) && (so_locked)) {
@@ -4199,7 +4199,7 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 			SCTP_TCB_LOCK(stcb);
 			atomic_subtract_int(&stcb->asoc.refcnt, 1);
 		}
-#endif
+#endif		
 		if (net) {
 			/* for link local this must be done */
 			sin6->sin6_scope_id = prev_scope;
@@ -4410,7 +4410,7 @@ sctp_send_initiate(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int so_locked
 		ecn = (struct sctp_ecn_supported_param *)((caddr_t)ph + sizeof(*ph));
 	}
 
-
+	
 	/* now any cookie time extensions */
 	if (stcb->asoc.cookie_preserve_req) {
 		struct sctp_cookie_perserve_param *cookie_preserve;
@@ -5209,7 +5209,7 @@ sctp_send_initiate_ack(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	sin6 = &store.sin6;
 	to_sin6 = &store1.sin6;
 #endif
-	iph = mtod(init_pkt, struct ip *);
+	iph = mtod(init_pkt, struct ip *);	
 	/* establish the to_addr's */
 	switch (iph->ip_v) {
 	case IPVERSION:
@@ -5590,7 +5590,7 @@ sctp_send_initiate_ack(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	pr_supported->chunk_types[num_ext++] = SCTP_STREAM_RESET;
 	if (!SCTP_BASE_SYSCTL(sctp_auth_disable))
 		pr_supported->chunk_types[num_ext++] = SCTP_AUTHENTICATION;
-	/* EY  if the sysctl variable is set, tell the assoc. initiator that we do nr_sack*/
+	/* EY  if the sysctl variable is set, tell the assoc. initiator that we do nr_sack*/	
 	if (SCTP_BASE_SYSCTL(sctp_nr_sack_on_off))
 		pr_supported->chunk_types[num_ext++] = SCTP_NR_SELECTIVE_ACK;
 	p_len = sizeof(*pr_supported) + num_ext;
@@ -5756,7 +5756,7 @@ sctp_send_initiate_ack(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	} else {
 		over_addr = NULL;
 	}
-
+	
 	(void)sctp_lowlevel_chunk_output(inp, NULL, NULL, to, m, 0, NULL, 0, 0,
 	                                 0, NULL, 0,
 	                                 inp->sctp_lport, sh->src_port, init_chk->init.initiate_tag,
@@ -6987,7 +6987,7 @@ sctp_move_to_outqueue(struct sctp_tcb *stcb, struct sctp_nets *net,
 			 * is expanding during the compare.
 			 */
 			uint32_t llen;
-
+			
 			llen = length;
 			if (to_move >= llen) {
 				to_move = llen;
@@ -7213,7 +7213,7 @@ sctp_move_to_outqueue(struct sctp_tcb *stcb, struct sctp_nets *net,
 		sctp_auth_key_acquire(stcb, chk->auth_keyid);
 		chk->holds_key_ref = 1;
 	}
-
+	
 #if defined(__FreeBSD__) || defined(__Panda__)
 	chk->rec.data.TSN_seq = atomic_fetchadd_int(&asoc->sending_seq, 1);
 #else
@@ -7260,7 +7260,7 @@ sctp_move_to_outqueue(struct sctp_tcb *stcb, struct sctp_nets *net,
 		/* need a pad */
 		struct mbuf *lm;
 		int pads;
-
+		
 		pads = SCTP_SIZE32(chk->book_size) - chk->send_size;
 		if (sctp_pad_lastmbuf(chk->data, pads, chk->last_mbuf) == 0) {
 			chk->pad_inplace = 1;
@@ -7662,7 +7662,7 @@ sctp_med_chunk_output(struct sctp_inpcb *inp,
 		*reason_code = 8;
 		return (0);
 	}
-
+	
 	if (SCTP_BASE_SYSCTL(sctp_cmt_on_off)) {
 		/* get the last start point */
 		start_at = asoc->last_net_cmt_send_started;
@@ -7675,7 +7675,7 @@ sctp_med_chunk_output(struct sctp_inpcb *inp,
 				start_at = TAILQ_FIRST(&asoc->nets);
 			}
 		}
-		asoc->last_net_cmt_send_started = start_at;
+		asoc->last_net_cmt_send_started = start_at;		
 	} else {
 		start_at = TAILQ_FIRST(&asoc->nets);
 	}
@@ -8196,7 +8196,7 @@ again_one_more_time:
 			else
 				omtu = 0;
 			break;
-#ifdef INET6
+#ifdef INET6		
 		case AF_INET6:
 			if (net->mtu > (sizeof(struct ip6_hdr) + sizeof(struct sctphdr)))
 				omtu = net->mtu - (sizeof(struct ip6_hdr) + sizeof(struct sctphdr));
@@ -8258,7 +8258,7 @@ again_one_more_time:
 				if (SCTP_BASE_SYSCTL(sctp_enable_sack_immediately) &&
 				    ((asoc->state & SCTP_STATE_SHUTDOWN_PENDING) == SCTP_STATE_SHUTDOWN_PENDING)) {
 					struct sctp_data_chunk *dchkh;
-
+					
 					dchkh = mtod(chk->data, struct sctp_data_chunk *);
 					dchkh->ch.chunk_flags |= SCTP_DATA_SACK_IMMEDIATELY;
 				}
@@ -9599,11 +9599,7 @@ sctp_chunk_output (struct sctp_inpcb *inp,
 	 * a sack timer running, if so piggy-back the sack.
 	 */
  	if (SCTP_OS_TIMER_PENDING(&stcb->asoc.dack_timer.timer)) {
-		/* EY if nr_sacks used then send an nr-sack , a sack otherwise*/
-		if (SCTP_BASE_SYSCTL(sctp_nr_sack_on_off) && asoc->peer_supports_nr_sack)
-			sctp_send_nr_sack(stcb);
-		else
-			sctp_send_sack(stcb);
+		sctp_send_sack(stcb);
 		(void)SCTP_OS_TIMER_STOP(&stcb->asoc.dack_timer.timer);
 	}
 	while (asoc->sent_queue_retran_cnt) {
@@ -9948,7 +9944,7 @@ sctp_fill_in_rest:
 			sctp_misc_ints(SCTP_FWD_TSN_CHECK,
 				       0xff, 0, cnt_of_skipped,
 				       asoc->advanced_peer_ack_point);
-
+			
 		}
 		advance_peer_ack_point = asoc->advanced_peer_ack_point;
 		if (cnt_of_space < space_needed) {
@@ -10040,13 +10036,15 @@ void
 sctp_send_sack(struct sctp_tcb *stcb)
 {
 	/*-
-	 * Queue up a SACK in the control queue. We must first check to see
-	 * if a SACK is somehow on the control queue. If so, we will take
-	 * and and remove the old one.
+	 * Queue up a SACK or NR-SACK in the control queue.
+	 * We must first check to see if a SACK or NR-SACK is
+	 * somehow on the control queue.
+	 * If so, we will take and and remove the old one.
 	 */
 	struct sctp_association *asoc;
 	struct sctp_tmit_chunk *chk, *a_chk;
 	struct sctp_sack_chunk *sack;
+	struct sctp_nr_sack_chunk *nr_sack;
 	struct sctp_gap_ack_block *gap_descriptor;
 	struct sack_track *selector;
 	int mergeable = 0;
@@ -10054,12 +10052,20 @@ sctp_send_sack(struct sctp_tcb *stcb)
 	caddr_t limit;
 	uint32_t *dup;
 	int limit_reached = 0;
-	unsigned int i, sel_start, siz, j, starting_index ;
-	unsigned int num_gap_blocks = 0, space;
+	unsigned int i, sel_start, siz, j, starting_index;
+	unsigned int num_gap_blocks = 0, num_nr_gap_blocks = 0, space;
 	int num_dups = 0;
 	int space_req;
 	uint32_t highest_tsn;
+	uint8_t flags;
+	uint8_t type;
 
+	if (SCTP_BASE_SYSCTL(sctp_nr_sack_on_off) &&
+	    stcb->asoc.peer_supports_nr_sack) {
+		type = SCTP_NR_SELECTIVE_ACK;
+	} else {
+		type = SCTP_SELECTIVE_ACK;
+	}
 	a_chk = NULL;
 	asoc = &stcb->asoc;
 	SCTP_TCB_LOCK_ASSERT(stcb);
@@ -10070,7 +10076,7 @@ sctp_send_sack(struct sctp_tcb *stcb)
 	sctp_slide_mapping_arrays(stcb);
 	sctp_set_rwnd(stcb, asoc);
 	TAILQ_FOREACH(chk, &asoc->control_send_queue, sctp_next) {
-		if (chk->rec.chunk_id.id == SCTP_SELECTIVE_ACK) {
+		if (chk->rec.chunk_id.id == type) {
 			/* Hmm, found a sack already on queue, remove it */
 			TAILQ_REMOVE(&asoc->control_send_queue, chk, sctp_next);
 			asoc->ctrl_queue_cnt++;
@@ -10090,7 +10096,7 @@ sctp_send_sack(struct sctp_tcb *stcb)
 			/* No memory so we drop the idea, and set a timer */
 			if (stcb->asoc.delayed_ack) {
 				sctp_timer_stop(SCTP_TIMER_TYPE_RECV,
-				    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT+SCTP_LOC_5 );
+				    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT + SCTP_LOC_5);
 				sctp_timer_start(SCTP_TIMER_TYPE_RECV,
 				    stcb->sctp_ep, stcb, NULL);
 			} else {
@@ -10099,8 +10105,7 @@ sctp_send_sack(struct sctp_tcb *stcb)
 			return;
 		}
 		a_chk->copy_by_ref = 0;
-		/*a_chk->rec.chunk_id.id = SCTP_SELECTIVE_ACK;*/
-		a_chk->rec.chunk_id.id = SCTP_SELECTIVE_ACK;
+		a_chk->rec.chunk_id.id = type;
 		a_chk->rec.chunk_id.can_take_data = 1;
 	}
 	/* Clear our pkt counts */
@@ -10145,14 +10150,18 @@ sctp_send_sack(struct sctp_tcb *stcb)
 	if (a_chk->whoTo) {
 		atomic_add_int(&a_chk->whoTo->ref_count, 1);
 	}
-	if(compare_with_wrap(asoc->highest_tsn_inside_map, asoc->highest_tsn_inside_nr_map, MAX_TSN)) {
-	  highest_tsn = asoc->highest_tsn_inside_map;
+	if (compare_with_wrap(asoc->highest_tsn_inside_map, asoc->highest_tsn_inside_nr_map, MAX_TSN)) {
+		highest_tsn = asoc->highest_tsn_inside_map;
 	} else {
-	  highest_tsn = asoc->highest_tsn_inside_nr_map;
+		highest_tsn = asoc->highest_tsn_inside_nr_map;
 	}
 	if (highest_tsn == asoc->cumulative_tsn) {
 		/* no gaps */
-		space_req = sizeof(struct sctp_sack_chunk);
+		if (type == SCTP_SELECTIVE_ACK) {
+			space_req = sizeof(struct sctp_sack_chunk);
+		} else {
+			space_req = sizeof(struct sctp_nr_sack_chunk);
+		}
 	} else {
 		/* gaps get a cluster */
 		space_req = MCLBYTES;
@@ -10168,10 +10177,10 @@ sctp_send_sack(struct sctp_tcb *stcb)
 			a_chk->data = NULL;
 		}
 		sctp_free_a_chunk(stcb, a_chk);
-                /*sa_ignore NO_NULL_CHK*/
+		/* sa_ignore NO_NULL_CHK */
 		if (stcb->asoc.delayed_ack) {
 			sctp_timer_stop(SCTP_TIMER_TYPE_RECV,
-			    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT+SCTP_LOC_6 );
+			    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT + SCTP_LOC_6);
 			sctp_timer_start(SCTP_TIMER_TYPE_RECV,
 			    stcb->sctp_ep, stcb, NULL);
 		} else {
@@ -10188,15 +10197,13 @@ sctp_send_sack(struct sctp_tcb *stcb)
 	limit = mtod(a_chk->data, caddr_t);
 	limit += space;
 
-	sack = mtod(a_chk->data, struct sctp_sack_chunk *);
-	sack->ch.chunk_type = SCTP_SELECTIVE_ACK;
 	/* 0x01 is used by nonce for ecn */
 	if ((SCTP_BASE_SYSCTL(sctp_ecn_enable)) &&
 	    (SCTP_BASE_SYSCTL(sctp_ecn_nonce)) &&
 	    (asoc->peer_supports_ecn_nonce))
-		sack->ch.chunk_flags = (asoc->receiver_nonce_sum & SCTP_SACK_NONCE_SUM);
+		flags = (asoc->receiver_nonce_sum & SCTP_SACK_NONCE_SUM);
 	else
-		sack->ch.chunk_flags = 0;
+		flags = 0;
 
 	if (SCTP_BASE_SYSCTL(sctp_cmt_on_off) && SCTP_BASE_SYSCTL(sctp_cmt_use_dac)) {
 		/*-
@@ -10204,7 +10211,7 @@ sctp_send_sack(struct sctp_tcb *stcb)
 		 * received, then set high bit to 1, else 0. Reset
 		 * pkts_rcvd.
 		 */
-		sack->ch.chunk_flags |= (asoc->cmt_dac_pkts_rcvd << 6);
+		flags |= (asoc->cmt_dac_pkts_rcvd << 6);
 		asoc->cmt_dac_pkts_rcvd = 0;
 	}
 #ifdef SCTP_ASOCLOG_OF_TSNS
@@ -10214,21 +10221,30 @@ sctp_send_sack(struct sctp_tcb *stcb)
 		stcb->asoc.cumack_log_atsnt = 0;
 	}
 #endif
-	sack->sack.cum_tsn_ack = htonl(asoc->cumulative_tsn);
-	sack->sack.a_rwnd = htonl(asoc->my_rwnd);
-	asoc->my_last_reported_rwnd = asoc->my_rwnd;
-
 	/* reset the readers interpretation */
 	stcb->freed_by_sorcv_sincelast = 0;
 
-	gap_descriptor = (struct sctp_gap_ack_block *)((caddr_t)sack + sizeof(struct sctp_sack_chunk));
+	if (type == SCTP_SELECTIVE_ACK) {
+		sack = mtod(a_chk->data, struct sctp_sack_chunk *);
+		nr_sack = NULL;
+		gap_descriptor = (struct sctp_gap_ack_block *)((caddr_t)sack + sizeof(struct sctp_sack_chunk));
+		if (highest_tsn > asoc->mapping_array_base_tsn) {
+			siz = (((highest_tsn - asoc->mapping_array_base_tsn) + 1) + 7) / 8;
+		} else {
+			siz = (((MAX_TSN - highest_tsn) + 1) + highest_tsn + 7) / 8;
+		}
+	} else {
+		sack = NULL;
+		nr_sack = mtod(a_chk->data, struct sctp_nr_sack_chunk *);
+		gap_descriptor = (struct sctp_gap_ack_block *)((caddr_t)nr_sack + sizeof(struct sctp_nr_sack_chunk));
+		if (asoc->highest_tsn_inside_map > asoc->mapping_array_base_tsn) {
+			siz = (((asoc->highest_tsn_inside_map - asoc->mapping_array_base_tsn) + 1) + 7) / 8;
+		} else {
+			siz = (((MAX_TSN - asoc->mapping_array_base_tsn) + 1) + asoc->highest_tsn_inside_map + 7) / 8;
+		}
+	}
 
-	if (highest_tsn > asoc->mapping_array_base_tsn)
-		siz = (((highest_tsn - asoc->mapping_array_base_tsn) + 1) + 7) / 8;
-	else
-		siz = (((MAX_TSN - highest_tsn) + 1) + highest_tsn + 7) / 8;
-
-	if (compare_with_wrap(asoc->mapping_array_base_tsn, asoc->cumulative_tsn, MAX_TSN )) {
+	if (compare_with_wrap(asoc->mapping_array_base_tsn, asoc->cumulative_tsn, MAX_TSN)) {
 		offset = 1;
 		/*-
 		 * The base TSN is intialized to be the first TSN the peer
@@ -10256,23 +10272,30 @@ sctp_send_sack(struct sctp_tcb *stcb)
 		 * then we multiply the offset to be negative, since we need a negative
 		 * offset into the selector table.
 		 */
-	    SCTP_CALC_TSN_TO_GAP(offset, asoc->cumulative_tsn, asoc->mapping_array_base_tsn);
+		SCTP_CALC_TSN_TO_GAP(offset, asoc->cumulative_tsn, asoc->mapping_array_base_tsn);
 		if (offset > 7) {
-		  starting_index = offset / 8;
-		  offset = offset % 8;
-		  printf("Strange starting index is %d offset:%d (not 0/x)\n",
-				 starting_index, offset);
+			starting_index = offset / 8;
+			offset = offset % 8;
+			printf("Strange starting index is %d offset:%d (not 0/x)\n",
+			       starting_index, offset);
 		} else {
-		  starting_index = 0;
+			starting_index = 0;
 		}
 		/* We need a negative offset in our table */
 		offset *= -1;
 		sel_start = 1;
 	}
-	if (compare_with_wrap(highest_tsn, asoc->cumulative_tsn, MAX_TSN)) {
+	if (((type == SCTP_SELECTIVE_ACK) &&
+	     compare_with_wrap(highest_tsn, asoc->cumulative_tsn, MAX_TSN)) ||
+	    ((type == SCTP_NR_SELECTIVE_ACK) &&
+	     compare_with_wrap(asoc->highest_tsn_inside_map, asoc->cumulative_tsn, MAX_TSN))) {
 		/* we have a gap .. maybe */
 		for (i = starting_index; i < siz; i++) {
-		  selector = &sack_array[(asoc->mapping_array[i]|asoc->nr_mapping_array[i])];
+			if (type == SCTP_SELECTIVE_ACK) {
+				selector = &sack_array[asoc->mapping_array[i]|asoc->nr_mapping_array[i]];
+			} else {
+				selector = &sack_array[asoc->mapping_array[i]];
+			}
 			if (mergeable && selector->right_edge) {
 				/*
 				 * Backup, left and right edges were ok to
@@ -10320,6 +10343,83 @@ sctp_send_sack(struct sctp_tcb *stcb)
 			offset += 8;
 		}
 	}
+	if ((type == SCTP_NR_SELECTIVE_ACK) &&
+	    (limit_reached == 0)) {
+
+		mergeable = 0;
+
+		if (asoc->highest_tsn_inside_nr_map > asoc->mapping_array_base_tsn)
+			siz = (((asoc->highest_tsn_inside_nr_map - asoc->mapping_array_base_tsn) + 1) + 7) / 8;
+		else
+			siz = (((MAX_TSN - asoc->mapping_array_base_tsn) + 1) + asoc->highest_tsn_inside_nr_map + 7) / 8;
+
+		if (compare_with_wrap(asoc->mapping_array_base_tsn, asoc->cumulative_tsn, MAX_TSN)) {
+			offset = 1;
+			/*-
+			* cum-ack behind the mapping array, so we start and use all
+			* entries.
+			*/
+			sel_start = 0;
+		} else {
+			offset = asoc->mapping_array_base_tsn - asoc->cumulative_tsn;
+			/*-
+			* we skip the first one when the cum-ack is at or above the
+			* mapping array base. Note this only works if
+			*/
+			sel_start = 1;
+		}
+		if (compare_with_wrap(asoc->highest_tsn_inside_nr_map, asoc->cumulative_tsn, MAX_TSN)) {
+			/* we have a gap .. maybe */
+			for (i = 0; i < siz; i++) {
+				selector = &sack_array[asoc->nr_mapping_array[i]];
+				if (mergeable && selector->right_edge) {
+					/*
+					* Backup, left and right edges were ok to
+					* merge.
+					*/
+					num_nr_gap_blocks--;
+					gap_descriptor--;
+				}
+				if (selector->num_entries == 0)
+					mergeable = 0;
+				else {
+					for (j = sel_start; j < selector->num_entries; j++) {
+						if (mergeable && selector->right_edge) {
+							/*
+							* do a merge by NOT setting
+							* the left side
+							*/
+							mergeable = 0;
+						} else {
+							/*
+							* no merge, set the left
+							* side
+							*/
+							mergeable = 0;
+							gap_descriptor->start = htons((selector->gaps[j].start + offset));
+						}
+						gap_descriptor->end = htons((selector->gaps[j].end + offset));
+						num_nr_gap_blocks++;
+						gap_descriptor++;
+						if (((caddr_t)gap_descriptor + sizeof(struct sctp_gap_ack_block)) > limit) {
+							/* no more room */
+							limit_reached = 1;
+							break;
+						}
+					}
+					if (selector->left_edge) {
+						mergeable = 1;
+					}
+				}
+				if (limit_reached) {
+					/* Reached the limit stop */
+					break;
+				}
+				sel_start = 0;
+				offset += 8;
+			}
+		}
+	}
 	/* now we must add any dups we are going to report. */
 	if ((limit_reached == 0) && (asoc->numduptsns)) {
 		dup = (uint32_t *) gap_descriptor;
@@ -10338,394 +10438,35 @@ sctp_send_sack(struct sctp_tcb *stcb)
 	 * now that the chunk is prepared queue it to the control chunk
 	 * queue.
 	 */
-	a_chk->send_size = (sizeof(struct sctp_sack_chunk) +
-	    (num_gap_blocks * sizeof(struct sctp_gap_ack_block)) +
-	    (num_dups * sizeof(int32_t)));
-	SCTP_BUF_LEN(a_chk->data) = a_chk->send_size;
-	sack->sack.num_gap_ack_blks = htons(num_gap_blocks);
-	sack->sack.num_dup_tsns = htons(num_dups);
-	sack->ch.chunk_length = htons(a_chk->send_size);
+	if (type == SCTP_SELECTIVE_ACK) {
+		a_chk->send_size = sizeof(struct sctp_sack_chunk) +
+		                   (num_gap_blocks + num_nr_gap_blocks) * sizeof(struct sctp_gap_ack_block) +
+		                   num_dups * sizeof(int32_t);
+		SCTP_BUF_LEN(a_chk->data) = a_chk->send_size;
+		sack->sack.cum_tsn_ack = htonl(asoc->cumulative_tsn);
+		sack->sack.a_rwnd = htonl(asoc->my_rwnd);
+		sack->sack.num_gap_ack_blks = htons(num_gap_blocks);
+		sack->sack.num_dup_tsns = htons(num_dups);
+		sack->ch.chunk_type = type;
+		sack->ch.chunk_flags = flags;
+		sack->ch.chunk_length = htons(a_chk->send_size);
+	} else {
+		a_chk->send_size = sizeof(struct sctp_nr_sack_chunk) +
+		                   (num_gap_blocks + num_nr_gap_blocks) * sizeof(struct sctp_gap_ack_block) +
+		                   num_dups * sizeof(int32_t);
+		SCTP_BUF_LEN(a_chk->data) = a_chk->send_size;
+		nr_sack->nr_sack.cum_tsn_ack = htonl(asoc->cumulative_tsn);
+		nr_sack->nr_sack.a_rwnd = htonl(asoc->my_rwnd);
+		nr_sack->nr_sack.num_gap_ack_blks = htons(num_gap_blocks);
+		nr_sack->nr_sack.num_nr_gap_ack_blks = htons(num_nr_gap_blocks);
+		nr_sack->nr_sack.num_dup_tsns = htons(num_dups);
+		nr_sack->nr_sack.reserved = 0;
+		nr_sack->ch.chunk_type = type;
+		nr_sack->ch.chunk_flags = flags;
+		nr_sack->ch.chunk_length = htons(a_chk->send_size);
+	}
 	TAILQ_INSERT_TAIL(&asoc->control_send_queue, a_chk, sctp_next);
-	asoc->ctrl_queue_cnt++;
-	asoc->send_sack = 0;
-	SCTP_STAT_INCR(sctps_sendsacks);
-	return;
-}
-
-/* EY - This method will replace sctp_send_sack method if nr_sacks negotiated*/
-void
-sctp_send_nr_sack(struct sctp_tcb *stcb)
-{
-	/*-
-	 * Queue up an NR-SACK in the control queue. We must first check to see
-	 * if an NR-SACK is somehow on the control queue. If so, we will take
-	 * and and remove the old one.
-	 */
-	struct sctp_association *asoc;
-	struct sctp_tmit_chunk *chk, *a_chk;
-
-	struct sctp_nr_sack_chunk *nr_sack;
-
-	struct sctp_gap_ack_block *gap_descriptor;
-
-	struct sack_track *selector;
-	struct sack_track *nr_selector;
-
-	/* EY do we need nr_mergeable, NO*/
-	int mergeable = 0;
-	int offset;
-	caddr_t limit;
-	uint32_t *dup, highest_tsn;
-	int limit_reached = 0;
-	int seen_non_zero=0;
-	unsigned int i, jstart, siz, j;
-	unsigned int num_gap_blocks = 0, num_nr_gap_blocks = 0, space;
-	int num_dups = 0;
-	int space_req;
-
-	a_chk = NULL;
-	asoc = &stcb->asoc;
-	SCTP_TCB_LOCK_ASSERT(stcb);
-	if (asoc->last_data_chunk_from == NULL) {
-		/* Hmm we never received anything */
-		return;
-	}
-	sctp_slide_mapping_arrays(stcb);
-	sctp_set_rwnd(stcb, asoc);
-	TAILQ_FOREACH(chk, &asoc->control_send_queue, sctp_next) {
-		if (chk->rec.chunk_id.id == SCTP_NR_SELECTIVE_ACK) {
-			/* Hmm, found a sack already on queue, remove it */
-			TAILQ_REMOVE(&asoc->control_send_queue, chk, sctp_next);
-			asoc->ctrl_queue_cnt++;
-			a_chk = chk;
-			if (a_chk->data) {
-				sctp_m_freem(a_chk->data);
-				a_chk->data = NULL;
-			}
-			sctp_free_remote_addr(a_chk->whoTo);
-			a_chk->whoTo = NULL;
-			break;
-		}
-	}
-	if (a_chk == NULL) {
-		sctp_alloc_a_chunk(stcb, a_chk);
-		if (a_chk == NULL) {
-			/* No memory so we drop the idea, and set a timer */
-			if (stcb->asoc.delayed_ack) {
-				sctp_timer_stop(SCTP_TIMER_TYPE_RECV,
-				    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT + SCTP_LOC_5);
-				sctp_timer_start(SCTP_TIMER_TYPE_RECV,
-				    stcb->sctp_ep, stcb, NULL);
-			} else {
-				stcb->asoc.send_sack = 1;
-			}
-			return;
-		}
-		a_chk->copy_by_ref = 0;
-		/* a_chk->rec.chunk_id.id = SCTP_SELECTIVE_ACK; */
-		a_chk->rec.chunk_id.id = SCTP_NR_SELECTIVE_ACK;
-		a_chk->rec.chunk_id.can_take_data = 1;
-	}
-	/* Clear our pkt counts */
-	asoc->data_pkts_seen = 0;
-
-	a_chk->asoc = asoc;
-	a_chk->snd_count = 0;
-	a_chk->send_size = 0;	/* fill in later */
-	a_chk->sent = SCTP_DATAGRAM_UNSENT;
-	a_chk->whoTo = NULL;
-
-	if ((asoc->numduptsns) ||
-	    (asoc->last_data_chunk_from->dest_state & SCTP_ADDR_NOT_REACHABLE)
-	    ) {
-		/*-
-		 * Ok, we have some duplicates or the destination for the
-		 * sack is unreachable, lets see if we can select an
-		 * alternate than asoc->last_data_chunk_from
-		 */
-		if ((!(asoc->last_data_chunk_from->dest_state &
-		    SCTP_ADDR_NOT_REACHABLE)) &&
-		    (asoc->used_alt_onsack > asoc->numnets)) {
-			/* We used an alt last time, don't this time */
-			a_chk->whoTo = NULL;
-		} else {
-			asoc->used_alt_onsack++;
-			a_chk->whoTo = sctp_find_alternate_net(stcb, asoc->last_data_chunk_from, 0);
-		}
-		if (a_chk->whoTo == NULL) {
-			/* Nope, no alternate */
-			a_chk->whoTo = asoc->last_data_chunk_from;
-			asoc->used_alt_onsack = 0;
-		}
-	} else {
-		/*
-		 * No duplicates so we use the last place we received data
-		 * from.
-		 */
-		asoc->used_alt_onsack = 0;
-		a_chk->whoTo = asoc->last_data_chunk_from;
-	}
-	if (a_chk->whoTo) {
-		atomic_add_int(&a_chk->whoTo->ref_count, 1);
-	}
-
-	if(compare_with_wrap(asoc->highest_tsn_inside_map, asoc->highest_tsn_inside_nr_map, MAX_TSN)) {
-	  highest_tsn = asoc->highest_tsn_inside_map;
-	} else {
-	  highest_tsn = asoc->highest_tsn_inside_nr_map;
-	}
-	if (highest_tsn == asoc->cumulative_tsn) {
-		/* no gaps */
-		space_req = sizeof(struct sctp_nr_sack_chunk);
-	} else {
-		/* EY - what is this about? */
-		/* gaps get a cluster */
-		space_req = MCLBYTES;
-	}
-	/* Ok now lets formulate a MBUF with our sack */
-	a_chk->data = sctp_get_mbuf_for_msg(space_req, 0, M_DONTWAIT, 1, MT_DATA);
-	if ((a_chk->data == NULL) ||
-	    (a_chk->whoTo == NULL)) {
-		/* rats, no mbuf memory */
-		if (a_chk->data) {
-			/* was a problem with the destination */
-			sctp_m_freem(a_chk->data);
-			a_chk->data = NULL;
-		}
-		sctp_free_a_chunk(stcb, a_chk);
-		/* sa_ignore NO_NULL_CHK */
-		if (stcb->asoc.delayed_ack) {
-			sctp_timer_stop(SCTP_TIMER_TYPE_RECV,
-			    stcb->sctp_ep, stcb, NULL, SCTP_FROM_SCTP_OUTPUT + SCTP_LOC_6);
-			sctp_timer_start(SCTP_TIMER_TYPE_RECV,
-			    stcb->sctp_ep, stcb, NULL);
-		} else {
-			stcb->asoc.send_sack = 1;
-		}
-		return;
-	}
-	/* ok, lets go through and fill it in */
-	SCTP_BUF_RESV_UF(a_chk->data, SCTP_MIN_OVERHEAD);
-	space = M_TRAILINGSPACE(a_chk->data);
-	if (space > (a_chk->whoTo->mtu - SCTP_MIN_OVERHEAD)) {
-		space = (a_chk->whoTo->mtu - SCTP_MIN_OVERHEAD);
-	}
-	limit = mtod(a_chk->data, caddr_t);
-	limit += space;
-
-	nr_sack = mtod(a_chk->data, struct sctp_nr_sack_chunk *);
-	nr_sack->ch.chunk_type = SCTP_NR_SELECTIVE_ACK;
-	/* EYJ */
-	/* 0x01 is used by nonce for ecn */
-	if ((SCTP_BASE_SYSCTL(sctp_ecn_enable)) &&
-	    (SCTP_BASE_SYSCTL(sctp_ecn_nonce)) &&
-	    (asoc->peer_supports_ecn_nonce))
-		nr_sack->ch.chunk_flags = (asoc->receiver_nonce_sum & SCTP_SACK_NONCE_SUM);
-	else
-		nr_sack->ch.chunk_flags = 0;
-
-	if (SCTP_BASE_SYSCTL(sctp_cmt_on_off) && SCTP_BASE_SYSCTL(sctp_cmt_use_dac)) {
-		/*-
-		 * CMT DAC algorithm: If 2 (i.e., 0x10) packets have been
-		 * received, then set high bit to 1, else 0. Reset
-		 * pkts_rcvd.
-		 */
-		 /* EY - TODO: which chunk flag is used in here? -The LSB*/
-		nr_sack->ch.chunk_flags |= (asoc->cmt_dac_pkts_rcvd << 6);
-		asoc->cmt_dac_pkts_rcvd = 0;
-	}
-#ifdef SCTP_ASOCLOG_OF_TSNS
-	stcb->asoc.cumack_logsnt[stcb->asoc.cumack_log_atsnt] = asoc->cumulative_tsn;
-	stcb->asoc.cumack_log_atsnt++;
-	if (stcb->asoc.cumack_log_atsnt >= SCTP_TSN_LOG_SIZE) {
-		stcb->asoc.cumack_log_atsnt = 0;
-	}
-#endif
-	nr_sack->nr_sack.cum_tsn_ack = htonl(asoc->cumulative_tsn);
-	nr_sack->nr_sack.a_rwnd = htonl(asoc->my_rwnd);
 	asoc->my_last_reported_rwnd = asoc->my_rwnd;
-
-	/* reset the readers interpretation */
-	stcb->freed_by_sorcv_sincelast = 0;
-
-	gap_descriptor = (struct sctp_gap_ack_block *)((caddr_t)nr_sack + sizeof(struct sctp_nr_sack_chunk));
-
-	if (asoc->highest_tsn_inside_map > asoc->mapping_array_base_tsn)
-		siz = (((asoc->highest_tsn_inside_map - asoc->mapping_array_base_tsn) + 1) + 7) / 8;
-	else
-		siz = (((MAX_TSN - asoc->mapping_array_base_tsn) + 1) + asoc->highest_tsn_inside_map + 7) / 8;
-
-	if (compare_with_wrap(asoc->mapping_array_base_tsn, asoc->cumulative_tsn, MAX_TSN)) {
-		offset = 1;
-		/*-
-		 * cum-ack behind the mapping array, so we start and use all
-		 * entries.
-		 */
-		jstart = 0;
-	} else {
-		offset = asoc->mapping_array_base_tsn - asoc->cumulative_tsn;
-		/*-
-		 * we skip the first one when the cum-ack is at or above the
-		 * mapping array base. Note this only works if
-		 */
-		jstart = 1;
-	}
-	if (compare_with_wrap(asoc->highest_tsn_inside_map, asoc->cumulative_tsn, MAX_TSN)) {
-		/* we have a gap .. maybe */
-		for (i = 0; i < siz; i++) {
-            seen_non_zero = 1;
-			selector = &sack_array[asoc->mapping_array[i]];
-			if (mergeable && selector->right_edge) {
-				/*
-				 * Backup, left and right edges were ok to
-				 * merge.
-				 */
-				num_gap_blocks--;
-				gap_descriptor--;
-			}
-			if (selector->num_entries == 0)
-				mergeable = 0;
-			else {
-				for (j = jstart; j < selector->num_entries; j++) {
-					if (mergeable && selector->right_edge) {
-						/*
-						 * do a merge by NOT setting
-						 * the left side
-						 */
-						mergeable = 0;
-					} else {
-						/*
-						 * no merge, set the left
-						 * side
-						 */
-						mergeable = 0;
-						gap_descriptor->start = htons((selector->gaps[j].start + offset));
-					}
-					gap_descriptor->end = htons((selector->gaps[j].end + offset));
-					num_gap_blocks++;
-					gap_descriptor++;
-					if (((caddr_t)gap_descriptor + sizeof(struct sctp_gap_ack_block)) > limit) {
-						/* no more room */
-						limit_reached = 1;
-						break;
-					}
-				}
-				if (selector->left_edge) {
-					mergeable = 1;
-				}
-			}
-			if (limit_reached) {
-				/* Reached the limit stop */
-				break;
-			}
-			jstart = 0;
-			offset += 8;
-		}
-	}
-	if (limit_reached == 0) {
-
-		mergeable = 0;
-
-		if (asoc->highest_tsn_inside_nr_map > asoc->nr_mapping_array_base_tsn)
-			siz = (((asoc->highest_tsn_inside_nr_map - asoc->nr_mapping_array_base_tsn) + 1) + 7) / 8;
-		else
-			siz = (((MAX_TSN - asoc->nr_mapping_array_base_tsn) + 1) + asoc->highest_tsn_inside_nr_map + 7) / 8;
-
-		if (compare_with_wrap(asoc->nr_mapping_array_base_tsn, asoc->cumulative_tsn, MAX_TSN)) {
-			offset = 1;
-			/*-
-			* cum-ack behind the mapping array, so we start and use all
-			* entries.
-			*/
-			jstart = 0;
-		} else {
-			offset = asoc->nr_mapping_array_base_tsn - asoc->cumulative_tsn;
-			/*-
-			* we skip the first one when the cum-ack is at or above the
-			* mapping array base. Note this only works if
-			*/
-			jstart = 1;
-		}
-		if (compare_with_wrap(asoc->highest_tsn_inside_nr_map, asoc->cumulative_tsn, MAX_TSN)) {
-			/* we have a gap .. maybe */
-			for (i = 0; i < siz; i++) {
-				nr_selector = &sack_array[asoc->nr_mapping_array[i]];
-				if (mergeable && nr_selector->right_edge) {
-					/*
-					* Backup, left and right edges were ok to
-					* merge.
-					*/
-					num_nr_gap_blocks--;
-					gap_descriptor--;
-				}
-				if (nr_selector->num_entries == 0)
-					mergeable = 0;
-				else {
-					for (j = jstart; j < nr_selector->num_entries; j++) {
-						if (mergeable && nr_selector->right_edge) {
-							/*
-							* do a merge by NOT setting
-							* the left side
-							*/
-							mergeable = 0;
-						} else {
-							/*
-							* no merge, set the left
-							* side
-							*/
-							mergeable = 0;
-							gap_descriptor->start = htons((nr_selector->gaps[j].start + offset));
-						}
-						gap_descriptor->end = htons((nr_selector->gaps[j].end + offset));
-						num_nr_gap_blocks++;
-						gap_descriptor++;
-						if (((caddr_t)gap_descriptor + sizeof(struct sctp_gap_ack_block)) > limit) {
-							/* no more room */
-							limit_reached = 1;
-							break;
-						}
-					}
-					if (nr_selector->left_edge) {
-						mergeable = 1;
-					}
-				}
-				if (limit_reached) {
-					/* Reached the limit stop */
-					break;
-				}
-				jstart = 0;
-				offset += 8;
-			}
-		}
-	}
-	if ((limit_reached == 0) && (asoc->numduptsns)) {
-		dup = (uint32_t *) gap_descriptor;
-		for (i = 0; i < asoc->numduptsns; i++) {
-			*dup = htonl(asoc->dup_tsns[i]);
-			dup++;
-			num_dups++;
-			if (((caddr_t)dup + sizeof(uint32_t)) > limit) {
-				/* no more room */
-				break;
-			}
-		}
-		asoc->numduptsns = 0;
-	}
-	/*
-	 * now that the chunk is prepared queue it to the control chunk
-	 * queue.
-	 */
-	a_chk->send_size = sizeof(struct sctp_nr_sack_chunk) +
-	                   (num_gap_blocks + num_nr_gap_blocks) * sizeof(struct sctp_gap_ack_block) +
-	                   num_dups * sizeof(int32_t);
-
-	SCTP_BUF_LEN(a_chk->data) = a_chk->send_size;
-	nr_sack->nr_sack.num_gap_ack_blks = htons(num_gap_blocks);
-	nr_sack->nr_sack.num_nr_gap_ack_blks = htons(num_nr_gap_blocks);
-	nr_sack->nr_sack.num_dup_tsns = htons(num_dups);
-	nr_sack->nr_sack.reserved = 0;
-	nr_sack->ch.chunk_length = htons(a_chk->send_size);
-	TAILQ_INSERT_TAIL(&asoc->control_send_queue, a_chk, sctp_next);
 	asoc->ctrl_queue_cnt++;
 	asoc->send_sack = 0;
 	SCTP_STAT_INCR(sctps_sendsacks);
@@ -10893,7 +10634,7 @@ sctp_send_shutdown_complete2(struct mbuf *m, int iphlen, struct sctphdr *sh,
 	ip6_out = NULL;
 #endif
 	offset_out = 0;
-
+	
 	switch (iph->ip_v) {
 	case IPVERSION:
 		iph_out = mtod(mout, struct ip *);
@@ -11004,7 +10745,7 @@ sctp_send_shutdown_complete2(struct mbuf *m, int iphlen, struct sctphdr *sh,
 		} else {
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 			mout->m_pkthdr.csum_flags = CSUM_SCTP;
-			mout->m_pkthdr.csum_data = 0; /* FIXME MT */
+			mout->m_pkthdr.csum_data = 0;
 			SCTP_STAT_INCR(sctps_sendhwcrc);
 #else
 			comp_cp->sh.checksum = sctp_calculate_cksum(mout, offset_out);
@@ -11041,18 +10782,38 @@ sctp_send_shutdown_complete2(struct mbuf *m, int iphlen, struct sctphdr *sh,
 		if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LAST_PACKET_TRACING)
 			sctp_packet_log(mout, mlen);
 #endif
-		comp_cp->sh.checksum = sctp_calculate_cksum(mout, offset_out);
-		SCTP_STAT_INCR(sctps_sendswcrc);
 		SCTP_ATTACH_CHAIN(o_pak, mout, mlen);
 		if (port) {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+				comp_cp->sh.checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr) + sizeof(struct udphdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 #if defined(__Windows__)
 			udp->uh_sum = 0;
-#elif !defined(__Userspace__) /* UDP __Userspace__ missing Linux fields */
-			if ((udp->uh_sum = in6_cksum(o_pak, IPPROTO_UDP, sizeof(struct ip6_hdr),
-			                             sizeof(struct sctp_shutdown_complete_msg) + sizeof(struct udphdr))) == 0) {
+#elif !defined(__Userspace__)
+			if ((udp->uh_sum = in6_cksum(o_pak, IPPROTO_UDP, sizeof(struct ip6_hdr), mlen - sizeof(struct ip6_hdr))) == 0) {
 				udp->uh_sum = 0xffff;
 			}
 #endif
+		} else {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 800000
+				mout->m_pkthdr.csum_flags = CSUM_SCTP;
+				mout->m_pkthdr.csum_data = 0;
+				SCTP_STAT_INCR(sctps_sendhwcrc);
+#else
+				comp_cp->sh.checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+#endif
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 		}
 		SCTP_IP6_OUTPUT(ret, o_pak, &ro, &ifp, stcb, vrf_id);
 
@@ -11824,7 +11585,7 @@ sctp_send_str_reset_req(struct sctp_tcb *stcb,
 	if ((send_out_req == 0) && (send_in_req == 0) && (send_tsn_req == 0) &&
 		(add_stream== 0)) {
 		/* nothing to do */
-		SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTP_OUTPUT, EINVAL);
+		SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTP_OUTPUT, EINVAL);	
 		return (EINVAL);
 	}
 	if (send_tsn_req && (send_out_req || send_in_req)) {
@@ -12015,7 +11776,7 @@ sctp_send_abort(struct mbuf *m, int iphlen, struct sctphdr *sh, uint32_t vtag,
 	if (port) {
 		udp->uh_sport = htons(SCTP_BASE_SYSCTL(sctp_udp_tunneling_port));
 		udp->uh_dport = port;
-		/* set udp->uh_ulen later */
+		/* set udp->uh_ulen later */	
 		udp->uh_sum = 0;
 		iphlen_out += sizeof(struct udphdr);
 		abm = (struct sctp_abort_msg *)((caddr_t)abm + sizeof(struct udphdr));
@@ -12103,7 +11864,7 @@ sctp_send_abort(struct mbuf *m, int iphlen, struct sctphdr *sh, uint32_t vtag,
 		} else {
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 			mout->m_pkthdr.csum_flags = CSUM_SCTP;
-			mout->m_pkthdr.csum_data = 0; /* FIXME MT */
+			mout->m_pkthdr.csum_data = 0;
 			SCTP_STAT_INCR(sctps_sendhwcrc);
 #else
 			abm->sh.checksum = sctp_calculate_cksum(mout, iphlen_out);
@@ -12133,7 +11894,7 @@ sctp_send_abort(struct mbuf *m, int iphlen, struct sctphdr *sh, uint32_t vtag,
 #if defined(__Panda__)
 		ro._l_addr.sa.sa_family = AF_INET6;
 #endif
-#if !defined(__Userspace__) /* UDP __Userspace__ - missing Linux fields */
+#if !defined(__Userspace__)
 		if (port) {
 			udp->uh_ulen = htons(len - sizeof(struct ip6_hdr));
 		}
@@ -12145,17 +11906,38 @@ sctp_send_abort(struct mbuf *m, int iphlen, struct sctphdr *sh, uint32_t vtag,
 		if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LAST_PACKET_TRACING)
 			sctp_packet_log(mout, len);
 #endif
-		abm->sh.checksum = sctp_calculate_cksum(mout, iphlen_out);
-		SCTP_STAT_INCR(sctps_sendswcrc);
 		SCTP_ATTACH_CHAIN(o_pak, mout, len);
 		if (port) {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+				abm->sh.checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr) + sizeof(struct udphdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 #if defined(__Windows__)
 			udp->uh_sum = 0;
-#elif !defined(__Userspace__) /* UDP __Userspace__ - missing Linux fields */
+#elif !defined(__Userspace__)
 			if ((udp->uh_sum = in6_cksum(o_pak, IPPROTO_UDP, sizeof(struct ip6_hdr), len - sizeof(struct ip6_hdr))) == 0) {
 				udp->uh_sum = 0xffff;
 			}
 #endif
+		} else {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 800000
+				mout->m_pkthdr.csum_flags = CSUM_SCTP;
+				mout->m_pkthdr.csum_data = 0;
+				SCTP_STAT_INCR(sctps_sendhwcrc);
+#else
+				abm->sh.checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+#endif
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 		}
 		SCTP_IP6_OUTPUT(ret, o_pak, &ro, &ifp, stcb, vrf_id);
 
@@ -12278,7 +12060,7 @@ sctp_send_operr_to(struct mbuf *m, int iphlen, struct mbuf *scm, uint32_t vtag,
 	if (port) {
 		udp->uh_sport = htons(SCTP_BASE_SYSCTL(sctp_udp_tunneling_port));
 		udp->uh_dport = port;
-		/* set udp->uh_ulen later */
+		/* set udp->uh_ulen later */	
 		udp->uh_sum = 0;
 		iphlen_out += sizeof(struct udphdr);
 		sh_out = (struct sctphdr *)((caddr_t)udp + sizeof(struct udphdr));
@@ -12361,7 +12143,7 @@ sctp_send_operr_to(struct mbuf *m, int iphlen, struct mbuf *scm, uint32_t vtag,
 		} else {
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 			mout->m_pkthdr.csum_flags = CSUM_SCTP;
-			mout->m_pkthdr.csum_data = 0; /* FIXME MT */
+			mout->m_pkthdr.csum_data = 0;
 			SCTP_STAT_INCR(sctps_sendhwcrc);
 #else
 			sh_out->checksum = sctp_calculate_cksum(mout, iphlen_out);
@@ -12391,7 +12173,7 @@ sctp_send_operr_to(struct mbuf *m, int iphlen, struct mbuf *scm, uint32_t vtag,
 #if defined(__Panda__)
 		ro._l_addr.sa.sa_family = AF_INET6;
 #endif
-#if !defined(__Userspace__) /* UDP __Userspace__ - missing Linux fields */
+#if !defined(__Userspace__)
 		if (port) {
 			udp->uh_ulen = htons(len - sizeof(struct ip6_hdr));
 		}
@@ -12401,17 +12183,38 @@ sctp_send_operr_to(struct mbuf *m, int iphlen, struct mbuf *scm, uint32_t vtag,
 		if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LAST_PACKET_TRACING)
 			sctp_packet_log(mout, len);
 #endif
-		sh_out->checksum = sctp_calculate_cksum(mout, iphlen_out);
-		SCTP_STAT_INCR(sctps_sendswcrc);
 		SCTP_ATTACH_CHAIN(o_pak, mout, len);
 		if (port) {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+				sh_out->checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr) + sizeof(struct udphdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 #if defined(__Windows__)
 			udp->uh_sum = 0;
-#elif !defined(__Userspace__) /* UDP __Userspace__ - missing Linux fields */
+#elif !defined(__Userspace__)
 			if ((udp->uh_sum = in6_cksum(o_pak, IPPROTO_UDP, sizeof(struct ip6_hdr), len - sizeof(struct ip6_hdr))) == 0) {
 				udp->uh_sum = 0xffff;
 			}
 #endif
+		} else {
+			if (!(SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback) &&
+			     (stcb) &&
+			     (stcb->asoc.loopback_scope))) {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 800000
+				mout->m_pkthdr.csum_flags = CSUM_SCTP;
+				mout->m_pkthdr.csum_data = 0;
+				SCTP_STAT_INCR(sctps_sendhwcrc);
+#else
+				sh_out->checksum = sctp_calculate_cksum(mout, sizeof(struct ip6_hdr));
+				SCTP_STAT_INCR(sctps_sendswcrc);
+#endif
+			} else {
+				SCTP_STAT_INCR(sctps_sendnocrc);
+			}
 		}
 		SCTP_IP6_OUTPUT(ret, o_pak, &ro, &ifp, stcb, vrf_id);
 
@@ -12870,7 +12673,7 @@ sctp_lower_sosend(struct socket *so,
 	net = NULL;
 	stcb = NULL;
 	asoc = NULL;
-
+	
 #if defined(__APPLE__)
 	sctp_lock_assert(so);
 #endif
@@ -13164,7 +12967,7 @@ sctp_lower_sosend(struct socket *so,
 				panic("Error, should hold create lock and I don't?");
 			}
 #endif
-			stcb = sctp_aloc_assoc(inp, addr, 1, &error, 0, vrf_id,
+			stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id,
 #if !( defined( __Panda__) || defined(__Userspace__) )
 					       p
 #else

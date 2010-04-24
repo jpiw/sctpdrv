@@ -2518,25 +2518,25 @@ SCTPDispatchSelectRequest(
 
 		if (selectReq->readfds != NULL) {
 			fdset32 = (PSOCKET_FD_SET32)selectReq->readfds;
-			selectReq->readfds->fd_count = selectReq->readfds->fd_count;
+			selectReq->readfds->fd_count = fdset32->fd_count;
 			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->readfds->fd_array[i] = LongToHandle((LONG)selectReq->readfds->fd_array[i]);
+				selectReq->readfds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
 			}
 		}
 
 		if (selectReq->writefds != NULL) {
 			fdset32 = (PSOCKET_FD_SET32)selectReq->writefds;
-			selectReq->writefds->fd_count = selectReq->writefds->fd_count;
+			selectReq->writefds->fd_count = fdset32->fd_count;
 			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->writefds->fd_array[i] = LongToHandle((LONG)selectReq->writefds->fd_array[i]);
+				selectReq->writefds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
 			}
 		}
 
 		if (selectReq->exceptfds != NULL) {
 			fdset32 = (PSOCKET_FD_SET32)selectReq->exceptfds;
-			selectReq->exceptfds->fd_count = selectReq->exceptfds->fd_count;
+			selectReq->exceptfds->fd_count = fdset32->fd_count;
 			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->exceptfds->fd_array[i] = LongToHandle((LONG)selectReq->exceptfds->fd_array[i]);
+				selectReq->exceptfds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
 			}
 		}
 

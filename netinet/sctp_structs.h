@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 202526 2010-01-17 21:00:28Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #ifndef __sctp_structs_h__
@@ -271,7 +271,7 @@ struct sctp_nets {
 	uint16_t error_count;
 	/* UDP port number in case of UDP tunneling */
 	uint16_t port;
-
+	
 	uint8_t fast_retran_loss_recovery;
 	uint8_t will_exit_fast_recovery;
 	/* Flags that probably can be combined into dest_state */
@@ -484,9 +484,8 @@ struct sctp_asconf_addr {
 	TAILQ_ENTRY(sctp_asconf_addr) next;
 	struct sctp_asconf_addr_param ap;
 	struct sctp_ifa *ifa;	/* save the ifa for add/del ip */
-        uint8_t sent;		/* has this been sent yet? */
-        uint8_t special_del;	/* not to be used in lookup */
-
+	uint8_t sent;		/* has this been sent yet? */
+	uint8_t special_del;	/* not to be used in lookup */
 };
 
 struct sctp_scoping {
@@ -775,12 +774,10 @@ struct sctp_association {
 	 * mapping array.
 	 */
 	uint32_t highest_tsn_inside_map;
-
+	
 	/* EY - new NR variables used for nr_sack based on mapping_array*/
 	uint8_t *nr_mapping_array;
-	uint32_t nr_mapping_array_base_tsn;
 	uint32_t highest_tsn_inside_nr_map;
-	uint16_t nr_mapping_array_size;
 
 	uint32_t last_echo_tsn;
 	uint32_t last_cwr_tsn;
@@ -808,12 +805,12 @@ struct sctp_association {
 	 * to the asoc, but provides a log that you
 	 * can use to detect problems via kgdb.
 	 */
-        struct sctp_tsn_log  in_tsnlog[SCTP_TSN_LOG_SIZE];
-        struct sctp_tsn_log  out_tsnlog[SCTP_TSN_LOG_SIZE];
+	struct sctp_tsn_log  in_tsnlog[SCTP_TSN_LOG_SIZE];
+	struct sctp_tsn_log  out_tsnlog[SCTP_TSN_LOG_SIZE];
 	uint32_t cumack_log[SCTP_TSN_LOG_SIZE];
 	uint32_t cumack_logsnt[SCTP_TSN_LOG_SIZE];
 	uint16_t tsn_in_at;
- 	uint16_t tsn_out_at;
+	uint16_t tsn_out_at;
 	uint16_t tsn_in_wrapped;
 	uint16_t tsn_out_wrapped;
 	uint16_t cumack_log_at;
@@ -942,7 +939,7 @@ struct sctp_association {
 	/* could re-arrange to optimize space here. */
 	uint16_t streamincnt;
 	uint16_t streamoutcnt;
-    uint16_t strm_realoutsize;
+	uint16_t strm_realoutsize;
 	/* my maximum number of retrans of INIT and SEND */
 	/* copied from SCTP but should be individually setable */
 	uint16_t max_init_times;
@@ -1012,7 +1009,7 @@ struct sctp_association {
 	/* flag to indicate if peer can do asconf */
 	uint8_t peer_supports_asconf;
 	/* EY - flag to indicate if peer can do nr_sack*/
-	uint8_t peer_supports_nr_sack;
+	uint8_t peer_supports_nr_sack;	
 	/* pr-sctp support flag */
 	uint8_t peer_supports_prsctp;
 	/* peer authentication support flag */

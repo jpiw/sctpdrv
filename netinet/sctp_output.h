@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 204141 2010-02-20 20:30:40Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #ifndef __sctp_output_h__
@@ -177,9 +177,6 @@ void sctp_send_abort_tcb(struct sctp_tcb *, struct mbuf *, int
 void send_forward_tsn(struct sctp_tcb *, struct sctp_association *);
 
 void sctp_send_sack(struct sctp_tcb *);
-
-/* EY 05/07/08 if nr_sacks used, the following function will be called instead of sctp_send_sack */
-void sctp_send_nr_sack(struct sctp_tcb *);
 
 int sctp_send_hb(struct sctp_tcb *, int, struct sctp_nets *);
 

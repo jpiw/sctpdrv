@@ -399,7 +399,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 	uint32_t ifa_flags;
 
 	rc = getifaddrs(&g_interfaces);
-	if(rc != 0) {
+	if (rc != 0) {
 		return;
 	}
 
@@ -592,7 +592,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 void
 sctp_init_vrf_list(int vrfid)
 {
-	if(vrfid > SCTP_MAX_VRF_ID)
+	if (vrfid > SCTP_MAX_VRF_ID)
 		/* can't do that */
 		return;
 
@@ -767,7 +767,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 		if (m == NULL) {
 			return (NULL);
 		}
-
+		
 		if (SCTP_BUF_IS_EXTENDED(m) == 0) {
 		  sctp_m_freem(m);
 		  return (NULL);
@@ -783,23 +783,23 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 #endif
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if(SCTP_BUF_IS_EXTENDED(m)) {
+		if (SCTP_BUF_IS_EXTENDED(m)) {
 			sctp_log_mb(m, SCTP_MBUF_IALLOC);
 		}
 	}
 #endif
 #elif defined(__FreeBSD__) && __FreeBSD_version > 602000
 	m =  m_getm2(NULL, space_needed, how, type, want_header ? M_PKTHDR : 0);
-	if(m == NULL) {
+	if (m == NULL) {
 		/* bad, no memory */
 		return(m);
 	}
 	if (allonebuf) {
 		int siz;
-		if(SCTP_BUF_IS_EXTENDED(m)) {
+		if (SCTP_BUF_IS_EXTENDED(m)) {
 			siz = SCTP_BUF_EXTEND_SIZE(m);
 		} else {
-			if(want_header)
+			if (want_header)
 				siz = MHLEN;
 			else
 				siz = MLEN;
@@ -809,13 +809,13 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 			return (NULL);
 		}
 	}
-	if(SCTP_BUF_NEXT(m)) {
+	if (SCTP_BUF_NEXT(m)) {
 		sctp_m_freem( SCTP_BUF_NEXT(m));
 		SCTP_BUF_NEXT(m) = NULL;
 	}
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if(SCTP_BUF_IS_EXTENDED(m)) {
+		if (SCTP_BUF_IS_EXTENDED(m)) {
 			sctp_log_mb(m, SCTP_MBUF_IALLOC);
 		}
 	}
@@ -834,7 +834,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 	if (m == NULL) {
 		return (NULL);
 	}
-	if(allonebuf == 0)
+	if (allonebuf == 0)
 		mbuf_threshold = SCTP_BASE_SYSCTL(sctp_mbuf_threshold_count);
 	else
 		mbuf_threshold = 1;
@@ -844,7 +844,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 601000
 	try_again:
 		index = 4;
-		if(space_needed <= MCLBYTES){
+		if (space_needed <= MCLBYTES) {
 			aloc_size = MCLBYTES;
 		} else {
 			aloc_size = MJUMPAGESIZE;
@@ -855,8 +855,8 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 			return (NULL);
 		}
 		if (SCTP_BUF_IS_EXTENDED(m) == 0) {
-			if((aloc_size != MCLBYTES) &&
-			   (allonebuf == 0)){
+			if ((aloc_size != MCLBYTES) &&
+			   (allonebuf == 0)) {
 				aloc_size -= 10;
 				goto try_again;
 			}
@@ -878,7 +878,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 	SCTP_BUF_NEXT(m) = SCTP_BUF_NEXT_PKT(m) = NULL;
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if(SCTP_BUF_IS_EXTENDED(m)) {
+		if (SCTP_BUF_IS_EXTENDED(m)) {
 			sctp_log_mb(m, SCTP_MBUF_IALLOC);
 		}
 	}
@@ -925,7 +925,7 @@ sctp_packet_log(struct mbuf *m, int length)
 	again_locked:
 		value = SCTP_BASE_VAR(packet_log_end);
 		newval = SCTP_BASE_VAR(packet_log_end) + total_len;
-		if(newval >= SCTP_PACKET_LOG_SIZE) {
+		if (newval >= SCTP_PACKET_LOG_SIZE) {
 			/* we wrapped */
 			thisbegin = 0;
 			thisend = total_len;
@@ -952,7 +952,7 @@ sctp_packet_log(struct mbuf *m, int length)
 		}
 	}
 	/* Sanity check */
-	if(thisend >= SCTP_PACKET_LOG_SIZE) {
+	if (thisend >= SCTP_PACKET_LOG_SIZE) {
 		printf("Insanity stops a log thisbegin:%d thisend:%d writers:%d lock:%d end:%d\n",
 		       thisbegin,
 		       thisend,

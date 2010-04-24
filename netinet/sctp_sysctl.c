@@ -471,7 +471,7 @@ sctp_assoclist(SYSCTL_HANDLER_ARGS)
 			/* 7.0 does not support these */
 			xstcb.assoc_id = sctp_get_associd(stcb);
 			xstcb.peers_rwnd = stcb->asoc.peers_rwnd;
-#endif
+#endif			
 #else
 			xstcb.assoc_id = sctp_get_associd(stcb);
 			xstcb.peers_rwnd = stcb->asoc.peers_rwnd;
@@ -732,7 +732,7 @@ sysctl_sctp_check(SYSCTL_HANDLER_ARGS)
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_udp_tunneling_for_client_enable), SCTPCTL_UDP_TUNNELING_FOR_CLIENT_ENABLE_MIN, SCTPCTL_UDP_TUNNELING_FOR_CLIENT_ENABLE_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_enable_sack_immediately), SCTPCTL_SACK_IMMEDIATELY_ENABLE_MIN, SCTPCTL_SACK_IMMEDIATELY_ENABLE_MAX);
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_inits_include_nat_friendly), SCTPCTL_NAT_FRIENDLY_INITS_MIN, SCTPCTL_NAT_FRIENDLY_INITS_MAX);
-
+		
 #ifdef SCTP_DEBUG
 		RANGECHK(SCTP_BASE_SYSCTL(sctp_debug_on), SCTPCTL_DEBUG_MIN, SCTPCTL_DEBUG_MAX);
 #endif
@@ -1067,11 +1067,11 @@ SYSCTL_PROC(_net_inet_sctp, OID_AUTO, cmt_on_off, CTLTYPE_INT|CTLFLAG_RW,
             &SCTP_BASE_SYSCTL(sctp_cmt_on_off), 0, sysctl_sctp_check, "IU",
 	    SCTPCTL_CMT_ON_OFF_DESC);
 
-/* EY */
+/* EY */	
 SYSCTL_PROC(_net_inet_sctp, OID_AUTO, nr_sack_on_off, CTLTYPE_INT | CTLFLAG_RW,
     &SCTP_BASE_SYSCTL(sctp_nr_sack_on_off), 0, sysctl_sctp_check, "IU",
     SCTPCTL_NR_SACK_ON_OFF_DESC);
-
+	
 SYSCTL_PROC(_net_inet_sctp, OID_AUTO, cmt_use_dac, CTLTYPE_INT|CTLFLAG_RW,
             &SCTP_BASE_SYSCTL(sctp_cmt_use_dac), 0, sysctl_sctp_check, "IU",
 	    SCTPCTL_CMT_USE_DAC_DESC);

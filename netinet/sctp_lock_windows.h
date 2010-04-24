@@ -1,30 +1,30 @@
 /*-
  * Copyright (c) 2001-2006, Cisco Systems, Inc. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
- *
- * a) Redistributions of source code must retain the above copyright notice,
+ * 
+ * a) Redistributions of source code must retain the above copyright notice, 
  *   this list of conditions and the following disclaimer.
  *
- * b) Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ * b) Redistributions in binary form must reproduce the above copyright 
+ *    notice, this list of conditions and the following disclaimer in 
  *   the documentation and/or other materials provided with the distribution.
  *
- * c) Neither the name of Cisco Systems, Inc. nor the names of its
- *    contributors may be used to endorse or promote products derived
+ * c) Neither the name of Cisco Systems, Inc. nor the names of its 
+ *    contributors may be used to endorse or promote products derived 
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef __sctp_lock_windows_h__
@@ -68,11 +68,11 @@
  * SCTP_INP_INFO_RLOCK() and then when we want to add a new association to
  * the SCTP_BASE_INFO() list's we will do a SCTP_INP_INFO_WLOCK().
  */
-
+ 
 #ifdef SCTP_LOCK_LOGGING
 #include <netinet/sctputil.h>
 #endif
-
+ 
 extern struct sctp_foo_stuff sctp_logoff[];
 extern int sctp_logoff_stuff;
 extern LARGE_INTEGER zero_timeout;
@@ -309,7 +309,7 @@ __inline int _SCTP_TCB_TRYLOCK(struct sctp_tcb *tcb, char *filename, int lineno)
 
 #define SCTP_TCB_SEND_LOCK_DESTROY(_tcb) do { \
 	spinlock_destroy(&(_tcb)->tcb_send_lock); \
-} while (0)
+} while (0) 
 
 #define SCTP_TCB_SEND_LOCK(_tcb) do { \
 	spinlock_acquire(&(_tcb)->tcb_send_lock); \

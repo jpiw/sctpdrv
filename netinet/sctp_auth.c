@@ -584,10 +584,10 @@ void
 sctp_auth_key_acquire(struct sctp_tcb *stcb, uint16_t key_id)
 {
 	sctp_sharedkey_t *skey;
-
+	
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
-
+ 	
 	/* bump the ref count */
 	if (skey) {
 		atomic_add_int(&skey->refcount, 1);
@@ -601,10 +601,10 @@ void
 sctp_auth_key_release(struct sctp_tcb *stcb, uint16_t key_id)
 {
 	sctp_sharedkey_t *skey;
-
+	
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
-
+	
 	/* decrement the ref count */
 	if (skey) {
 		sctp_free_sharedkey(skey);
@@ -1133,7 +1133,7 @@ sctp_hmac_m(uint16_t hmac_algo, uint8_t *key, uint32_t keylen,
 	}
 	/* now use the rest of the mbuf chain for the text */
 	while (m_tmp != NULL) {
-		if((SCTP_BUF_NEXT(m_tmp) == NULL) && trailer){
+		if ((SCTP_BUF_NEXT(m_tmp) == NULL) && trailer) {
 			sctp_hmac_update(hmac_algo, &ctx, mtod(m_tmp, uint8_t *) + m_offset,
 					 SCTP_BUF_LEN(m_tmp) - (trailer+m_offset));
 		} else {
@@ -1859,7 +1859,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 	struct sctp_authkey_event *auth;
 	struct sctp_queued_to_read *control;
 
-	if((stcb == NULL) ||
+	if ((stcb == NULL) ||
 	   (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE) ||
 	   (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_ALLGONE) ||
 	   (stcb->asoc.state & SCTP_STATE_CLOSED_SOCKET)
@@ -2012,9 +2012,9 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 			num_chunks = plen - sizeof(*chunks);
 			for (i = 0; i < num_chunks; i++) {
 				/* record asconf/asconf-ack if listed */
-				if(chunks->chunk_types[i] == SCTP_ASCONF)
+				if (chunks->chunk_types[i] == SCTP_ASCONF)
 					saw_asconf = 1;
-				if(chunks->chunk_types[i] == SCTP_ASCONF_ACK)
+				if (chunks->chunk_types[i] == SCTP_ASCONF_ACK)
 					saw_asconf_ack = 1;
 
 			}
@@ -2046,7 +2046,7 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 			"SCTP: peer supports ASCONF but not AUTH\n");
 		return (-1);
 	} else if ((peer_supports_asconf) && (peer_supports_auth) &&
-		   ((saw_asconf == 0) || (saw_asconf_ack == 0)) ){
+		   ((saw_asconf == 0) || (saw_asconf_ack == 0))) {
 		return (-2);
 	}
 	return (0);

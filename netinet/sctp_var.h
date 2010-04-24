@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 189790 2009-03-14 13:42:13Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_VAR_H_
@@ -112,7 +112,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 		sctp_auth_key_release((_stcb), (_chk)->auth_keyid); \
 		(_chk)->holds_key_ref = 0; \
 	} \
-        if(_stcb) { \
+        if (_stcb) { \
           SCTP_TCB_LOCK_ASSERT((_stcb)); \
           if ((_chk)->whoTo) { \
                   sctp_free_remote_addr((_chk)->whoTo); \
@@ -304,7 +304,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 
 #ifdef SCTP_FS_SPEC_LOG
 #define sctp_total_flight_decrease(stcb, tp1) do { \
-        if(stcb->asoc.fs_index > SCTP_FS_SPEC_LOG_SIZE) \
+        if (stcb->asoc.fs_index > SCTP_FS_SPEC_LOG_SIZE) \
 		stcb->asoc.fs_index = 0;\
 	stcb->asoc.fslog[stcb->asoc.fs_index].total_flight = stcb->asoc.total_flight; \
 	stcb->asoc.fslog[stcb->asoc.fs_index].tsn = tp1->rec.data.TSN_seq; \
@@ -325,7 +325,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 } while (0)
 
 #define sctp_total_flight_increase(stcb, tp1) do { \
-        if(stcb->asoc.fs_index > SCTP_FS_SPEC_LOG_SIZE) \
+        if (stcb->asoc.fs_index > SCTP_FS_SPEC_LOG_SIZE) \
 		stcb->asoc.fs_index = 0;\
 	stcb->asoc.fslog[stcb->asoc.fs_index].total_flight = stcb->asoc.total_flight; \
 	stcb->asoc.fslog[stcb->asoc.fs_index].tsn = tp1->rec.data.TSN_seq; \

@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 204096 2010-02-19 18:00:38Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 #include <netinet/sctp_os.h>
 #ifdef __FreeBSD__
@@ -75,7 +75,7 @@ sctp_init(void)
 #endif
 
 	bzero(&SCTP_BASE_STATS, sizeof(struct sctpstat));
-
+	
 	/* Initialize and modify the sysctled variables */
 	sctp_init_sysctls();
 #if defined(__Userspace__)
@@ -343,7 +343,7 @@ sctp_notify(struct sctp_inpcb *inp,
 				    net->error_count,
 				    net->failure_threshold,
 				    net);
-
+			
 			net->dest_state &= ~SCTP_ADDR_REACHABLE;
 			net->dest_state |= SCTP_ADDR_NOT_REACHABLE;
 			/*
@@ -1007,7 +1007,7 @@ sctp_disconnect(struct socket *so)
 	}
 	SCTP_INP_RLOCK(inp);
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_TCPTYPE) ||
-	    (inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL)){
+	    (inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL)) {
 		if (LIST_EMPTY(&inp->sctp_asoc_list)) {
 			/* No connection */
 			SCTP_INP_RUNLOCK(inp);
@@ -1121,7 +1121,7 @@ sctp_disconnect(struct socket *so)
 				}
 				if (TAILQ_EMPTY(&asoc->send_queue) &&
 				    TAILQ_EMPTY(&asoc->sent_queue) &&
-				    (asoc->state & SCTP_STATE_PARTIAL_MSG_LEFT)){
+				    (asoc->state & SCTP_STATE_PARTIAL_MSG_LEFT)) {
 					struct mbuf *op_err;
 				abort_anyway:
 					op_err = sctp_get_mbuf_for_msg((sizeof(struct sctp_paramhdr) + sizeof(uint32_t)),
@@ -1723,7 +1723,7 @@ sctp_do_connect_x(struct socket *so, struct sctp_inpcb *inp, void *optval,
 	}
 
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL) &&
-	    (sctp_is_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE))){
+	    (sctp_is_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE))) {
 		SCTP_LTRACE_ERR_RET(inp, stcb, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
 		return(EINVAL);
 	}
@@ -1795,10 +1795,10 @@ sctp_do_connect_x(struct socket *so, struct sctp_inpcb *inp, void *optval,
 
 	/* FIX ME: do we want to pass in a vrf on the connect call? */
 	vrf_id = inp->def_vrf_id;
-
+	
 
 	/* We are GOOD to go */
-	stcb = sctp_aloc_assoc(inp, sa, 1, &error, 0, vrf_id,
+	stcb = sctp_aloc_assoc(inp, sa, &error, 0, vrf_id,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 			       (struct thread *)p
 #elif defined(__Windows__)
@@ -2045,7 +2045,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 		*optsize = sizeof(*av);
 	}
 	break;
-	/* EY - set socket option for nr_sacks  */
+	/* EY - set socket option for nr_sacks  */		
 	case SCTP_NR_SACK_ON_OFF:
 		{
 			struct sctp_assoc_value *av;
@@ -2128,7 +2128,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 	{
 		struct sctp_assoc_ids *ids;
 		unsigned int at, limit;
-
+		
 		SCTP_CHECK_AND_CAST(ids, optval, struct sctp_assoc_ids, *optsize);
 		at = 0;
 		limit = (*optsize-sizeof(uint32_t))/ sizeof(sctp_assoc_t);
@@ -3593,7 +3593,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 		sctp_hmaclist_t *hmaclist;
 		uint16_t hmacid;
 		uint32_t i;
-
+		
 		size_t found;
 
 		SCTP_CHECK_AND_CAST(shmac, optval, struct sctp_hmacalgo, optsize);
@@ -3602,7 +3602,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 			error = EINVAL;
 			break;
 		}
-
+		
 		hmaclist = sctp_alloc_hmaclist(shmac->shmac_number_of_idents);
 		if (hmaclist == NULL) {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOMEM);
@@ -3804,7 +3804,7 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 				struct sctp_stream_out *oldstream;
 				struct sctp_stream_queue_pending *sp;
 				int removed;
-
+				
 				oldstream = stcb->asoc.strmout;
 				/* get some more */
 				SCTP_MALLOC(stcb->asoc.strmout, struct sctp_stream_out *,
@@ -4966,7 +4966,7 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 	/* Now do we connect? */
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL) &&
-	    (sctp_is_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE))){
+	    (sctp_is_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE))) {
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
 		error = EINVAL;
 		goto out_now;
@@ -5017,7 +5017,7 @@ sctp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 	}
 #endif
 	/* We are GOOD to go */
-	stcb = sctp_aloc_assoc(inp, addr, 1, &error, 0, vrf_id, p);
+	stcb = sctp_aloc_assoc(inp, addr, &error, 0, vrf_id, p);
 	if (stcb == NULL) {
 		/* Gak! no memory */
 		goto out_now;
@@ -5085,7 +5085,7 @@ sctp_listen(struct socket *so, struct proc *p)
 
 	int error = 0;
 	struct sctp_inpcb *inp;
-
+	
 	inp = (struct sctp_inpcb *)so->so_pcb;
 	if (inp == 0) {
 		/* I made the same as TCP since we are not setup? */
@@ -5101,7 +5101,7 @@ sctp_listen(struct socket *so, struct proc *p)
 		if ((inp->sctp_flags & SCTP_PCB_FLAGS_BOUNDALL) == 0) {
 			/* not bound all */
 			struct sctp_laddr *laddr;
-
+	
 			LIST_FOREACH(laddr, &inp->sctp_addr_list, sctp_nxt_addr) {
 				memcpy(&store, &laddr->ifa->address, sizeof(store));
 				sp->sin.sin_port = inp->sctp_lport;
@@ -5194,7 +5194,7 @@ sctp_listen(struct socket *so, struct proc *p)
 			return (error);
 		}
 		SOCK_LOCK(so);
-	}
+	}	
 #if (defined(__FreeBSD__) && __FreeBSD_version > 500000) || defined(__Windows__) || defined(__Userspace__)
 #if __FreeBSD_version >= 700000 || defined(__Windows__) || defined(__Userspace__)
 	/* It appears for 7.0 and on, we must always call this. */

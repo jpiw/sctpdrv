@@ -33,7 +33,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 205628 2010-03-24 20:01:14Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 #ifndef __sctputil_h__
 #define __sctputil_h__
@@ -80,7 +80,7 @@ uint32_t sctp_select_initial_TSN(struct sctp_pcb *);
 
 uint32_t sctp_select_a_tag(struct sctp_inpcb *, uint16_t lport, uint16_t rport, int);
 
-int sctp_init_asoc(struct sctp_inpcb *, struct sctp_tcb *, int, uint32_t, uint32_t);
+int sctp_init_asoc(struct sctp_inpcb *, struct sctp_tcb *, uint32_t, uint32_t);
 
 void sctp_fill_random_store(struct sctp_pcb *);
 

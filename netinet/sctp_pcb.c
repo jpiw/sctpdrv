@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 205629 2010-03-24 20:02:40Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 206137 2010-04-03 15:40:14Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -370,7 +370,7 @@ sctp_mark_ifa_addr_down(uint32_t vrf_id, struct sockaddr *addr,
 	if (sctp_ifap == NULL) {
 		SCTPDBG(SCTP_DEBUG_PCB4, "Can't find sctp_ifap for address\n");
 		goto out;
-	}
+	}	
 	if (sctp_ifap->ifn_p == NULL) {
 		SCTPDBG(SCTP_DEBUG_PCB4, "IFA has no IFN - can't mark unuseable\n");
 		goto out;
@@ -397,7 +397,7 @@ sctp_mark_ifa_addr_down(uint32_t vrf_id, struct sockaddr *addr,
 			goto out;
 		}
 	}
-
+	
 	sctp_ifap->localifa_flags &= (~SCTP_ADDR_VALID);
 	sctp_ifap->localifa_flags |= SCTP_ADDR_IFA_UNUSEABLE;
  out:
@@ -421,7 +421,7 @@ sctp_mark_ifa_addr_up(uint32_t vrf_id, struct sockaddr *addr,
 	if (sctp_ifap == NULL) {
 		SCTPDBG(SCTP_DEBUG_PCB4, "Can't find sctp_ifap for address\n");
 		goto out;
-	}
+	}	
 	if (sctp_ifap->ifn_p == NULL) {
 		SCTPDBG(SCTP_DEBUG_PCB4, "IFA has no IFN - can't mark unuseable\n");
 		goto out;
@@ -1006,12 +1006,12 @@ sctp_tcb_special_locate(struct sctp_inpcb **inp_p, struct sockaddr *from,
 		SCTP_TCB_LOCK(stcb);
 		if (stcb->rport != rport) {
 			/* remote port does not match. */
-			SCTP_TCB_UNLOCK(stcb);
+			SCTP_TCB_UNLOCK(stcb);	
 			SCTP_INP_RUNLOCK(inp);
 			continue;
 		}
 		if (stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) {
-			SCTP_TCB_UNLOCK(stcb);
+			SCTP_TCB_UNLOCK(stcb);	
 			SCTP_INP_RUNLOCK(inp);
 			continue;
 		}
@@ -1177,7 +1177,7 @@ sctp_findassociation_ep_addr(struct sctp_inpcb **inp_p, struct sockaddr *remote,
 				goto null_return;
 			}
 			if (stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) {
-				SCTP_TCB_UNLOCK(stcb);
+				SCTP_TCB_UNLOCK(stcb);	
 				goto null_return;
 			}
 			/* now look at the list of remote addresses */
@@ -1469,7 +1469,7 @@ sctp_endpoint_probe(struct sockaddr *nam, struct sctppcbhead *head,
 
 	if (head == NULL)
 		return (NULL);
-
+	
 	LIST_FOREACH(inp, head, sctp_hash) {
 		SCTP_INP_RLOCK(inp);
 		if (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_ALLGONE) {
@@ -3663,7 +3663,7 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 		/* Free associations that are NOT killing us */
 		SCTP_TCB_LOCK(asoc);
 		if ((SCTP_GET_STATE(&asoc->asoc) != SCTP_STATE_COOKIE_WAIT) &&
-		    ((asoc->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) == 0)){
+		    ((asoc->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) == 0)) {
 			struct mbuf *op_err;
 			uint32_t *ippp;
 			op_err = sctp_get_mbuf_for_msg((sizeof(struct sctp_paramhdr) + sizeof(uint32_t)),
@@ -4366,7 +4366,7 @@ sctp_aloc_a_assoc_id(struct sctp_inpcb *inp, struct sctp_tcb *stcb)
  */
 struct sctp_tcb *
 sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
-		int for_a_init, int *error, uint32_t override_tag, uint32_t vrf_id,
+		int *error, uint32_t override_tag, uint32_t vrf_id,
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 		struct thread *p
 #elif defined(__Windows__)
@@ -4499,7 +4499,7 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 	/* setup back pointer's */
 	stcb->sctp_ep = inp;
 	stcb->sctp_socket = inp->sctp_socket;
-	if ((err = sctp_init_asoc(inp, stcb, for_a_init, override_tag, vrf_id))) {
+	if ((err = sctp_init_asoc(inp, stcb, override_tag, vrf_id))) {
 		/* failed */
 		SCTP_TCB_LOCK_DESTROY(stcb);
 		SCTP_TCB_SEND_LOCK_DESTROY(stcb);
@@ -5114,7 +5114,7 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 	sctp_add_vtag_to_timewait(asoc->my_vtag, SCTP_BASE_SYSCTL(sctp_vtag_time_wait),
 				  inp->sctp_lport, stcb->rport);
 
-	/* Now restop the timers to be sure -
+	/* Now restop the timers to be sure
 	 * this is paranoia at is finest!
 	 */
 	(void)SCTP_OS_TIMER_STOP(&asoc->strreset_timer.timer);
@@ -5878,7 +5878,7 @@ sctp_pcb_init()
 	 */
 	int i;
 	struct timeval tv;
-
+	
 	if (SCTP_BASE_VAR(sctp_pcb_initialized) != 0) {
 		/* error I was called twice */
 		return;
@@ -6292,7 +6292,7 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 			sa = (struct sockaddr *)&sin;
 			break;
 		}
-#ifdef INET6
+#ifdef INET6	
 		case  IPV6_VERSION >> 4:
 		{
 			/* its IPv6 */
@@ -6770,7 +6770,7 @@ goto add_it_now6;
 				break;
 			}
 		}
-
+	
 next_param:
 		offset += SCTP_SIZE32(plen);
 		if (offset >= limit) {
@@ -6810,7 +6810,7 @@ next_param:
 		/* peer supports asconf but not auth? */
 		return (-32);
 	} else if ((stcb->asoc.peer_supports_asconf) && (stcb->asoc.peer_supports_auth) &&
-	           ((saw_asconf == 0) || (saw_asconf_ack == 0)) ){
+	           ((saw_asconf == 0) || (saw_asconf_ack == 0))) {
 		return (-33);
 	}
 	/* concatenate the full random key */
@@ -6993,9 +6993,11 @@ sctp_drain_mbufs(struct sctp_inpcb *inp, struct sctp_tcb *stcb)
 	 */
 	struct sctp_association *asoc;
 	struct sctp_tmit_chunk *chk, *nchk;
-	uint32_t cumulative_tsn_p1, tsn;
+	uint32_t cumulative_tsn_p1;
 	struct sctp_queued_to_read *ctl, *nctl;
-	int cnt, strmat, gap;
+	int cnt, strmat;
+	uint32_t gap, i;
+	int fnd=0;
 
 	/* We look for anything larger than the cum-ack + 1 */
 
@@ -7016,13 +7018,7 @@ sctp_drain_mbufs(struct sctp_inpcb *inp, struct sctp_tcb *stcb)
 		    cumulative_tsn_p1, MAX_TSN)) {
 			/* Yep it is above cum-ack */
 			cnt++;
-			tsn = chk->rec.data.TSN_seq;
-			if (tsn >= asoc->mapping_array_base_tsn) {
-				gap = tsn - asoc->mapping_array_base_tsn;
-			} else {
-				gap = (MAX_TSN - asoc->mapping_array_base_tsn) +
-				    tsn + 1;
-			}
+			SCTP_CALC_TSN_TO_GAP(gap, chk->rec.data.TSN_seq, asoc->mapping_array_base_tsn);
 			asoc->size_on_reasm_queue = sctp_sbspace_sub(asoc->size_on_reasm_queue, chk->send_size);
 			sctp_ucount_decr(asoc->cnt_on_reasm_queue);
 			SCTP_UNSET_TSN_PRESENT(asoc->mapping_array, gap);
@@ -7041,25 +7037,14 @@ sctp_drain_mbufs(struct sctp_inpcb *inp, struct sctp_tcb *stcb)
 		while (ctl) {
 			nctl = TAILQ_NEXT(ctl, next);
 			if (compare_with_wrap(ctl->sinfo_tsn,
-			    cumulative_tsn_p1, MAX_TSN)) {
+			                      cumulative_tsn_p1, MAX_TSN)) {
 				/* Yep it is above cum-ack */
 				cnt++;
-				tsn = ctl->sinfo_tsn;
-				if (tsn >= asoc->mapping_array_base_tsn) {
-					gap = tsn -
-					    asoc->mapping_array_base_tsn;
-				} else {
-					gap = (MAX_TSN -
-					    asoc->mapping_array_base_tsn) +
-					    tsn + 1;
-				}
+				SCTP_CALC_TSN_TO_GAP(gap, ctl->sinfo_tsn, asoc->mapping_array_base_tsn);
 				asoc->size_on_all_streams = sctp_sbspace_sub(asoc->size_on_all_streams, ctl->length);
 				sctp_ucount_decr(asoc->cnt_on_all_streams);
-
-				SCTP_UNSET_TSN_PRESENT(asoc->mapping_array,
-				    gap);
-				TAILQ_REMOVE(&asoc->strmin[strmat].inqueue,
-				    ctl, next);
+				SCTP_UNSET_TSN_PRESENT(asoc->mapping_array, gap);
+				TAILQ_REMOVE(&asoc->strmin[strmat].inqueue, ctl, next);
 				if (ctl->data) {
 					sctp_m_freem(ctl->data);
 					ctl->data = NULL;
@@ -7071,70 +7056,43 @@ sctp_drain_mbufs(struct sctp_inpcb *inp, struct sctp_tcb *stcb)
 			ctl = nctl;
 		}
 	}
-	/*
-	 * Question, should we go through the delivery queue? The only
-	 * reason things are on here is the app not reading OR a p-d-api up.
-	 * An attacker COULD send enough in to initiate the PD-API and then
-	 * send a bunch of stuff to other streams... these would wind up on
-	 * the delivery queue.. and then we would not get to them. But in
-	 * order to do this I then have to back-track and un-deliver
-	 * sequence numbers in streams.. el-yucko. I think for now we will
-	 * NOT look at the delivery queue and leave it to be something to
-	 * consider later. An alternative would be to abort the P-D-API with
-	 * a notification and then deliver the data.... Or another method
-	 * might be to keep track of how many times the situation occurs and
-	 * if we see a possible attack underway just abort the association.
-	 */
+	if (cnt) {
+		/* We must back down to see what the new highest is */
+		for (i = asoc->highest_tsn_inside_map;
+		     (compare_with_wrap(i, asoc->mapping_array_base_tsn, MAX_TSN) || (i == asoc->mapping_array_base_tsn));
+		     i--) {
+			SCTP_CALC_TSN_TO_GAP(gap, i, asoc->mapping_array_base_tsn);
+			if (SCTP_IS_TSN_PRESENT(asoc->mapping_array, gap)) {
+				asoc->highest_tsn_inside_map = i;
+				fnd = 1;
+				break;
+			}
+		}
+		if (!fnd) {
+			asoc->highest_tsn_inside_map = asoc->mapping_array_base_tsn - 1;
+		}
+
+		/*
+		 * Question, should we go through the delivery queue? The only
+		 * reason things are on here is the app not reading OR a p-d-api up.
+		 * An attacker COULD send enough in to initiate the PD-API and then
+		 * send a bunch of stuff to other streams... these would wind up on
+		 * the delivery queue.. and then we would not get to them. But in
+		 * order to do this I then have to back-track and un-deliver
+		 * sequence numbers in streams.. el-yucko. I think for now we will
+		 * NOT look at the delivery queue and leave it to be something to
+		 * consider later. An alternative would be to abort the P-D-API with
+		 * a notification and then deliver the data.... Or another method
+		 * might be to keep track of how many times the situation occurs and
+		 * if we see a possible attack underway just abort the association.
+		 */
 #ifdef SCTP_DEBUG
-	if (cnt) {
 		SCTPDBG(SCTP_DEBUG_PCB1, "Freed %d chunks from reneg harvest\n", cnt);
-	}
 #endif
-	if (cnt) {
 		/*
 		 * Now do we need to find a new
 		 * asoc->highest_tsn_inside_map?
 		 */
-		if (asoc->highest_tsn_inside_map >= asoc->mapping_array_base_tsn) {
-			gap = asoc->highest_tsn_inside_map - asoc->mapping_array_base_tsn;
-		} else {
-			gap = (MAX_TSN - asoc->mapping_array_base_tsn) +
-			    asoc->highest_tsn_inside_map + 1;
-		}
-		if (gap >= (asoc->mapping_array_size << 3)) {
-			/*
-			 * Something bad happened or cum-ack and high were
-			 * behind the base, but if so earlier checks should
-			 * have found NO data... wierd... we will start at
-			 * end of mapping array.
-			 */
-			SCTP_PRINTF("Gap was larger than array?? %d set to max:%d maparraymax:%x\n",
-			    (int)gap,
-			    (int)(asoc->mapping_array_size << 3),
-			    (int)asoc->highest_tsn_inside_map);
-			gap = asoc->mapping_array_size << 3;
-		}
-		while (gap > 0) {
-			if (SCTP_IS_TSN_PRESENT(asoc->mapping_array, gap)) {
-				/* found the new highest */
-				asoc->highest_tsn_inside_map = asoc->mapping_array_base_tsn + gap;
-				if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MAP_LOGGING_ENABLE) {
-				  sctp_log_map(0, 8, asoc->highest_tsn_inside_map, SCTP_MAP_SLIDE_RESULT);
-				}
-				break;
-			}
-			gap--;
-		}
-		if (gap == 0) {
-			/* Nothing left in map */
-			memset(asoc->mapping_array, 0, asoc->mapping_array_size);
-			asoc->mapping_array_base_tsn = asoc->cumulative_tsn + 1;
-			asoc->highest_tsn_inside_map = asoc->cumulative_tsn;
-			if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MAP_LOGGING_ENABLE) {
-			  sctp_log_map(0, 9, asoc->highest_tsn_inside_map, SCTP_MAP_SLIDE_RESULT);
-			}
-
-		}
 		asoc->last_revoke_count = cnt;
 		(void)SCTP_OS_TIMER_STOP(&stcb->asoc.dack_timer.timer);
                 /*sa_ignore NO_NULL_CHK*/
@@ -7188,7 +7146,7 @@ sctp_drain()
 			continue;
 #else
 			return;
-#endif
+#endif			
 		}
 #endif
 		SCTP_INP_INFO_RLOCK();
