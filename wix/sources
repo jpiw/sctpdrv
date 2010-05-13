@@ -30,8 +30,9 @@ TARGETLIBS= $(TARGETLIBS) \
 	$(SDK_LIB_PATH)\oleaut32.lib \
 	$(SDK_LIB_PATH)\msi.lib \
 	$(SDK_LIB_PATH)\advapi32.lib \
+	$(SDK_LIB_PATH)\Version.lib \
 	..\lib\wcautil$(LIBARCHSUFFIX).lib \
-	..\lib\dutil$(LIBARCHSUFFIX).lib
+	..\lib\dutil$(LIBARCHSUFFIX).lib \
 
 INCLUDES= $(INCLUDES); \
 	..\sp; \
