@@ -42,10 +42,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp.h 194355 2009-06-17 12:34:56Z rrs $");
 #endif
 #include <sys/types.h>
 
-#if defined(__Windows__)
-#include <packon.h>
-#endif
-
 #define SCTP_PACKED __attribute__((packed))
 
 /*
@@ -549,10 +545,6 @@ struct sctp_error_unrecognized_chunk {
 #define SCTP_LOG_AT_SEND_2_SCTP             0x04000000
 #define SCTP_LOG_AT_SEND_2_OUTQ             0x08000000
 #define SCTP_LOG_TRY_ADVANCE                0x10000000
-
-#if defined(__Windows__)
-#include <packoff.h>
-#endif
 
 #undef SCTP_PACKED
 

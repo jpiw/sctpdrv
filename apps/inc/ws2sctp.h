@@ -58,8 +58,8 @@
 struct sctphdr {
 	unsigned short src_port;	/* source port */
 	unsigned short dest_port;	/* destination port */
-	unsigned long v_tag;		/* verification tag of packet */
-	unsigned long checksum;	/* Adler32 C-Sum */
+	unsigned int v_tag;		/* verification tag of packet */
+	unsigned int checksum;	/* Adler32 C-Sum */
 	/* chunks follow... */
 };
 
@@ -314,13 +314,13 @@ struct sctp_error_invalid_stream {
 
 struct sctp_error_missing_param {
 	struct sctp_error_cause cause;	/* code=SCTP_ERROR_MISSING_PARAM */
-	unsigned long num_missing_params;	/* number of missing parameters */
+	unsigned int num_missing_params;	/* number of missing parameters */
 	/* unsigned short param_type's follow */
 };
 
 struct sctp_error_stale_cookie {
 	struct sctp_error_cause cause;	/* code=SCTP_ERROR_STALE_COOKIE */
-	unsigned long stale_time;	/* time in usec of staleness */
+	unsigned int stale_time;	/* time in usec of staleness */
 };
 
 struct sctp_error_out_of_resource {
@@ -380,7 +380,7 @@ struct sctp_error_unrecognized_chunk {
 /* <== The above definitions are based on netinet/sctp.h (Revision 1.115) */
 
 /* ==> The below definitions are based on netinet/sctp_uio.h (Revision 1.209) */
-typedef unsigned long sctp_assoc_t;
+typedef unsigned int sctp_assoc_t;
 
 /* On/Off setup for subscription to events */
 struct sctp_event_subscribe {
@@ -432,12 +432,11 @@ struct sctp_sndrcvinfo {
 	unsigned short sinfo_stream;
 	unsigned short sinfo_ssn;
 	unsigned short sinfo_flags;
-	unsigned short sinfo_pr_policy;
-	unsigned long sinfo_ppid;
-	unsigned long sinfo_context;
-	unsigned long sinfo_timetolive;
-	unsigned long sinfo_tsn;
-	unsigned long sinfo_cumtsn;
+	unsigned int sinfo_ppid;
+	unsigned int sinfo_context;
+	unsigned int sinfo_timetolive;
+	unsigned int sinfo_tsn;
+	unsigned int sinfo_cumtsn;
 	sctp_assoc_t sinfo_assoc_id;
 	unsigned char  __reserve_pad[SCTP_ALIGN_RESV_PAD];
 };
@@ -447,17 +446,17 @@ struct sctp_extrcvinfo {
 	unsigned short sinfo_ssn;
 	unsigned short sinfo_flags;
 	unsigned short sinfo_pr_policy;
-	unsigned long sinfo_ppid;
-	unsigned long sinfo_context;
-	unsigned long sinfo_timetolive;
-	unsigned long sinfo_tsn;
-	unsigned long sinfo_cumtsn;
+	unsigned int sinfo_ppid;
+	unsigned int sinfo_context;
+	unsigned int sinfo_timetolive;
+	unsigned int sinfo_tsn;
+	unsigned int sinfo_cumtsn;
 	sctp_assoc_t sinfo_assoc_id;
 	unsigned short sreinfo_next_flags;
 	unsigned short sreinfo_next_stream;
-	unsigned long sreinfo_next_aid;
-	unsigned long sreinfo_next_length;
-	unsigned long sreinfo_next_ppid;
+	unsigned int sreinfo_next_aid;
+	unsigned int sreinfo_next_length;
+	unsigned int sreinfo_next_ppid;
 	unsigned char  __reserve_pad[SCTP_ALIGN_RESV_PAD_SHORT];
 };
 
@@ -470,10 +469,10 @@ struct sctp_extrcvinfo {
 struct sctp_snd_all_completes {
 	unsigned short sall_stream;
 	unsigned short sall_flags;
-	unsigned long sall_ppid;
-	unsigned long sall_context;
-	unsigned long sall_num_sent;
-	unsigned long sall_num_failed;
+	unsigned int sall_ppid;
+	unsigned int sall_context;
+	unsigned int sall_num_sent;
+	unsigned int sall_num_failed;
 };
 
 /* Flags that go into the sinfo->sinfo_flags field */
@@ -504,20 +503,20 @@ struct sctp_snd_all_completes {
 #define PR_SCTP_INVALID_POLICY(x) (PR_SCTP_POLICY(x) > SCTP_PR_SCTP_RTX)
 /* Stat's */
 struct sctp_pcbinfo {
-	unsigned long ep_count;
-	unsigned long asoc_count;
-	unsigned long laddr_count;
-	unsigned long raddr_count;
-	unsigned long chk_count;
-	unsigned long readq_count;
-	unsigned long free_chunks;
-	unsigned long stream_oque;
+	unsigned int ep_count;
+	unsigned int asoc_count;
+	unsigned int laddr_count;
+	unsigned int raddr_count;
+	unsigned int chk_count;
+	unsigned int readq_count;
+	unsigned int free_chunks;
+	unsigned int stream_oque;
 };
 
 struct sctp_sockstat {
 	sctp_assoc_t ss_assoc_id;
-	unsigned long ss_total_sndbuf;
-	unsigned long ss_total_recv_buf;
+	unsigned int ss_total_sndbuf;
+	unsigned int ss_total_recv_buf;
 };
 
 /*
@@ -530,7 +529,7 @@ struct sctp_sockstat {
 struct sctp_assoc_change {
 	unsigned short sac_type;
 	unsigned short sac_flags;
-	unsigned long sac_length;
+	unsigned int sac_length;
 	unsigned short sac_state;
 	unsigned short sac_error;
 	unsigned short sac_outbound_streams;
@@ -552,10 +551,10 @@ struct sctp_assoc_change {
 struct sctp_paddr_change {
 	unsigned short spc_type;
 	unsigned short spc_flags;
-	unsigned long spc_length;
+	unsigned int spc_length;
 	struct sockaddr_storage spc_aaddr;
-	unsigned long spc_state;
-	unsigned long spc_error;
+	unsigned int spc_state;
+	unsigned int spc_error;
 	sctp_assoc_t spc_assoc_id;
 	unsigned char spc_padding[4];
 };
@@ -597,7 +596,7 @@ struct sctp_paddr_change {
 struct sctp_remote_error {
 	unsigned short sre_type;
 	unsigned short sre_flags;
-	unsigned long sre_length;
+	unsigned int sre_length;
 	unsigned short sre_error;
 	sctp_assoc_t sre_assoc_id;
 	unsigned char sre_data[4];
@@ -607,8 +606,8 @@ struct sctp_remote_error {
 struct sctp_send_failed {
 	unsigned short ssf_type;
 	unsigned short ssf_flags;
-	unsigned long ssf_length;
-	unsigned long ssf_error;
+	unsigned int ssf_length;
+	unsigned int ssf_error;
 	struct sctp_sndrcvinfo ssf_info;
 	sctp_assoc_t ssf_assoc_id;
 	unsigned char ssf_data[];
@@ -622,7 +621,7 @@ struct sctp_send_failed {
 struct sctp_shutdown_event {
 	unsigned short sse_type;
 	unsigned short sse_flags;
-	unsigned long sse_length;
+	unsigned int sse_length;
 	sctp_assoc_t sse_assoc_id;
 };
 
@@ -630,8 +629,8 @@ struct sctp_shutdown_event {
 struct sctp_adaptation_event {
 	unsigned short sai_type;
 	unsigned short sai_flags;
-	unsigned long sai_length;
-	unsigned long sai_adaptation_ind;
+	unsigned int sai_length;
+	unsigned int sai_adaptation_ind;
 	sctp_assoc_t sai_assoc_id;
 };
 
@@ -643,13 +642,13 @@ struct sctp_setadaptation {
 struct sctp_adaption_event {
 	unsigned short sai_type;
 	unsigned short sai_flags;
-	unsigned long sai_length;
-	unsigned long sai_adaption_ind;
+	unsigned int sai_length;
+	unsigned int sai_adaption_ind;
 	sctp_assoc_t sai_assoc_id;
 };
 
 struct sctp_setadaption {
-	unsigned long ssb_adaption_ind;
+	unsigned int ssb_adaption_ind;
 };
 
 
@@ -659,8 +658,8 @@ struct sctp_setadaption {
 struct sctp_pdapi_event {
 	unsigned short pdapi_type;
 	unsigned short pdapi_flags;
-	unsigned long pdapi_length;
-	unsigned long pdapi_indication;
+	unsigned int pdapi_length;
+	unsigned int pdapi_indication;
 	unsigned short pdapi_stream;
 	unsigned short pdapi_seq;
 	sctp_assoc_t pdapi_assoc_id;
@@ -676,10 +675,10 @@ struct sctp_pdapi_event {
 struct sctp_authkey_event {
 	unsigned short auth_type;
 	unsigned short auth_flags;
-	unsigned long auth_length;
+	unsigned int auth_length;
 	unsigned short auth_keynumber;
 	unsigned short auth_altkeynumber;
-	unsigned long auth_indication;
+	unsigned int auth_indication;
 	sctp_assoc_t auth_assoc_id;
 };
 
@@ -692,7 +691,7 @@ struct sctp_authkey_event {
 struct sctp_sender_dry_event {
 	unsigned short sender_dry_type;
 	unsigned short sender_dry_flags;
-	unsigned long sender_dry_length;
+	unsigned int sender_dry_length;
 	sctp_assoc_t sender_dry_assoc_id;
 };
 
@@ -703,7 +702,7 @@ struct sctp_sender_dry_event {
 struct sctp_stream_reset_event {
 	unsigned short strreset_type;
 	unsigned short strreset_flags;
-	unsigned long strreset_length;
+	unsigned int strreset_length;
 	sctp_assoc_t strreset_assoc_id;
 	unsigned short strreset_list[];
 };
@@ -720,7 +719,7 @@ struct sctp_stream_reset_event {
 struct sctp_tlv {
 	unsigned short sn_type;
 	unsigned short sn_flags;
-	unsigned long sn_length;
+	unsigned int sn_length;
 };
 
 union sctp_notification {
@@ -761,10 +760,10 @@ union sctp_notification {
 struct sctp_paddrparams {
 	struct sockaddr_storage spp_address;
 	sctp_assoc_t spp_assoc_id;
-	unsigned long spp_hbinterval;
-	unsigned long spp_pathmtu;
-	unsigned long spp_flags;
-	unsigned long spp_ipv6_flowlabel;
+	unsigned int spp_hbinterval;
+	unsigned int spp_pathmtu;
+	unsigned int spp_flags;
+	unsigned int spp_ipv6_flowlabel;
 	unsigned short spp_pathmaxrxt;
 	unsigned char spp_ipv4_tos;
 };
@@ -781,25 +780,25 @@ struct sctp_paddrparams {
 struct sctp_paddrinfo {
 	struct sockaddr_storage spinfo_address;
 	sctp_assoc_t spinfo_assoc_id;
-	long spinfo_state;
-	unsigned long spinfo_cwnd;
-	unsigned long spinfo_srtt;
-	unsigned long spinfo_rto;
-	unsigned long spinfo_mtu;
+	int spinfo_state;
+	unsigned int spinfo_cwnd;
+	unsigned int spinfo_srtt;
+	unsigned int spinfo_rto;
+	unsigned int spinfo_mtu;
 };
 
 struct sctp_rtoinfo {
 	sctp_assoc_t srto_assoc_id;
-	unsigned long srto_initial;
-	unsigned long srto_max;
-	unsigned long srto_min;
+	unsigned int srto_initial;
+	unsigned int srto_max;
+	unsigned int srto_min;
 };
 
 struct sctp_assocparams {
 	sctp_assoc_t sasoc_assoc_id;
-	unsigned long sasoc_peer_rwnd;
-	unsigned long sasoc_local_rwnd;
-	unsigned long sasoc_cookie_life;
+	unsigned int sasoc_peer_rwnd;
+	unsigned int sasoc_local_rwnd;
+	unsigned int sasoc_cookie_life;
 	unsigned short sasoc_asocmaxrxt;
 	unsigned short sasoc_number_peer_destinations;
 };
@@ -824,20 +823,20 @@ struct sctp_getaddresses {
 
 struct sctp_setstrm_timeout {
 	sctp_assoc_t ssto_assoc_id;
-	unsigned long ssto_timeout;
-	unsigned long ssto_streamid_start;
-	unsigned long ssto_streamid_end;
+	unsigned int ssto_timeout;
+	unsigned int ssto_streamid_start;
+	unsigned int ssto_streamid_end;
 };
 
 struct sctp_status {
 	sctp_assoc_t sstat_assoc_id;
-	long sstat_state;
-	unsigned long sstat_rwnd;
+	int sstat_state;
+	unsigned int sstat_rwnd;
 	unsigned short sstat_unackdata;
 	unsigned short sstat_penddata;
 	unsigned short sstat_instrms;
 	unsigned short sstat_outstrms;
-	unsigned long sstat_fragmentation_point;
+	unsigned int sstat_fragmentation_point;
 	struct sctp_paddrinfo sstat_primary;
 };
 
@@ -858,7 +857,7 @@ struct sctp_authkey {
 
 /* SCTP_HMAC_IDENT */
 struct sctp_hmacalgo {
-	unsigned long shmac_number_of_idents;
+	unsigned int shmac_number_of_idents;
 	unsigned short shmac_idents[];
 };
 
@@ -886,26 +885,26 @@ struct sctp_authchunks {
 
 struct sctp_assoc_value {
 	sctp_assoc_t assoc_id;
-	unsigned long assoc_value;
+	unsigned int assoc_value;
 };
 
 struct sctp_assoc_ids {
-	unsigned long gaids_number_of_ids;
+	unsigned int gaids_number_of_ids;
 	sctp_assoc_t gaids_assoc_id[];
 };
 
 struct sctp_sack_info {
 	sctp_assoc_t sack_assoc_id;
-	unsigned long sack_delay;
-	unsigned long sack_freq;
+	unsigned int sack_delay;
+	unsigned int sack_freq;
 };
 
 struct sctp_cwnd_args {
 	struct sctp_nets *net;	/* network to */ /* FIXME: LP64 issue */
-	unsigned long cwnd_new_value;/* cwnd in k */
-	unsigned long inflight;	/* flightsize in k */
-	unsigned long pseudo_cumack;
-	unsigned long cwnd_augment;	/* increment to it */
+	unsigned int cwnd_new_value;/* cwnd in k */
+	unsigned int pseudo_cumack;
+	unsigned short inflight;	/* flightsize in k */
+	unsigned short cwnd_augment;	/* increment to it */
 	unsigned char meets_pseudo_cumack;
 	unsigned char need_new_pseudo_cumack;
 	unsigned char cnt_in_send;
@@ -913,9 +912,9 @@ struct sctp_cwnd_args {
 };
 
 struct sctp_blk_args {
-	unsigned long onsb;		/* in 1k bytes */
-	unsigned long sndlen;	/* len of send being attempted */
-	unsigned long peer_rwnd;	/* rwnd of peer */
+	unsigned int onsb;		/* in 1k bytes */
+	unsigned int sndlen;	/* len of send being attempted */
+	unsigned int peer_rwnd;	/* rwnd of peer */
 	unsigned short send_sent_qcnt;/* chnk cnt */
 	unsigned short stream_qcnt;	/* chnk cnt */
 	unsigned short chunks_on_oque;/* chunks out */
@@ -934,6 +933,7 @@ struct sctp_blk_args {
 #define SCTP_RESET_LOCAL_SEND  0x0002
 #define SCTP_RESET_BOTH        0x0003
 #define SCTP_RESET_TSN         0x0004
+#define SCTP_RESET_ADD_STREAMS 0x0005
 
 struct sctp_stream_reset {
 	sctp_assoc_t strrst_assoc_id;
@@ -945,15 +945,15 @@ struct sctp_stream_reset {
 
 struct sctp_get_nonce_values {
 	sctp_assoc_t gn_assoc_id;
-	unsigned long gn_peers_tag;
-	unsigned long gn_local_tag;
+	unsigned int gn_peers_tag;
+	unsigned int gn_local_tag;
 };
 
 /* Debugging logs */
 struct sctp_str_log {
 	void *stcb; /* FIXME: LP64 issue */
-	unsigned long n_tsn;
-	unsigned long e_tsn;
+	unsigned int n_tsn;
+	unsigned int e_tsn;
 	unsigned short n_sseq;
 	unsigned short e_sseq;
 	unsigned short strm;
@@ -961,41 +961,41 @@ struct sctp_str_log {
 
 struct sctp_sb_log {
 	void  *stcb; /* FIXME: LP64 issue */
-	unsigned long so_sbcc;
-	unsigned long stcb_sbcc;
-	unsigned long incr;
+	unsigned int so_sbcc;
+	unsigned int stcb_sbcc;
+	unsigned int incr;
 };
 
 struct sctp_fr_log {
-	unsigned long largest_tsn;
-	unsigned long largest_new_tsn;
-	unsigned long tsn;
+	unsigned int largest_tsn;
+	unsigned int largest_new_tsn;
+	unsigned int tsn;
 };
 
 struct sctp_fr_map {
-	unsigned long base;
-	unsigned long cum;
-	unsigned long high;
+	unsigned int base;
+	unsigned int cum;
+	unsigned int high;
 };
 
 struct sctp_rwnd_log {
-	unsigned long rwnd;
-	unsigned long send_size;
-	unsigned long overhead;
-	unsigned long new_rwnd;
+	unsigned int rwnd;
+	unsigned int send_size;
+	unsigned int overhead;
+	unsigned int new_rwnd;
 };
 
 struct sctp_mbcnt_log {
-	unsigned long total_queue_size;
-	unsigned long size_change;
-	unsigned long total_queue_mb_size;
-	unsigned long mbcnt_change;
+	unsigned int total_queue_size;
+	unsigned int size_change;
+	unsigned int total_queue_mb_size;
+	unsigned int mbcnt_change;
 };
 
 struct sctp_sack_log {
-	unsigned long cumack;
-	unsigned long oldcumack;
-	unsigned long tsn;
+	unsigned int cumack;
+	unsigned int oldcumack;
+	unsigned int tsn;
 	unsigned short numGaps;
 	unsigned short numDups;
 };
@@ -1015,13 +1015,13 @@ struct sctp_lock_log {
 
 struct sctp_rto_log {
 	void * net; /* FIXME: LP64 issue */
-	unsigned long rtt;
+	unsigned int rtt;
 };
 
 struct sctp_nagle_log {
 	void  *stcb; /* FIXME: LP64 issue */
-	unsigned long total_flight;
-	unsigned long total_in_queue;
+	unsigned int total_flight;
+	unsigned int total_in_queue;
 	unsigned short count_in_queue;
 	unsigned short count_in_flight;
 };
@@ -1039,16 +1039,16 @@ struct sctp_sbwake_log {
 };
 
 struct sctp_misc_info {
-	unsigned long log1;
-	unsigned long log2;
-	unsigned long log3;
-	unsigned long log4;
+	unsigned int log1;
+	unsigned int log2;
+	unsigned int log3;
+	unsigned int log4;
 };
 
 struct sctp_log_closing {
 	void *inp; /* FIXME: LP64 issue */
 	void *stcb;  /* FIXME: LP64 issue */
-	unsigned long sctp_flags;
+	unsigned int sctp_flags;
 	unsigned short  state;
 	short  loc;
 };
@@ -1088,165 +1088,174 @@ struct sctp_cwnd_log {
 };
 
 struct sctp_cwnd_log_req {
-	long num_in_log;		/* Number in log */
-	long num_ret;		/* Number returned */
-	long start_at;		/* start at this one */
-	long end_at;		        /* end at this one */
+	int num_in_log;		/* Number in log */
+	int num_ret;		/* Number returned */
+	int start_at;		/* start at this one */
+	int end_at;		        /* end at this one */
 	struct sctp_cwnd_log log[];
 };
 
 struct sctp_timeval {
-	unsigned long tv_sec;
-	unsigned long tv_usec;
+	unsigned int tv_sec;
+	unsigned int tv_usec;
 };
 
 struct sctpstat {
+	 struct sctp_timeval sctps_discontinuitytime;    /* sctpStats 18
+                                                      * (TimeStamp) */
 	/* MIB according to RFC 3873 */
-	unsigned long  sctps_currestab;           /* sctpStats  1   (Gauge32) */
-	unsigned long  sctps_activeestab;         /* sctpStats  2 (Counter32) */
-	unsigned long  sctps_restartestab;
-	unsigned long  sctps_collisionestab;
-	unsigned long  sctps_passiveestab;        /* sctpStats  3 (Counter32) */
-	unsigned long  sctps_aborted;             /* sctpStats  4 (Counter32) */
-	unsigned long  sctps_shutdown;            /* sctpStats  5 (Counter32) */
-	unsigned long  sctps_outoftheblue;        /* sctpStats  6 (Counter32) */
-	unsigned long  sctps_checksumerrors;      /* sctpStats  7 (Counter32) */
-	unsigned long  sctps_outcontrolchunks;    /* sctpStats  8 (Counter64) */
-	unsigned long  sctps_outorderchunks;      /* sctpStats  9 (Counter64) */
-	unsigned long  sctps_outunorderchunks;    /* sctpStats 10 (Counter64) */
-	unsigned long  sctps_incontrolchunks;     /* sctpStats 11 (Counter64) */
-	unsigned long  sctps_inorderchunks;       /* sctpStats 12 (Counter64) */
-	unsigned long  sctps_inunorderchunks;     /* sctpStats 13 (Counter64) */
-	unsigned long  sctps_fragusrmsgs;         /* sctpStats 14 (Counter64) */
-	unsigned long  sctps_reasmusrmsgs;        /* sctpStats 15 (Counter64) */
-	unsigned long  sctps_outpackets;          /* sctpStats 16 (Counter64) */
-	unsigned long  sctps_inpackets;           /* sctpStats 17 (Counter64) */
+	unsigned int  sctps_currestab;           /* sctpStats  1   (Gauge32) */
+	unsigned int  sctps_activeestab;         /* sctpStats  2 (Counter32) */
+	unsigned int  sctps_restartestab;
+	unsigned int  sctps_collisionestab;
+	unsigned int  sctps_passiveestab;        /* sctpStats  3 (Counter32) */
+	unsigned int  sctps_aborted;             /* sctpStats  4 (Counter32) */
+	unsigned int  sctps_shutdown;            /* sctpStats  5 (Counter32) */
+	unsigned int  sctps_outoftheblue;        /* sctpStats  6 (Counter32) */
+	unsigned int  sctps_checksumerrors;      /* sctpStats  7 (Counter32) */
+	unsigned int  sctps_outcontrolchunks;    /* sctpStats  8 (Counter64) */
+	unsigned int  sctps_outorderchunks;      /* sctpStats  9 (Counter64) */
+	unsigned int  sctps_outunorderchunks;    /* sctpStats 10 (Counter64) */
+	unsigned int  sctps_incontrolchunks;     /* sctpStats 11 (Counter64) */
+	unsigned int  sctps_inorderchunks;       /* sctpStats 12 (Counter64) */
+	unsigned int  sctps_inunorderchunks;     /* sctpStats 13 (Counter64) */
+	unsigned int  sctps_fragusrmsgs;         /* sctpStats 14 (Counter64) */
+	unsigned int  sctps_reasmusrmsgs;        /* sctpStats 15 (Counter64) */
+	unsigned int  sctps_outpackets;          /* sctpStats 16 (Counter64) */
+	unsigned int  sctps_inpackets;           /* sctpStats 17 (Counter64) */
 
 	/* input statistics: */
-	unsigned long  sctps_recvpackets;         /* total input packets        */
-	unsigned long  sctps_recvdatagrams;       /* total input datagrams      */
-	unsigned long  sctps_recvpktwithdata;     /* total packets that had data */
-	unsigned long  sctps_recvsacks;           /* total input SACK chunks    */
-	unsigned long  sctps_recvdata;            /* total input DATA chunks    */
-	unsigned long  sctps_recvdupdata;         /* total input duplicate DATA chunks */
-	unsigned long  sctps_recvheartbeat;       /* total input HB chunks      */
-	unsigned long  sctps_recvheartbeatack;    /* total input HB-ACK chunks  */
-	unsigned long  sctps_recvecne;            /* total input ECNE chunks    */
-	unsigned long  sctps_recvauth;            /* total input AUTH chunks    */
-	unsigned long  sctps_recvauthmissing;     /* total input chunks missing AUTH */
-	unsigned long  sctps_recvivalhmacid;      /* total number of invalid HMAC ids received */
-	unsigned long  sctps_recvivalkeyid;       /* total number of invalid secret ids received */
-	unsigned long  sctps_recvauthfailed;      /* total number of auth failed */
-	unsigned long  sctps_recvexpress;         /* total fast path receives all one chunk */
-	unsigned long  sctps_recvexpressm;        /* total fast path multi-part data */
+	unsigned int  sctps_recvpackets;         /* total input packets        */
+	unsigned int  sctps_recvdatagrams;       /* total input datagrams      */
+	unsigned int  sctps_recvpktwithdata;     /* total packets that had data */
+	unsigned int  sctps_recvsacks;           /* total input SACK chunks    */
+	unsigned int  sctps_recvdata;            /* total input DATA chunks    */
+	unsigned int  sctps_recvdupdata;         /* total input duplicate DATA chunks */
+	unsigned int  sctps_recvheartbeat;       /* total input HB chunks      */
+	unsigned int  sctps_recvheartbeatack;    /* total input HB-ACK chunks  */
+	unsigned int  sctps_recvecne;            /* total input ECNE chunks    */
+	unsigned int  sctps_recvauth;            /* total input AUTH chunks    */
+	unsigned int  sctps_recvauthmissing;     /* total input chunks missing AUTH */
+	unsigned int  sctps_recvivalhmacid;      /* total number of invalid HMAC ids received */
+	unsigned int  sctps_recvivalkeyid;       /* total number of invalid secret ids received */
+	unsigned int  sctps_recvauthfailed;      /* total number of auth failed */
+	unsigned int  sctps_recvexpress;         /* total fast path receives all one chunk */
+	unsigned int  sctps_recvexpressm;        /* total fast path multi-part data */
+	unsigned int  sctps_recvnocrc;
+	unsigned int  sctps_recvswcrc;
+	unsigned int  sctps_recvhwcrc;
+
 	/* output statistics: */
-	unsigned long  sctps_sendpackets;         /* total output packets       */
-	unsigned long  sctps_sendsacks;           /* total output SACKs         */
-	unsigned long  sctps_senddata;            /* total output DATA chunks   */
-	unsigned long  sctps_sendretransdata;     /* total output retransmitted DATA chunks */
-	unsigned long  sctps_sendfastretrans;     /* total output fast retransmitted DATA chunks */
-	unsigned long  sctps_sendmultfastretrans; /* total FR's that happened more than once
+	unsigned int  sctps_sendpackets;         /* total output packets       */
+	unsigned int  sctps_sendsacks;           /* total output SACKs         */
+	unsigned int  sctps_senddata;            /* total output DATA chunks   */
+	unsigned int  sctps_sendretransdata;     /* total output retransmitted DATA chunks */
+	unsigned int  sctps_sendfastretrans;     /* total output fast retransmitted DATA chunks */
+	unsigned int  sctps_sendmultfastretrans; /* total FR's that happened more than once
                                               * to same chunk (u-del multi-fr algo).
 					      */
-	unsigned long  sctps_sendheartbeat;       /* total output HB chunks     */
-	unsigned long  sctps_sendecne;            /* total output ECNE chunks    */
-	unsigned long  sctps_sendauth;            /* total output AUTH chunks FIXME   */
-	unsigned long  sctps_senderrors;	   /* ip_output error counter */
+	unsigned int  sctps_sendheartbeat;       /* total output HB chunks     */
+	unsigned int  sctps_sendecne;            /* total output ECNE chunks    */
+	unsigned int  sctps_sendauth;            /* total output AUTH chunks FIXME   */
+	unsigned int  sctps_senderrors;	         /* ip_output error counter */
+	unsigned int  sctps_sendnocrc;
+	unsigned int  sctps_sendswcrc;
+    unsigned int  sctps_sendhwcrc;
 	/* PCKDROPREP statistics: */
-	unsigned long  sctps_pdrpfmbox;           /* Packet drop from middle box */
-	unsigned long  sctps_pdrpfehos;           /* P-drop from end host */
-	unsigned long  sctps_pdrpmbda;            /* P-drops with data */
-	unsigned long  sctps_pdrpmbct;            /* P-drops, non-data, non-endhost */
-	unsigned long  sctps_pdrpbwrpt;           /* P-drop, non-endhost, bandwidth rep only */
-	unsigned long  sctps_pdrpcrupt;           /* P-drop, not enough for chunk header */
-	unsigned long  sctps_pdrpnedat;           /* P-drop, not enough data to confirm */
-	unsigned long  sctps_pdrppdbrk;           /* P-drop, where process_chunk_drop said break */
-	unsigned long  sctps_pdrptsnnf;           /* P-drop, could not find TSN */
-	unsigned long  sctps_pdrpdnfnd;           /* P-drop, attempt reverse TSN lookup */
-	unsigned long  sctps_pdrpdiwnp;           /* P-drop, e-host confirms zero-rwnd */
-	unsigned long  sctps_pdrpdizrw;           /* P-drop, midbox confirms no space */
-	unsigned long  sctps_pdrpbadd;            /* P-drop, data did not match TSN */
-	unsigned long  sctps_pdrpmark;            /* P-drop, TSN's marked for Fast Retran */
+	unsigned int  sctps_pdrpfmbox;           /* Packet drop from middle box */
+	unsigned int  sctps_pdrpfehos;           /* P-drop from end host */
+	unsigned int  sctps_pdrpmbda;            /* P-drops with data */
+	unsigned int  sctps_pdrpmbct;            /* P-drops, non-data, non-endhost */
+	unsigned int  sctps_pdrpbwrpt;           /* P-drop, non-endhost, bandwidth rep only */
+	unsigned int  sctps_pdrpcrupt;           /* P-drop, not enough for chunk header */
+	unsigned int  sctps_pdrpnedat;           /* P-drop, not enough data to confirm */
+	unsigned int  sctps_pdrppdbrk;           /* P-drop, where process_chunk_drop said break */
+	unsigned int  sctps_pdrptsnnf;           /* P-drop, could not find TSN */
+	unsigned int  sctps_pdrpdnfnd;           /* P-drop, attempt reverse TSN lookup */
+	unsigned int  sctps_pdrpdiwnp;           /* P-drop, e-host confirms zero-rwnd */
+	unsigned int  sctps_pdrpdizrw;           /* P-drop, midbox confirms no space */
+	unsigned int  sctps_pdrpbadd;            /* P-drop, data did not match TSN */
+	unsigned int  sctps_pdrpmark;            /* P-drop, TSN's marked for Fast Retran */
 	/* timeouts */
-	unsigned long  sctps_timoiterator;        /* Number of iterator timers that fired */
-	unsigned long  sctps_timodata;            /* Number of T3 data time outs */
-	unsigned long  sctps_timowindowprobe;     /* Number of window probe (T3) timers that fired */
-	unsigned long  sctps_timoinit;            /* Number of INIT timers that fired */
-	unsigned long  sctps_timosack;            /* Number of sack timers that fired */
-	unsigned long  sctps_timoshutdown;        /* Number of shutdown timers that fired */
-	unsigned long  sctps_timoheartbeat;       /* Number of heartbeat timers that fired */
-	unsigned long  sctps_timocookie;          /* Number of times a cookie timeout fired */
-	unsigned long  sctps_timosecret;          /* Number of times an endpoint changed its cookie secret*/
-	unsigned long  sctps_timopathmtu;         /* Number of PMTU timers that fired */
-	unsigned long  sctps_timoshutdownack;     /* Number of shutdown ack timers that fired */
-	unsigned long  sctps_timoshutdownguard;   /* Number of shutdown guard timers that fired */
-	unsigned long  sctps_timostrmrst;         /* Number of stream reset timers that fired */
-	unsigned long  sctps_timoearlyfr;         /* Number of early FR timers that fired */
-	unsigned long  sctps_timoasconf;          /* Number of times an asconf timer fired */
-	unsigned long  sctps_timodelprim;	     /* Number of times a prim_deleted timer fired */
-	unsigned long  sctps_timoautoclose;       /* Number of times auto close timer fired */
-	unsigned long  sctps_timoassockill;       /* Number of asoc free timers expired */
-	unsigned long  sctps_timoinpkill;         /* Number of inp free timers expired */
+	unsigned int  sctps_timoiterator;        /* Number of iterator timers that fired */
+	unsigned int  sctps_timodata;            /* Number of T3 data time outs */
+	unsigned int  sctps_timowindowprobe;     /* Number of window probe (T3) timers that fired */
+	unsigned int  sctps_timoinit;            /* Number of INIT timers that fired */
+	unsigned int  sctps_timosack;            /* Number of sack timers that fired */
+	unsigned int  sctps_timoshutdown;        /* Number of shutdown timers that fired */
+	unsigned int  sctps_timoheartbeat;       /* Number of heartbeat timers that fired */
+	unsigned int  sctps_timocookie;          /* Number of times a cookie timeout fired */
+	unsigned int  sctps_timosecret;          /* Number of times an endpoint changed its cookie secret*/
+	unsigned int  sctps_timopathmtu;         /* Number of PMTU timers that fired */
+	unsigned int  sctps_timoshutdownack;     /* Number of shutdown ack timers that fired */
+	unsigned int  sctps_timoshutdownguard;   /* Number of shutdown guard timers that fired */
+	unsigned int  sctps_timostrmrst;         /* Number of stream reset timers that fired */
+	unsigned int  sctps_timoearlyfr;         /* Number of early FR timers that fired */
+	unsigned int  sctps_timoasconf;          /* Number of times an asconf timer fired */
+	unsigned int  sctps_timodelprim;	     /* Number of times a prim_deleted timer fired */
+	unsigned int  sctps_timoautoclose;       /* Number of times auto close timer fired */
+	unsigned int  sctps_timoassockill;       /* Number of asoc free timers expired */
+	unsigned int  sctps_timoinpkill;         /* Number of inp free timers expired */
 	/* Early fast retransmission counters */
-	unsigned long  sctps_earlyfrstart;
-	unsigned long  sctps_earlyfrstop;
-	unsigned long  sctps_earlyfrmrkretrans;
-	unsigned long  sctps_earlyfrstpout;
-	unsigned long  sctps_earlyfrstpidsck1;
-	unsigned long  sctps_earlyfrstpidsck2;
-	unsigned long  sctps_earlyfrstpidsck3;
-	unsigned long  sctps_earlyfrstpidsck4;
-	unsigned long  sctps_earlyfrstrid;
-	unsigned long  sctps_earlyfrstrout;
-	unsigned long  sctps_earlyfrstrtmr;
+	unsigned int  sctps_earlyfrstart;
+	unsigned int  sctps_earlyfrstop;
+	unsigned int  sctps_earlyfrmrkretrans;
+	unsigned int  sctps_earlyfrstpout;
+	unsigned int  sctps_earlyfrstpidsck1;
+	unsigned int  sctps_earlyfrstpidsck2;
+	unsigned int  sctps_earlyfrstpidsck3;
+	unsigned int  sctps_earlyfrstpidsck4;
+	unsigned int  sctps_earlyfrstrid;
+	unsigned int  sctps_earlyfrstrout;
+	unsigned int  sctps_earlyfrstrtmr;
 	/* otheres */
-	unsigned long  sctps_hdrops;	          /* packet shorter than header */
-	unsigned long  sctps_badsum;	          /* checksum error             */
-	unsigned long  sctps_noport;           /* no endpoint for port       */
-	unsigned long  sctps_badvtag;          /* bad v-tag                  */
-	unsigned long  sctps_badsid;           /* bad SID                    */
-	unsigned long  sctps_nomem;            /* no memory                  */
-	unsigned long  sctps_fastretransinrtt; /* number of multiple FR in a RTT window */
-	unsigned long  sctps_markedretrans;
-	unsigned long  sctps_naglesent;        /* nagle allowed sending      */
-	unsigned long  sctps_naglequeued;      /* nagle does't allow sending */
-	unsigned long  sctps_maxburstqueued;   /* max burst dosn't allow sending */
-	unsigned long  sctps_ifnomemqueued;    /* look ahead tells us no memory in
+	unsigned int  sctps_hdrops;	          /* packet shorter than header */
+	unsigned int  sctps_badsum;	          /* checksum error             */
+	unsigned int  sctps_noport;           /* no endpoint for port       */
+	unsigned int  sctps_badvtag;          /* bad v-tag                  */
+	unsigned int  sctps_badsid;           /* bad SID                    */
+	unsigned int  sctps_nomem;            /* no memory                  */
+	unsigned int  sctps_fastretransinrtt; /* number of multiple FR in a RTT window */
+	unsigned int  sctps_markedretrans;
+	unsigned int  sctps_naglesent;        /* nagle allowed sending      */
+	unsigned int  sctps_naglequeued;      /* nagle does't allow sending */
+	unsigned int  sctps_maxburstqueued;   /* max burst dosn't allow sending */
+	unsigned int  sctps_ifnomemqueued;    /* look ahead tells us no memory in
                                          * interface ring buffer OR we had a
 					 * send error and are queuing one send.
                                          */
-	unsigned long  sctps_windowprobed;     /* total number of window probes sent */
-	unsigned long  sctps_lowlevelerr;	/* total times an output error causes us
+	unsigned int  sctps_windowprobed;     /* total number of window probes sent */
+	unsigned int  sctps_lowlevelerr;	/* total times an output error causes us
 					 * to clamp down on next user send.
 					 */
-	unsigned long  sctps_lowlevelerrusr;	/* total times sctp_senderrors were caused from
+	unsigned int  sctps_lowlevelerrusr;	/* total times sctp_senderrors were caused from
 					 * a user send from a user invoked send not
 					 * a sack response
 					 */
-	unsigned long  sctps_datadropchklmt;	/* Number of in data drops due to chunk limit reached */
-	unsigned long  sctps_datadroprwnd;	/* Number of in data drops due to rwnd limit reached */
-	unsigned long  sctps_ecnereducedcwnd;  /* Number of times a ECN reduced the cwnd */
-	unsigned long  sctps_vtagexpress;	/* Used express lookup via vtag */
-	unsigned long  sctps_vtagbogus;	/* Collision in express lookup. */
-	unsigned long  sctps_primary_randry;	/* Number of times the sender ran dry of user data on primary */
-	unsigned long  sctps_cmt_randry;       /* Same for above */
-	unsigned long  sctps_slowpath_sack;    /* Sacks the slow way */
-	unsigned long  sctps_wu_sacks_sent;	/* Window Update only sacks sent */
-	unsigned long  sctps_sends_with_flags; /* number of sends with sinfo_flags !=0 */
-	unsigned long  sctps_sends_with_unord	/* number of undordered sends */;
-	unsigned long  sctps_sends_with_eof; 	/* number of sends with EOF flag set */
-	unsigned long  sctps_sends_with_abort; /* number of sends with ABORT flag set */
-	unsigned long  sctps_protocol_drain_calls;	/* number of times protocol drain called */
-	unsigned long  sctps_protocol_drains_done; 	/* number of times we did a protocol drain */
-	unsigned long  sctps_read_peeks;	/* Number of times recv was called with peek */
-	unsigned long  sctps_cached_chk;       /* Number of cached chunks used */
-	unsigned long  sctps_cached_strmoq;    /* Number of cached stream oq's used */
-	unsigned long  sctps_left_abandon;     /* Number of unread message abandonded by close */
-	unsigned long  sctps_send_burst_avoid; /* Send burst avoidance, already max burst inflight to net */
-	unsigned long  sctps_send_cwnd_avoid;  /* Send cwnd full  avoidance, already max burst inflight to net */
-	unsigned long  sctps_fwdtsn_map_over;  /* number of map array over-runs via fwd-tsn's */
-
-	struct sctp_timeval sctps_discontinuitytime; /* sctpStats 18 (TimeStamp) */
+	unsigned int  sctps_datadropchklmt;	/* Number of in data drops due to chunk limit reached */
+	unsigned int  sctps_datadroprwnd;	/* Number of in data drops due to rwnd limit reached */
+	unsigned int  sctps_ecnereducedcwnd;  /* Number of times a ECN reduced the cwnd */
+	unsigned int  sctps_vtagexpress;	/* Used express lookup via vtag */
+	unsigned int  sctps_vtagbogus;	/* Collision in express lookup. */
+	unsigned int  sctps_primary_randry;	/* Number of times the sender ran dry of user data on primary */
+	unsigned int  sctps_cmt_randry;       /* Same for above */
+	unsigned int  sctps_slowpath_sack;    /* Sacks the slow way */
+	unsigned int  sctps_wu_sacks_sent;	/* Window Update only sacks sent */
+	unsigned int  sctps_sends_with_flags; /* number of sends with sinfo_flags !=0 */
+	unsigned int  sctps_sends_with_unord	/* number of undordered sends */;
+	unsigned int  sctps_sends_with_eof; 	/* number of sends with EOF flag set */
+	unsigned int  sctps_sends_with_abort; /* number of sends with ABORT flag set */
+	unsigned int  sctps_protocol_drain_calls;	/* number of times protocol drain called */
+	unsigned int  sctps_protocol_drains_done; 	/* number of times we did a protocol drain */
+	unsigned int  sctps_read_peeks;	/* Number of times recv was called with peek */
+	unsigned int  sctps_cached_chk;       /* Number of cached chunks used */
+	unsigned int  sctps_cached_strmoq;    /* Number of cached stream oq's used */
+	unsigned int  sctps_left_abandon;     /* Number of unread message abandonded by close */
+	unsigned int  sctps_send_burst_avoid; /* Send burst avoidance, already max burst inflight to net */
+	unsigned int  sctps_send_cwnd_avoid;  /* Send cwnd full  avoidance, already max burst inflight to net */
+	unsigned int  sctps_fwdtsn_map_over;  /* number of map array over-runs via fwd-tsn's */
+    unsigned int  sctps_reserved[32];    /* Future ABI compat - remove int's
+                                         * from here when adding new */
 };
 
 #define SCTP_STAT_INCR(_x) SCTP_STAT_INCR_BY(_x,1)
@@ -1273,67 +1282,73 @@ union sctp_sockstore {
 };
 
 struct xsctp_inpcb {
-	unsigned long last;
-	unsigned long flags;
-	unsigned long features;
-	unsigned long total_sends;
-	unsigned long total_recvs;
-	unsigned long total_nospaces;
-	unsigned long fragmentation_point;
+	unsigned int last;
+	unsigned int flags;
+	unsigned int features;
+	unsigned int total_sends;
+	unsigned int total_recvs;
+	unsigned int total_nospaces;
+	unsigned int fragmentation_point;
 	unsigned short local_port;
 	unsigned short qlen;
 	unsigned short maxqlen;
+	unsigned int   extra_padding[32];     /* future */
 };
 
 struct xsctp_tcb {
 	union sctp_sockstore primary_addr;      /* sctpAssocEntry 5/6 */
-	unsigned long last;
-	unsigned long heartbeat_interval;            /* sctpAssocEntry 7   */
-	unsigned long state;                         /* sctpAssocEntry 8   */
-	unsigned long in_streams;                    /* sctpAssocEntry 9   */
-	unsigned long out_streams;                   /* sctpAssocEntry 10  */
-	unsigned long max_nr_retrans;                /* sctpAssocEntry 11  */
-	unsigned long primary_process;               /* sctpAssocEntry 12  */
-	unsigned long T1_expireries;                 /* sctpAssocEntry 13  */
-	unsigned long T2_expireries;                 /* sctpAssocEntry 14  */
-	unsigned long retransmitted_tsns;            /* sctpAssocEntry 15  */
-	unsigned long total_sends;
-	unsigned long total_recvs;
-	unsigned long local_tag;
-	unsigned long remote_tag;
-	unsigned long initial_tsn;
-	unsigned long highest_tsn;
-	unsigned long cumulative_tsn;
-	unsigned long cumulative_tsn_ack;
-	unsigned long mtu;
-	unsigned long peers_rwnd;
-	unsigned long refcnt;
+	unsigned int last;
+	unsigned int heartbeat_interval;            /* sctpAssocEntry 7   */
+	unsigned int state;                         /* sctpAssocEntry 8   */
+	unsigned int in_streams;                    /* sctpAssocEntry 9   */
+	unsigned int out_streams;                   /* sctpAssocEntry 10  */
+	unsigned int max_nr_retrans;                /* sctpAssocEntry 11  */
+	unsigned int primary_process;               /* sctpAssocEntry 12  */
+	unsigned int T1_expireries;                 /* sctpAssocEntry 13  */
+	unsigned int T2_expireries;                 /* sctpAssocEntry 14  */
+	unsigned int retransmitted_tsns;            /* sctpAssocEntry 15  */
+	unsigned int total_sends;
+	unsigned int total_recvs;
+	unsigned int local_tag;
+	unsigned int remote_tag;
+	unsigned int initial_tsn;
+	unsigned int highest_tsn;
+	unsigned int cumulative_tsn;
+	unsigned int cumulative_tsn_ack;
+	unsigned int mtu;
+	unsigned int refcnt;
 	unsigned short local_port;                    /* sctpAssocEntry 3   */
 	unsigned short remote_port;                   /* sctpAssocEntry 4   */
 	struct sctp_timeval start_time;         /* sctpAssocEntry 16  */
 	struct sctp_timeval discontinuity_time; /* sctpAssocEntry 17  */
+	unsigned int peers_rwnd;
+	sctp_assoc_t assoc_id;  /* sctpAssocEntry 1   */
+    unsigned int extra_padding[32];     /* future */
 };
 
 struct xsctp_laddr {
 	union sctp_sockstore address;    /* sctpAssocLocalAddrEntry 1/2 */
-	unsigned long last;
+	unsigned int last;
 	struct sctp_timeval start_time;  /* sctpAssocLocalAddrEntry 3   */
+	unsigned int extra_padding[32];     /* future */
 };
 
 struct xsctp_raddr {
 	union sctp_sockstore address;      /* sctpAssocLocalRemEntry 1/2 */
-	unsigned long last;
-	unsigned long rto;                      /* sctpAssocLocalRemEntry 5   */
-	unsigned long max_path_rtx;             /* sctpAssocLocalRemEntry 6   */
-	unsigned long rtx;                      /* sctpAssocLocalRemEntry 7   */
-	unsigned long error_counter;            /*                            */
-	unsigned long cwnd;                     /*                            */
-	unsigned long flight_size;              /*                            */
-	unsigned long mtu;                      /*                            */
+	unsigned int last;
+	unsigned int rto;                      /* sctpAssocLocalRemEntry 5   */
+	unsigned int max_path_rtx;             /* sctpAssocLocalRemEntry 6   */
+	unsigned int rtx;                      /* sctpAssocLocalRemEntry 7   */
+	unsigned int error_counter;            /*                            */
+	unsigned int cwnd;                     /*                            */
+	unsigned int flight_size;              /*                            */
+	unsigned int mtu;                      /*                            */
 	unsigned char active;                    /* sctpAssocLocalRemEntry 3   */
 	unsigned char confirmed;                 /*                            */
 	unsigned char heartbeat_enabled;         /* sctpAssocLocalRemEntry 4   */
 	struct sctp_timeval start_time;    /* sctpAssocLocalRemEntry 8   */
+	unsigned int rtt;
+    unsigned int extra_padding[32];     /* future */
 };
 
 #define SCTP_MAX_LOGGING_SIZE 30000
@@ -1341,15 +1356,15 @@ struct xsctp_raddr {
 
 struct sctp_log_entry {
 	unsigned long long timestamp;
-	unsigned long subsys;
-	unsigned long padding;
-	unsigned long params[SCTP_TRACE_PARAMS];
+	unsigned int subsys;
+	unsigned int padding;
+	unsigned int params[SCTP_TRACE_PARAMS];
 };
 
 struct sctp_log {
 	struct sctp_log_entry entry[SCTP_MAX_LOGGING_SIZE];
-	unsigned long index;
-	unsigned long padding;
+	unsigned int index;
+	unsigned int padding;
 };
 
 /*
