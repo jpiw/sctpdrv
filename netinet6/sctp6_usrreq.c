@@ -54,7 +54,7 @@ __FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 206137 2010-04-03 15:40:14Z
 #include <netinet/sctp_auth.h>
 #include <netinet/sctp_input.h>
 #include <netinet/sctp_output.h>
-#include <netinet/sctp_bsd_addr.h>
+#include <netinet/sctp_windows_addr.h>
 #include <netinet/sctp_crc32.h>
 #include <netinet/udp.h>
 

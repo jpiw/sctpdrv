@@ -1,7 +1,7 @@
 <Include>
 	<?define VersionMajor = 1 ?>
 	<?define VersionMinor = 1 ?>
-	<?define VersionRev   = 4 ?>
+	<?define VersionRev   = 5 ?>
 
 	<?if $(var.Platform)=x64 ?>
 

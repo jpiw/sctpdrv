@@ -5,7 +5,7 @@ Signature      = "$WINDOWS NT$"
 Class          = System
 ClassGUID      = {4d36e97d-e325-11ce-bfc1-08002be10318}
 Provider       = %BruceCran%
-DriverVer      = 02/03/2010,1.1.4
+DriverVer      = 05/31/2010,1.1.5
 DriverPackageType        = KernelService
 DriverPackageDisplayName = %SctpDesc%
 CatalogFile    = sctp.cat
@@ -30,7 +30,7 @@ sctp.sys,,,2
 [DefaultInstall.Services]
 AddService     = Sctp,,DriverService
 
-; Driver specification for NT >= 6 (Vista/Win7)
+; Driver specification for NT > 6 (Win7)
 ; Use AutoStart StartType because BFE isn't a boot-time service
 [DriverService]
 DisplayName    = %SctpDesc%
