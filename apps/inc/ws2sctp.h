@@ -1391,15 +1391,15 @@ INT
 #endif
 
 
-int WSAAPI sctp_peeloff(int, sctp_assoc_t);
-int WSAAPI sctp_bindx(int, struct sockaddr *, int, int);
-int WSAAPI sctp_connectx(int, const struct sockaddr *, int, sctp_assoc_t *);
+int WSAAPI sctp_peeloff(SOCKET, sctp_assoc_t);
+int WSAAPI sctp_bindx(SOCKET, struct sockaddr *, int, int);
+int WSAAPI sctp_connectx(SOCKET, const struct sockaddr *, int, sctp_assoc_t *);
 int WSAAPI sctp_getaddrlen(int);
-int WSAAPI sctp_getpaddrs(int, sctp_assoc_t, struct sockaddr **);
+int WSAAPI sctp_getpaddrs(SOCKET, sctp_assoc_t, struct sockaddr **);
 void WSAAPI sctp_freepaddrs(struct sockaddr *);
-int WSAAPI sctp_getladdrs(int, sctp_assoc_t, struct sockaddr **);
+int WSAAPI sctp_getladdrs(SOCKET, sctp_assoc_t, struct sockaddr **);
 void WSAAPI sctp_freeladdrs(struct sockaddr *);
-int WSAAPI sctp_opt_info(int, sctp_assoc_t, int, void *, socklen_t *);
+int WSAAPI sctp_opt_info(SOCKET, sctp_assoc_t, int, void *, socklen_t *);
 
 int WSAAPI sctp_sendmsg(SOCKET, const void *, size_t,
     const struct sockaddr *, socklen_t,

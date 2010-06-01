@@ -1,3 +1,3 @@
 #!/bin/sh
 
-dlltool -k --output-lib libsctpsp.a --def libsctpsp.def
+dlltool -k --add-stdcall-underscore --output-lib libsctpsp.a --def libsctpsp.def
