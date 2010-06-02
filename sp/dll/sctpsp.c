@@ -31,6 +31,7 @@
 #include <guiddef.h>
 #include <winsock2.h>
 #include <winerror.h>
+#include <io.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <ws2spi.h>
@@ -1132,6 +1133,15 @@ WSPGetSockOpt(
 		peeloff->new_sd = (HANDLE)hModifiedSocket;
 		*optlen = sizeof(struct sctp_peeloff_opt);
 		DBGPRINT("WSPGetSockOpt:SCTP_PEELOFF - leave\n");
+	} else if (level == IPPROTO_SCTP && optname == SCTP_GET_HANDLE) {
+		if (*optlen < sizeof(int)) {
+			*lpErrno = WSAEFAULT;
+			ret = SOCKET_ERROR;
+		} else {
+			SOCKET *sock = (SOCKET*)optval;
+			*optlen = sizeof(SOCKET);
+			*sock = s;
+		}
 	} else {
 		ZeroMemory(&optReq, sizeof(optReq));
 		optReq.level = level;
@@ -1272,7 +1282,6 @@ WSPIoctl(
 		if (!bSuccess) {
 			SetErrorCode(lpErrno);
 			*lpErrno = WSAENETDOWN;
-			printf("GetLastEror() == %08X\n", GetLastError());
 			ret = SOCKET_ERROR;
 		}
 	}
@@ -1590,7 +1599,6 @@ _WSARecvMsg(
 		*lpdwNumberOfBytesRecvd = *bytesTransferred;
 	} else {
 		SetErrorCode(NULL);
-		printf("GetLastEror() == %08X\n", GetLastError());
 		ret = SOCKET_ERROR;
 	}
 

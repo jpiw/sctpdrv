@@ -1391,36 +1391,52 @@ INT
 #endif
 
 
-int WSAAPI sctp_peeloff(SOCKET, sctp_assoc_t);
-int WSAAPI sctp_bindx(SOCKET, struct sockaddr *, int, int);
-int WSAAPI sctp_connectx(SOCKET, const struct sockaddr *, int, sctp_assoc_t *);
-int WSAAPI sctp_getaddrlen(int);
-int WSAAPI sctp_getpaddrs(SOCKET, sctp_assoc_t, struct sockaddr **);
-void WSAAPI sctp_freepaddrs(struct sockaddr *);
-int WSAAPI sctp_getladdrs(SOCKET, sctp_assoc_t, struct sockaddr **);
-void WSAAPI sctp_freeladdrs(struct sockaddr *);
-int WSAAPI sctp_opt_info(SOCKET, sctp_assoc_t, int, void *, socklen_t *);
+int WSAAPI sctp_peeloff2(SOCKET, sctp_assoc_t);
+int WSAAPI sctp_bindx2(SOCKET, struct sockaddr *, int, int);
+int WSAAPI sctp_connectx2(SOCKET, const struct sockaddr *, int, sctp_assoc_t *);
+int WSAAPI sctp_getaddrlen2(int);
+int WSAAPI sctp_getpaddrs2(SOCKET, sctp_assoc_t, struct sockaddr **);
+void WSAAPI sctp_freepaddrs2(struct sockaddr *);
+int WSAAPI sctp_getladdrs2(SOCKET, sctp_assoc_t, struct sockaddr **);
+void WSAAPI sctp_freeladdrs2(struct sockaddr *);
+int WSAAPI sctp_opt_info2(SOCKET, sctp_assoc_t, int, void *, socklen_t *);
 
-int WSAAPI sctp_sendmsg(SOCKET, const void *, size_t,
+int WSAAPI sctp_sendmsg2(SOCKET, const void *, size_t,
     const struct sockaddr *, socklen_t,
     unsigned long, unsigned long, unsigned short, unsigned long, unsigned long);
 
-int WSAAPI sctp_send(SOCKET, const void *, size_t,
+int WSAAPI sctp_send2(SOCKET, const void *, size_t,
     const struct sctp_sndrcvinfo *, int);
 
-int WSAAPI sctp_sendx(SOCKET, const void *, size_t,
+int WSAAPI sctp_sendx2(SOCKET, const void *, size_t,
     struct sockaddr *, int,
     struct sctp_sndrcvinfo *, int);
 
-int WSAAPI sctp_sendmsgx(SOCKET, const void *, size_t,
+int WSAAPI sctp_sendmsgx2(SOCKET, const void *, size_t,
     struct sockaddr *, int,
     unsigned long, unsigned long, unsigned short, unsigned long, unsigned long);
 
-sctp_assoc_t WSAAPI sctp_getassocid(SOCKET, struct sockaddr *);
+sctp_assoc_t WSAAPI sctp_getassocid2(SOCKET, struct sockaddr *);
 
-int WSAAPI sctp_recvmsg(SOCKET, void *, size_t, struct sockaddr *,
+int WSAAPI sctp_recvmsg2(SOCKET, void *, size_t, struct sockaddr *,
     socklen_t *, struct sctp_sndrcvinfo *, int *);
 /* <== The above definitions are based on netinet/sctp_uio.h (Revision 1.209) */
+
+#define sctp_peeloff     sctp_peeloff2
+#define sctp_bindx       sctp_bindx2
+#define sctp_connectx    sctp_connectx2
+#define sctp_getaddrlen  sctp_getaddrlen2
+#define sctp_getpaddrs   sctp_getpaddrs2
+#define sctp_freepaddrs  sctp_freepaddrs2
+#define sctp_getladdrs   sctp_getladdrs2
+#define sctp_freeladdrs  sctp_freeladdrs2
+#define sctp_opt_info    sctp_opt_info2
+#define sctp_sendmsg     sctp_sendmsg2
+#define sctp_send        sctp_send2
+#define sctp_sendx       sctp_sendx2
+#define sctp_sendmsgx    sctp_sendmsgx2
+#define sctp_getassocid  sctp_getassocid2
+#define sctp_recvmsg     sctp_recvmsg2
 
 #ifdef __cplusplus
 }

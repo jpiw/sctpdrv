@@ -1133,69 +1133,279 @@ sctp_sorecvmsg(struct socket *so,
 #if !(defined(_KERNEL)) && !(defined(__Userspace__))
 #if !defined(__Windows__)
 
+#if defined(_WIN64)
+#define WSAAPI __fastcall
+#else
+#define WSAAPI __stdcall
+#endif
+
+int WSAAPI sctp_getaddrlen2(sa_family_t family);
+
+int WSAAPI sctp_connectx2(int sd, const struct sockaddr *addrs, int addrcnt,
+	      sctp_assoc_t *id);
+
+int WSAAPI sctp_bindx2(int sd, struct sockaddr *addrs, int addrcnt, int flags);
+
+int WSAAPI sctp_opt_info2(int sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size);
+
+int WSAAPI sctp_getpaddrs2(int sd, sctp_assoc_t id, struct sockaddr **raddrs);
+
+void WSAAPI sctp_freepaddrs2(struct sockaddr *addrs);
+
+int WSAAPI sctp_getladdrs2(int sd, sctp_assoc_t id, struct sockaddr **raddrs);
+
+void WSAAPI sctp_freeladdrs2(struct sockaddr *addrs);
+
+ssize_t WSAAPI sctp_sendmsg2(
+    int s,
+    const void *data,
+    size_t len,
+    const struct sockaddr *to,
+    socklen_t tolen,
+    uint32_t ppid,
+    uint32_t flags,
+    uint16_t stream_no,
+    uint32_t timetolive,
+    uint32_t context);
+
+sctp_assoc_t WSAAPI sctp_getassocid2(int sd, struct sockaddr *sa);
+
+ssize_t WSAAPI sctp_send2(
+    int s,
+    const void *data,
+    size_t len,
+    const struct sctp_sndrcvinfo *sinfo,
+    int flags);
+
+ssize_t WSAAPI sctp_sendx2(int sd, const void *msg, size_t msg_len,
+	    struct sockaddr *addrs, int addrcnt,
+	    struct sctp_sndrcvinfo *sinfo,
+    	int flags);
+
+ssize_t WSAAPI sctp_sendmsgx2(int sd,
+    const void *msg,
+    size_t len,
+    struct sockaddr *addrs,
+    int addrcnt,
+    u_int32_t ppid,
+    u_int32_t flags,
+    u_int16_t stream_no,
+    u_int32_t timetolive,
+    u_int32_t context);
+
+ssize_t WSAAPI sctp_recvmsg2(
+    int s,
+    char *data,
+    size_t len,
+    struct sockaddr *from,
+    socklen_t *fromlen,
+    struct sctp_sndrcvinfo *sinfo,
+    int *msg_flags);
+
+int WSAAPI sctp_peeloff2(int sd, sctp_assoc_t assoc_id);
+
+#define SCTP_GET_HANDLE			0x0000800d
+
+__inline int get_cyg_fd(int fd)
+{
+	int sd;
+	int len = sizeof(int);
+	if (getsockopt(fd, IPPROTO_SCTP, SCTP_GET_HANDLE, (char*)&sd, &len) != 0) {
+		perror("sctpsp.dll internal error in get_cyg_fd");
+		sd = fd;
+	}
+
+	return sd;
+}
+
 __BEGIN_DECLS
-int __stdcall sctp_peeloff __P((int, sctp_assoc_t));
-int __stdcall sctp_bindx __P((int, struct sockaddr *, int, int));
-int __stdcall sctp_connectx __P((int, const struct sockaddr *, int, sctp_assoc_t *));
-int __stdcall sctp_getaddrlen __P((sa_family_t));
-int __stdcall sctp_getpaddrs __P((int, sctp_assoc_t, struct sockaddr **));
-void __stdcall sctp_freepaddrs __P((struct sockaddr *));
-int __stdcall sctp_getladdrs __P((int, sctp_assoc_t, struct sockaddr **));
-void __stdcall sctp_freeladdrs __P((struct sockaddr *));
-int __stdcall sctp_opt_info __P((int, sctp_assoc_t, int, void *, socklen_t *));
+__inline int WSAAPI sctp_peeloff (int sd, sctp_assoc_t assoc_id)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
 
-ssize_t __stdcall sctp_sendmsg __P((int, const void *, size_t,
-    const struct sockaddr *,
-    socklen_t, uint32_t, uint32_t, uint16_t, uint32_t, uint32_t));
+	return sctp_peeloff2(sd, assoc_id);
+}
 
-ssize_t __stdcall sctp_send __P((int sd, const void *msg, size_t len,
-    const struct sctp_sndrcvinfo *sinfo, int flags));
+__inline int WSAAPI sctp_bindx (int sd, struct sockaddr *addrs, int addrcnt, int flags)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
 
-ssize_t	__stdcall sctp_sendx __P((int sd, const void *msg, size_t len,
+	return sctp_bindx2(sd, addrs, addrcnt, flags);
+}
+
+__inline int WSAAPI sctp_connectx (int sd, const struct sockaddr * addrs, int addrcnt, sctp_assoc_t *id)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_connectx2(sd, addrs, addrcnt, id);
+}
+
+__inline int WSAAPI sctp_getaddrlen (sa_family_t family)
+{
+	return sctp_getaddrlen2(family);
+}
+
+__inline int WSAAPI sctp_getpaddrs (int sd, sctp_assoc_t id, struct sockaddr **raddrs)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_getpaddrs2(sd, id, raddrs);
+}
+
+__inline void WSAAPI sctp_freepaddrs (struct sockaddr *addrs)
+{
+	sctp_freepaddrs2(addrs);
+}
+
+__inline int WSAAPI sctp_getladdrs (int sd, sctp_assoc_t id, struct sockaddr **raddrs)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_getladdrs2(sd, id, raddrs);
+}
+
+__inline void WSAAPI sctp_freeladdrs (struct sockaddr *addrs)
+{
+	sctp_freeladdrs2(addrs);
+}
+
+__inline int WSAAPI sctp_opt_info (int sd, sctp_assoc_t id, int opt, void *val, socklen_t *size)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_opt_info2(sd, id, opt, val, size);
+}
+
+__inline ssize_t WSAAPI sctp_sendmsg (int sd, const void *data, size_t len,
+    const struct sockaddr *to,
+    socklen_t tolen, uint32_t ppid, uint32_t flags, uint16_t stream_no, uint32_t timetolive, uint32_t context)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_sendmsg2(sd, data, len, to, tolen, ppid, flags, stream_no, timetolive, context);
+}
+
+__inline ssize_t WSAAPI sctp_send (int sd, const void *msg, size_t len,
+    const struct sctp_sndrcvinfo *sinfo, int flags)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+    return sctp_send2(sd, msg, len, sinfo, flags);
+}
+
+__inline ssize_t WSAAPI sctp_sendx (int sd, const void *msg, size_t len,
     struct sockaddr *addrs, int addrcnt,
-    struct sctp_sndrcvinfo *sinfo, int flags));
+    struct sctp_sndrcvinfo *sinfo, int flags)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
 
-ssize_t	__stdcall sctp_sendmsgx __P((int sd, const void *, size_t,
-    struct sockaddr *, int,
-    uint32_t, uint32_t, uint16_t, uint32_t, uint32_t));
+	return sctp_sendx2(sd, msg, len, addrs, addrcnt, sinfo, flags);
+}
 
-sctp_assoc_t __stdcall sctp_getassocid __P((int sd, struct sockaddr *sa));
+__inline ssize_t WSAAPI sctp_sendmsgx (int sd, const void *msg, size_t len,
+    struct sockaddr *addrs, int addrcnt,
+    uint32_t ppid, uint32_t flags, uint16_t stream_no, uint32_t timetolive, uint32_t context)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
 
-ssize_t __stdcall sctp_recvmsg __P((int, void *, size_t, struct sockaddr *,
-    socklen_t *, struct sctp_sndrcvinfo *, int *));
+	return sctp_sendmsgx2(sd, msg, len, addrs, addrcnt, ppid, flags, stream_no, timetolive, context);
+}
+
+__inline sctp_assoc_t WSAAPI sctp_getassocid (int sd, struct sockaddr *sa)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_getassocid2(sd, sa);
+}
+
+ssize_t WSAAPI sctp_generic_recvmsg(int, char *, size_t, struct sockaddr *, socklen_t *,
+    struct sctp_sndrcvinfo *, int *);
+
+__inline ssize_t WSAAPI sctp_recvmsg(int sd, void *buf, size_t size, struct sockaddr * sa,
+    socklen_t * sl, struct sctp_sndrcvinfo * snd, int * len)
+{
+	#if defined(__CYGWIN__)
+		sd = get_cyg_fd(sd);
+	#endif
+
+	return sctp_recvmsg2(sd, buf, size, sa, sl, snd, len);
+}
 
 __END_DECLS
 
-#else
-SOCKET WSAAPI sctp_peeloff __P((SOCKET, sctp_assoc_t));
-int  WSAAPI sctp_bindx __P((SOCKET, struct sockaddr *, int, int));
-int  WSAAPI sctp_connectx __P((SOCKET, const struct sockaddr *, int, sctp_assoc_t *));
-int  WSAAPI sctp_getaddrlen __P((sa_family_t));
-int  WSAAPI sctp_getpaddrs __P((SOCKET, sctp_assoc_t, struct sockaddr **));
-void WSAAPI sctp_freepaddrs __P((struct sockaddr *));
-int  WSAAPI sctp_getladdrs __P((SOCKET, sctp_assoc_t, struct sockaddr **));
-void WSAAPI sctp_freeladdrs __P((struct sockaddr *));
-int  WSAAPI sctp_opt_info __P((SOCKET, sctp_assoc_t, int, void *, socklen_t *));
+#undef SCTP_GET_HANDLE
+#undef WSAAPI
 
-ssize_t WSAAPI sctp_sendmsg (SOCKET, const void *, size_t,
+
+#else
+
+SOCKET WSAAPI sctp_peeloff2 __P((SOCKET, sctp_assoc_t));
+int  WSAAPI sctp_bindx2 __P((SOCKET, struct sockaddr *, int, int));
+int  WSAAPI sctp_connectx2 __P((SOCKET, const struct sockaddr *, int, sctp_assoc_t *));
+int  WSAAPI sctp_getaddrlen2 __P((sa_family_t));
+int  WSAAPI sctp_getpaddrs2 __P((SOCKET, sctp_assoc_t, struct sockaddr **));
+void WSAAPI sctp_freepaddrs2 __P((struct sockaddr *));
+int  WSAAPI sctp_getladdrs2 __P((SOCKET, sctp_assoc_t, struct sockaddr **));
+void WSAAPI sctp_freeladdrs2 __P((struct sockaddr *));
+int  WSAAPI sctp_opt_info2 __P((SOCKET, sctp_assoc_t, int, void *, socklen_t *));
+
+ssize_t WSAAPI sctp_sendmsg2 (SOCKET, const void *, size_t,
     const struct sockaddr *,
     socklen_t, uint32_t, uint32_t, uint16_t, uint32_t, uint32_t);
 
-ssize_t WSAAPI sctp_send __P((SOCKET sd, const void *msg, size_t len,
+ssize_t WSAAPI sctp_send2 __P((SOCKET sd, const void *msg, size_t len,
     const struct sctp_sndrcvinfo *sinfo, int flags));
 
-ssize_t	WSAAPI sctp_sendx __P((SOCKET sd, const void *msg, size_t len,
+ssize_t	WSAAPI sctp_sendx2 __P((SOCKET sd, const void *msg, size_t len,
     struct sockaddr *addrs, int addrcnt,
     struct sctp_sndrcvinfo *sinfo, int flags));
 
-ssize_t	WSAAPI sctp_sendmsgx __P((SOCKET sd, const void *, size_t,
+ssize_t	WSAAPI sctp_sendmsgx2 __P((SOCKET sd, const void *, size_t,
     struct sockaddr *, int,
     uint32_t, uint32_t, uint16_t, uint32_t, uint32_t));
 
-sctp_assoc_t WSAAPI sctp_getassocid __P((SOCKET sd, struct sockaddr *sa));
+sctp_assoc_t WSAAPI sctp_getassocid2 __P((SOCKET sd, struct sockaddr *sa));
 
-ssize_t WSAAPI sctp_recvmsg __P((SOCKET, void *, size_t, struct sockaddr *,
+ssize_t WSAAPI sctp_recvmsg2 __P((SOCKET, void *, size_t, struct sockaddr *,
     socklen_t *, struct sctp_sndrcvinfo *, int *));
+
+#define sctp_peeloff     sctp_peeloff2
+#define sctp_bindx       sctp_bindx2
+#define sctp_connectx    sctp_connectx2
+#define sctp_getaddrlen  sctp_getaddrlen2
+#define sctp_getpaddrs   sctp_getpaddrs2
+#define sctp_freepaddrs  sctp_freepaddrs2
+#define sctp_getladdrs   sctp_getladdrs2
+#define sctp_freeladdrs  sctp_freeladdrs2
+#define sctp_opt_info    sctp_opt_info2
+#define sctp_sendmsg     sctp_sendmsg2
+#define sctp_send        sctp_send2
+#define sctp_sendx       sctp_sendx2
+#define sctp_sendmsgx    sctp_sendmsgx2
+#define sctp_getassocid  sctp_getassocid2
+#define sctp_recvmsg     sctp_recvmsg2
 
 #pragma warning(pop)
 #endif				/* !__Windows__*/
