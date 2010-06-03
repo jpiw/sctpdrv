@@ -1,7 +1,7 @@
 #include "version.h"
 #include "resourceVersion.h"
 
-#define VER_PRODUCT_RELEASE_LEVEL_STR		"beta"
+#define VER_BETA
 #define VER_INTERNAL_FILEDESCRIPTION_STR	"SctpDrv"
 #define VER_INTERNALNAME_STR				"file_receiver.exe"
 #define VER_ORIGINALFILENAME_STR			"file_receiver.exe"

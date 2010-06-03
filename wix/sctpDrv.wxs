@@ -65,7 +65,9 @@
 				<Directory Id="SctpDrv" Name="SctpDrv">
 					<Directory Id="bin" Name="bin"/>
 					<Directory Id='lib' Name='lib'/>
-					<Directory Id='inc' Name='inc'/>
+					<Directory Id='inc' Name='inc'>
+						<Directory Id='netinet' Name='netinet'/>
+					</Directory>
 					<Directory Id='src' Name='src'/>
 				</Directory>
 			</Directory>

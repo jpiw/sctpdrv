@@ -1270,7 +1270,7 @@ ifnet_create_by_index(
 	ifEntry.InterfaceIndex = interfaceIndex;
 
 	status = GetIfEntry2(&ifEntry);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_index - leave#1,status=%08x\n", status);
 		return NULL;
 	}
@@ -1281,6 +1281,9 @@ ifnet_create_by_index(
 		if (NT_SUCCESS(status)) {
 			sz = asGuid.Length < IF_XNAMESIZE ? asGuid.Length : IF_XNAMESIZE;
 			xname_tmp = ExAllocatePoolWithTag(NonPagedPool, IF_XNAMESIZE + 1, 'km51');
+			if (xname_tmp == NULL)
+				return NULL;
+
 			RtlCopyMemory(xname_tmp, asGuid.Buffer, sz);
 			RtlFreeAnsiString(&asGuid);
 		}

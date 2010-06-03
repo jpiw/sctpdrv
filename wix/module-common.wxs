@@ -56,6 +56,8 @@
 
 		<ComponentGroup Id='inc'>
 			<ComponentRef Id='ws2sctp.h'/>
+			<ComponentRef Id="sctp.h"/>
+			<ComponentRef Id="sctp_uio.h"/>
 		</ComponentGroup>
 
 		<ComponentGroup Id='lib'>
@@ -63,7 +65,6 @@
 			<?if $(var.Platform)=x64 ?>
 			<ComponentRef Id='sctpsp64.lib'/>
 			<?endif ?>
-			<ComponentRef Id='libsctpsp.a'/>
 		</ComponentGroup>
 
 		<ComponentGroup Id='src'>
@@ -76,6 +77,18 @@
 			<Component Id="ws2sctp.h" Guid="a85ec122-dada-4678-9fbf-ae37f1212732" Win64="$(var.Win64)">
 				<File Id="ws2sctp.h" Name="ws2sctp.h" KeyPath="yes"
 					Source="..\apps\inc\ws2sctp.h" />
+			</Component>
+		</DirectoryRef>
+		
+		<DirectoryRef Id='netinet'>
+			<Component Id="sctp.h" Guid="f1383a3a-4711-4102-a5b2-dd19ac576a73" Win64="$(var.Win64)">
+				<File Id="sctp.h" Name="sctp.h" KeyPath="yes"
+					Source="..\netinet\sctp.h"/>
+			</Component>
+		
+			<Component Id="sctp_uio.h" Guid="ef7089da-3aae-4d33-9411-63a6db8009ec" Win64="$(var.Win64)">
+				<File Id="sctp_uio.h" Name="sctp_uio.h" KeyPath="yes"
+					Source="..\netinet\sctp_uio.h"/>
 			</Component>
 		</DirectoryRef>
 
@@ -134,15 +147,7 @@
 						Value='%SystemRoot%\System32\drivers\sctp.sys'/>
 					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
 				</RegistryKey>
-				<difx:Driver Legacy="yes" AddRemovePrograms="no"/>
-				<ServiceControl Id="sctp_service" Name="Sctp" Start="install" Stop="both" Remove="uninstall" Wait="no"/>
-			</Component>
-		</DirectoryRef>
-
-		<DirectoryRef Id='lib'>
-			<Component Id="libsctpsp.a" Win64="$(var.Win64)" Guid="0c095fe8-b486-4df5-8a30-c8874e254e3b">
-				<File Id="libsctpsp.a" Name="libsctpsp.a" KeyPath="yes"
-					Source="..\mingw\libsctpsp.a" />
+				<difx:Driver Legacy="yes" AddRemovePrograms="no" DeleteFiles="yes"/>
 			</Component>
 		</DirectoryRef>
 		

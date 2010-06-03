@@ -565,6 +565,9 @@ route_add(
 #endif
 
 	rt = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct rtentry), 'km51');
+	if (rt == NULL)
+		return (NULL);
+
 	RtlZeroMemory(rt, sizeof(struct rtentry));
 	RT_LOCK_INIT(rt);
 
@@ -1047,8 +1050,8 @@ route_ipv4_check(
 		ipRouteTableSize = sizeof(ULONG) + sizeof(IPRouteEntry) * ipSnmpInfo.ipsi_numroutes;
 		*ipRouteTable_ptr = ExAllocatePoolWithTag(NonPagedPool, ipRouteTableSize, 'km51');
 		if (*ipRouteTable_ptr == NULL) {
-			return -1;
 			DebugPrint(DEBUG_NET_VERBOSE, "route_ipv4_check - leave#4\n");
+			return -1;
 		}
 		RtlZeroMemory(*ipRouteTable_ptr, ipRouteTableSize);
 	}
@@ -1066,7 +1069,7 @@ route_ipv4_check(
 	    sizeof(tcp_req),
 	    ipRouteTable->table,
 	    sizeof(IPRouteEntry) * ipRouteTable->dwNumEntries);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "route_ipv4_check - leave#5,status=%08x\n", status);
 		return -1;
 	}

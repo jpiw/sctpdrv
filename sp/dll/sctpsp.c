@@ -49,9 +49,6 @@
 #include <netinet/sctp.h>
 #include <netinet/sctp_peeloff.h>
 
-#define MAXDEVNAME_LEN 256
-#define MAXSOCKETS     512
-
 struct SocketInfo
 {
 	SOCKET s;
@@ -385,7 +382,6 @@ WSPAccept(
     LPINT lpErrno)
 {
 	int ret = 0;
-	WCHAR devname[MAXDEVNAME_LEN];
 	SOCKET hAcceptSocket;
 	SOCKET hModifiedSocket = INVALID_SOCKET;
 	struct SocketInfo *socketInfo;
@@ -411,9 +407,7 @@ WSPAccept(
 	if (!ValidSocket(s, &socketInfo, lpErrno))
 		return INVALID_SOCKET;
 
-	StringCchCopy(devname, MAXDEVNAME_LEN, WIN_SCTP_SOCKET_DEVICE_NAME);
-
-	hAcceptSocket = (SOCKET)CreateFile(devname,
+	hAcceptSocket = (SOCKET)CreateFile(WIN_SCTP_SOCKET_DEVICE_NAME,
 					socketInfo->accessFlags,
 					socketInfo->shareFlags,
 					NULL,
@@ -1044,7 +1038,6 @@ WSPGetSockOpt(
 
 	if (level == IPPROTO_SCTP && optname == SCTP_PEELOFF) {
 		struct sctp_peeloff_opt *peeloff = NULL;
-		WCHAR devname[MAXDEVNAME_LEN];
 		SOCKET socket = INVALID_SOCKET;
 		SOCKET_PEELOFF_REQUEST peeloffReq;
 
@@ -1065,9 +1058,8 @@ WSPGetSockOpt(
 		}
 
 		if (!ret) {
-			StringCchCopy(devname, MAXDEVNAME_LEN, WIN_SCTP_SOCKET_DEVICE_NAME);
 
-			socket = (SOCKET)CreateFile(devname,
+			socket = (SOCKET)CreateFile(WIN_SCTP_SOCKET_DEVICE_NAME,
 					socketInfo->accessFlags,
 					socketInfo->shareFlags,
 					NULL,
@@ -1143,7 +1135,6 @@ WSPGetSockOpt(
 			*sock = s;
 		}
 	} else {
-		ZeroMemory(&optReq, sizeof(optReq));
 		optReq.level = level;
 		optReq.optname = optname;
 		optReq.optlen = *optlen;
@@ -1276,8 +1267,9 @@ WSPIoctl(
 		DBGPRINT("IOCTL_SOCKET_IOCTL: bSuccess=%d, bytesReturned=%d\n", bSuccess, bytesReturned);
 
 		if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
-				(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
+				(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING))) {
 			free(lpOverlapped->Pointer);
+		}
 
 		if (!bSuccess) {
 			SetErrorCode(lpErrno);
@@ -1421,6 +1413,7 @@ WSPRecv(
 	BOOL bSuccess;
 	DWORD bytesReturned;
 	DWORD *bytesTransferred;
+	INT byteCount = 0;
 
 	DBGPRINT("WSPRecv - enter\n");
 
@@ -1438,27 +1431,39 @@ WSPRecv(
 	else
 		recvReq.lpFlags = lpFlags;
 
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	if (lpOverlapped != NULL) {
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	} else {
+		// bytesTransferred can be NULL if byte count isn't required
+		bytesTransferred = lpNumberOfBytesRecvd;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
 
 	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECV,
 			(PVOID)&recvReq, sizeof(recvReq),
-			lpNumberOfBytesRecvd, sizeof(*lpNumberOfBytesRecvd),
+			bytesTransferred, byteCount,
 			&bytesReturned,
 			lpOverlapped);
 
 	DBGPRINT("IOCTL_SOCKET_RECV: bSuccess=%d,bytesReturned=%d\n", bSuccess, bytesReturned);
 
 	if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
-			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
+			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING))) {
 		free(lpOverlapped->Pointer);
+	}
 
 	if (!bSuccess) {
 		SetErrorCode(lpErrno);
 		ret = SOCKET_ERROR;
 	}
 
-	if (bSuccess || *lpErrno != ERROR_IO_PENDING) {
+	// If the operation fully completed now and we're doing overlapped IO
+	// OR we're doing overlapped IO and the request isn't pending, then free the memory
+	if ((bSuccess && lpOverlapped != NULL) ||
+	        (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
 		if (lpOverlapped != NULL)
 			*lpFlags = lpOverlapped->OffsetHigh;
@@ -1501,6 +1506,7 @@ WSPRecvFrom(
 	DWORD bytesReturned;
 	SOCKET_RECV_REQUEST recvReq;
 	DWORD *bytesTransferred;
+	INT byteCount = 0;
 
 	DBGPRINT("WSPRecvFrom - enter\n");
 
@@ -1510,7 +1516,6 @@ WSPRecvFrom(
 		return SOCKET_ERROR;
 	}
 
-	ZeroMemory(&recvReq, sizeof(recvReq));
 	recvReq.lpBuffers = (PSOCKET_WSABUF)lpBuffers;
 	recvReq.dwBufferCount = dwBufferCount;
 	recvReq.lpFrom = lpFrom;
@@ -1520,12 +1525,19 @@ WSPRecvFrom(
 	else
 		recvReq.lpFlags = lpFlags;
 
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	if (lpOverlapped != NULL) {
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	} else {
+		bytesTransferred = lpNumberOfBytesRecvd;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
 
 	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECVFROM,
 			(PVOID)&recvReq, sizeof(recvReq),
-			bytesTransferred, sizeof(*bytesTransferred),
+			bytesTransferred, byteCount,
 			&bytesReturned,
 			lpOverlapped);
 
@@ -1534,14 +1546,15 @@ WSPRecvFrom(
 		free(lpOverlapped->Pointer);
 
 	DBGPRINT("IOCTL_SOCKET_RECVFROM: bSuccess=%d,bytesReturned=%d\n", bSuccess, bytesReturned);
-	if (bSuccess) {
-		*lpNumberOfBytesRecvd = *bytesTransferred;
-	} else {
+	if (!bSuccess) {
 		SetErrorCode(lpErrno);
 		ret = SOCKET_ERROR;
 	}
 
-	if (!ret || *lpErrno != ERROR_IO_PENDING) {
+	// If we're doing overlapped IO and the operation fully finished now, OR
+	// we're doing overlapped IO and the operation isn't pending, free the memory
+	if ((bSuccess && lpOverlapped != NULL) ||
+	       (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
 		if (lpOverlapped != NULL)
 			*lpFlags = lpOverlapped->OffsetHigh;
@@ -1569,6 +1582,7 @@ _WSARecvMsg(
 	INT iErrno;
 	WSATHREADID threadId;
 	DWORD *bytesTransferred;
+	INT byteCount = 0;
 
 	DBGPRINT("WSARecvMsg - enter\n");
 
@@ -1578,32 +1592,38 @@ _WSARecvMsg(
 		return SOCKET_ERROR;
 	}
 
-	ZeroMemory(&recvMsgReq, sizeof(recvMsgReq));
 	recvMsgReq.lpMsg = (PSOCKET_WSAMSG)lpMsg;
 
-	threadId.ThreadHandle = GetCurrentThread();
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
+	if (lpOverlapped != NULL) {
+		threadId.ThreadHandle = GetCurrentThread();
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
 
-	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECVMSG,
-			(PVOID)&recvMsgReq, sizeof(recvMsgReq),
-			bytesTransferred, sizeof(*bytesTransferred),
-			&bytesReturned, lpOverlapped);
+		bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECVMSG,
+				(PVOID)&recvMsgReq, sizeof(recvMsgReq),
+				bytesTransferred, sizeof(*bytesTransferred),
+				&bytesReturned, lpOverlapped);
+	} else {
+		bytesTransferred = lpdwNumberOfBytesRecvd;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
 
 	DBGPRINT("IOCTL_SOCKET_RECVMSG: bSuccess=%d,bytesReturned=%d\n", bSuccess, bytesReturned);
 	if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
 
-	if (bSuccess) {
-		*lpdwNumberOfBytesRecvd = *bytesTransferred;
-	} else {
+	if (!bSuccess) {
 		SetErrorCode(NULL);
 		ret = SOCKET_ERROR;
 	}
 
-	if (!ret || GetLastError() != ERROR_IO_PENDING)
+	if ((bSuccess && lpOverlapped != NULL) ||
+			(lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
+	}
 
 	DBGPRINT("WSARecvMsg - leave\n");
 	return ret;
@@ -1680,6 +1700,7 @@ WSPSend(
 	BOOL bSuccess;
 	DWORD bytesReturned;
 	DWORD *bytesTransferred;
+	INT byteCount = 0;
 
 	DBGPRINT("WSPSend - enter\n");
 
@@ -1689,8 +1710,16 @@ WSPSend(
 		return SOCKET_ERROR;
 	}
 
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+
+	if (lpOverlapped != NULL) {
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	} else {
+		bytesTransferred = lpNumberOfBytesSent;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
 
 	ZeroMemory(&sendReq, sizeof(sendReq));
 	sendReq.lpBuffers = (PSOCKET_WSABUF)lpBuffers;
@@ -1699,7 +1728,7 @@ WSPSend(
 
 	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_SEND,
 			(PVOID)&sendReq, sizeof(sendReq),
-			bytesTransferred, sizeof(*bytesTransferred),
+			bytesTransferred, byteCount,
 			&bytesReturned, lpOverlapped);
 
 	DBGPRINT("IOCTL_SOCKET_SEND: bSuccess=%d\n", bSuccess);
@@ -1707,17 +1736,15 @@ WSPSend(
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
 
-	if (bSuccess) {
-		if (lpNumberOfBytesSent != NULL) {
-			*lpNumberOfBytesSent = *bytesTransferred;
-		}
-	} else {
+	if (!bSuccess) {
 		SetErrorCode(lpErrno);
 		ret = SOCKET_ERROR;
 	}
 
-	if (!ret || *lpErrno != ERROR_IO_PENDING)
+	if ((bSuccess && lpOverlapped != NULL) ||
+			(lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
+	}
 
 	DBGPRINT("WSPSend - leave\n");
 	return ret;
@@ -1757,6 +1784,7 @@ WSPSendTo(
 	BOOL bSuccess;
 	DWORD bytesReturned;
 	DWORD *bytesTransferred;
+	INT byteCount = 0;
 
 	DBGPRINT("WSPSendTo - enter\n");
 
@@ -1767,10 +1795,16 @@ WSPSendTo(
 		return SOCKET_ERROR;
 	}
 
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	if (lpOverlapped != NULL) {
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
+	} else {
+		bytesTransferred = lpNumberOfBytesSent;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
 
-	ZeroMemory(&sendReq, sizeof(sendReq));
 	sendReq.lpBuffers = (PSOCKET_WSABUF)lpBuffers;
 	sendReq.dwBufferCount = dwBufferCount;
 	sendReq.dwFlags = dwFlags;
@@ -1779,7 +1813,7 @@ WSPSendTo(
 
 	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_SENDTO,
 			(PVOID)&sendReq, sizeof(sendReq),
-			bytesTransferred, sizeof(*bytesTransferred),
+			bytesTransferred, byteCount,
 			&bytesReturned, lpOverlapped);
 
 	DBGPRINT("IOCTL_SOCKET_SEND: bSuccess=%d\n", bSuccess);
@@ -1787,17 +1821,15 @@ WSPSendTo(
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
 
-	if (bSuccess) {
-		if (lpNumberOfBytesSent != NULL) {
-			*lpNumberOfBytesSent = *bytesTransferred;
-		}
-	} else {
+	if (!bSuccess) {
 		SetErrorCode(lpErrno);
 		ret = SOCKET_ERROR;
 	}
 
-	if (!ret || *lpErrno != ERROR_IO_PENDING)
+	if ((bSuccess && lpOverlapped != NULL) ||
+			(lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
+	}
 
 	DBGPRINT("WSPSendTo - leave\n");
 	return ret;
@@ -1821,6 +1853,7 @@ _WSASendMsg(
 	DWORD *bytesTransferred;
 	WSATHREADID threadId;
 	INT iErrno;
+	INT byteCount = 0;
 
 	DBGPRINT("WSASendMsg - enter\n");
 
@@ -1832,16 +1865,24 @@ _WSASendMsg(
 
 	threadId.ThreadHandle = GetCurrentThread();
 	threadId.Reserved = 0;
-	bytesTransferred = malloc(sizeof(DWORD));
-	bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
 
-	ZeroMemory(&sendMsgReq, sizeof(sendMsgReq));
+	if (lpOverlapped != NULL) {
+		bytesTransferred = malloc(sizeof(DWORD));
+		byteCount = sizeof(DWORD);
+		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
+	} else {
+		// lpNumberOfBytesSent can be NULL, in which case it's ignored
+		bytesTransferred = lpNumberOfBytesSent;
+		if (bytesTransferred != NULL)
+			byteCount = sizeof(DWORD);
+	}
+
 	sendMsgReq.lpMsg = (PSOCKET_WSAMSG)lpMsg;
 	sendMsgReq.dwFlags = dwFlags;
 
 	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_SENDMSG,
 			(PVOID)&sendMsgReq, sizeof(sendMsgReq),
-			bytesTransferred, sizeof(*bytesTransferred),
+			bytesTransferred, byteCount,
 			&bytesReturned, lpOverlapped);
 
 	DBGPRINT("IOCTL_SOCKET_SENDMSG: bSuccess=%d\n", bSuccess);
@@ -1849,17 +1890,17 @@ _WSASendMsg(
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
 
-	if (bSuccess) {
-		if (lpNumberOfBytesSent != NULL) {
+	if (bSuccess && lpOverlapped != NULL && lpNumberOfBytesSent != NULL) {
 			*lpNumberOfBytesSent = *bytesTransferred;
-		}
-	} else {
+	} else if (!bSuccess) {
 		SetErrorCode(NULL);
 		ret = SOCKET_ERROR;
 	}
 
-	if (!ret || GetLastError() != ERROR_IO_PENDING)
+	if ((bSuccess && lpOverlapped != NULL) ||
+			(lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
 		free(bytesTransferred);
+	}
 
 	DBGPRINT("WSPSendMsg - leave\n");
 	return ret;
@@ -1888,7 +1929,6 @@ WSPSetSockOpt(
 		return SOCKET_ERROR;
 	}
 
-	RtlZeroMemory(&optReq, sizeof(optReq));
 	optReq.level = level;
 	optReq.optname = optname;
 	optReq.optval = (char *)optval;
@@ -1958,7 +1998,6 @@ WSPSocket(
 	SOCKET socket = INVALID_SOCKET;
 	SOCKET hModifiedSocket = INVALID_SOCKET;
 	SOCKET_OPEN_REQUEST openReq;
-	WCHAR devname[MAXDEVNAME_LEN];
 	BOOL bSuccess;
 	DWORD bytesReturned;
 	DWORD accessFlags    = (GENERIC_READ | GENERIC_WRITE);
@@ -1978,13 +2017,11 @@ WSPSocket(
 
 	DBGPRINT("WSPSocket - enter\n");
 
-	StringCchCopy(devname, MAXDEVNAME_LEN, WIN_SCTP_SOCKET_DEVICE_NAME);
-
 	/* Check to see if WSADuplicateSocket has been called and we've been given a socket */
 	if (lpProtocolInfo != NULL && GetSocketInfo(lpProtocolInfo->dwProviderReserved) != NULL) {
 		socket = lpProtocolInfo->dwProviderReserved;
 	} else {
-		socket = (SOCKET)CreateFile(devname,
+		socket = (SOCKET)CreateFile(WIN_SCTP_SOCKET_DEVICE_NAME,
 				accessFlags,
 				shareFlags,
 				NULL,
@@ -2000,8 +2037,6 @@ WSPSocket(
 	}
 
 	if (socket != INVALID_SOCKET) {
-		ZeroMemory(&openReq, sizeof(openReq));
-
 		openReq.af = af;
 		openReq.type = type;
 		openReq.protocol = protocol;
@@ -2121,8 +2156,6 @@ sctp_generic_recvmsg(
 		return -1;
 	}
 
-	ZeroMemory(&sctpRecvReq, sizeof(sctpRecvReq));
-
 	sctpRecvReq.data = data;
 	sctpRecvReq.len = len;
 	sctpRecvReq.from = from;
@@ -2172,8 +2205,6 @@ sctp_generic_sendmsg(
 		DBGPRINT("sctp_generic_sendmsg - leave#1\n");
 		return -1;
 	}
-
-	ZeroMemory(&sctpSendReq, sizeof(sctpSendReq));
 
 	sctpSendReq.data = (void *)data;
 	sctpSendReq.len = len;

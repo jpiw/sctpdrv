@@ -109,21 +109,27 @@ LockWsabuf(
 		if (lpBuffers[i].buf != NULL) {
 			mdls[i] = IoAllocateMdl(lpBuffers[i].buf, lpBuffers[i].len,
 			    FALSE, FALSE, NULL);
-			if (mdls[i] != NULL) {
-				__try {
-					MmProbeAndLockPages(mdls[i], KernelMode, operation);
-				} __except (EXCEPTION_EXECUTE_HANDLER) {
-					IoFreeMdl(mdls[i]);
-					mdls[i] = NULL;
-					status = GetExceptionCode();
-					DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#2\n");
-					goto error;
-				}
+
+			if (mdls[i] == NULL) {
+				status = STATUS_INSUFFICIENT_RESOURCES;
+				DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#3\n");
+				goto error;
 			}
+
+			__try {
+				MmProbeAndLockPages(mdls[i], KernelMode, operation);
+			} __except (EXCEPTION_EXECUTE_HANDLER) {
+				IoFreeMdl(mdls[i]);
+				mdls[i] = NULL;
+				status = GetExceptionCode();
+				DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#4\n");
+				goto error;
+			}
+
 			iov[i].iov_base = MmGetSystemAddressForMdlSafe(mdls[i], NormalPagePriority);
 			if (iov[i].iov_base == NULL) {
 				status = STATUS_INSUFFICIENT_RESOURCES;
-				DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#3\n");
+				DebugPrint(DEBUG_KERN_VERBOSE, "LockWsabuf - leave#5\n");
 				goto error;
 			}
 			iov[i].iov_len = lpBuffers[i].len;

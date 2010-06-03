@@ -492,11 +492,13 @@ m_getcl(int how, short type, int flags)
 	m = (struct mbuf *)ExAllocateFromNPagedLookasideList(&zone_mbuf);
 	if (m == NULL)
 		return (NULL);
+
 	mem = ExAllocateFromNPagedLookasideList(&zone_clust);
 	if (mem == NULL) {
 		ExFreeToNPagedLookasideList(&zone_mbuf, m);
 		return (NULL);
 	}
+
 	mb_ctor_mbuf(m, MSIZE, &args);
 	mb_ctor_clust(mem, MCLBYTES, m);
 	return (m);
@@ -564,8 +566,12 @@ m_clget(struct mbuf *m, int how)
 
 	if (m->m_flags & M_EXT)
 		printf("m_clget: %p mbuf already has cluster\n", m);
-	m->m_ext.ext_buf = (char *)NULL;
-	mem = ExAllocateFromNPagedLookasideList(&zone_clust);
+	m->m_ext.ext_buf = NULL;
+
+	do {
+		mem = ExAllocateFromNPagedLookasideList(&zone_clust);
+	} while (mem == NULL);
+
 	mb_ctor_clust(mem, MCLBYTES, m);
 }
 
@@ -588,7 +594,11 @@ m_cljget(struct mbuf *m, int how, int size)
 		m->m_ext.ext_buf = NULL;
 
 	zone = m_getzone(size);
-	mem = ExAllocateFromNPagedLookasideList(zone);
+
+	do {
+		mem = ExAllocateFromNPagedLookasideList(zone);
+	} while (mem == NULL);
+
 	mb_ctor_clust(mem, size, m);
 	return m;
 }
