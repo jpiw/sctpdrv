@@ -45,13 +45,16 @@
 			<ComponentRef Id='echo_client.exe'/>
 			<ComponentRef Id='echo_server.exe'/>
 			<ComponentRef Id='sctpsp32.dll'/>
+			<ComponentRef Id='sctpsp32.pdb'/>
 			<?if $(var.Platform)=x64 ?>
 			<ComponentRef Id='sctpsp64.dll'/>
+			<ComponentRef Id='sctpsp64.pdb'/>
 			<?endif ?>
 			<ComponentRef Id='sctpmon.dll'/>
 			<ComponentRef Id='sctp.inf'/>
 			<ComponentRef Id='sctp.cat'/>
 			<ComponentRef Id='sctp.sys'/>
+			<ComponentRef Id='sctp.pdb'/>
 		</ComponentGroup>
 
 		<ComponentGroup Id='inc'>
@@ -148,6 +151,11 @@
 					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
 				</RegistryKey>
 				<difx:Driver Legacy="yes" AddRemovePrograms="no" DeleteFiles="yes"/>
+			</Component>
+			
+			<Component Id="sctp.pdb" Win64="$(var.Win64)" Guid="16c69324-efaf-41df-bd2f-70aa21b56af6">
+				<File Id="sctp.pdb" Name="sctp.pdb" KeyPath="yes" 
+				Source="symbol\$(env.BUILD_ALT_DIR)\private\sys\sctp.pdb"/>
 			</Component>
 		</DirectoryRef>
 		

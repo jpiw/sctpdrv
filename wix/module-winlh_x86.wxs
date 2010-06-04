@@ -38,6 +38,11 @@
 			<File Id="sctpsp32.dll" Name="sctpsp.dll" KeyPath="yes"
 				Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
 		</Component>
+		
+		<Component Id="sctpsp32.pdb" Guid="24990176-bcf3-4e5c-a19c-72a007f26c50">
+			<File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes" 
+			Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
+		</Component>
 	</DirectoryRef>
 	
 	<DirectoryRef Id="lib">

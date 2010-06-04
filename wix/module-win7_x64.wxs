@@ -38,6 +38,11 @@
 			<File Id="sctpsp32.dll" Name="sctpsp.dll" KeyPath="yes"
 				Source="bin\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\sctpsp.dll" />
 		</Component>
+		
+		<Component Id="sctpsp32.pdb" Guid="8a166931-6eca-4c99-bb19-122359f4bf9b">
+			<File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes" 
+				Source="symbol\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\private\dll\sctpsp.pdb"/>
+		</Component>
 	</DirectoryRef>
 	<DirectoryRef Id="lib32">
 		<Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
@@ -50,6 +55,11 @@
 		<Component Id="sctpsp64.dll" Win64="$(var.Win64)" Guid="1c5ea8c6-3b72-4cb0-932c-0859a3f9dc25">
 			<File Id="sctpsp64.dll" Name="sctpsp.dll" KeyPath="yes" Checksum="yes"
 				Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
+		</Component>
+		
+		<Component Id="sctpsp64.pdb" Win64="$(var.Win64)" Guid="fb8aa80e-f7d3-4b61-9df0-88330feb2b05">
+			<File Id="sctpsp64.pdb" Name="sctpsp.pdb" KeyPath="yes" 
+				Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
 		</Component>
 	</DirectoryRef>
 	
