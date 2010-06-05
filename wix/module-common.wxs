@@ -128,8 +128,7 @@
 			<Component Id="sctpmon.dll" Win64="$(var.Win64)" Guid="96042ac3-2fd7-46f9-8ed5-3abe5d883d1d">
 				<File Id="sctpmon.dll" Name="sctpmon.dll" KeyPath="yes" Checksum="yes"
 					Source="bin\$(env.BUILD_ALT_DIR)\sctpmon.dll" />
-				<RegistryKey Id='sctpmon' Root='HKLM' Key='SOFTWARE\Microsoft\NetSh'
-						Action='createAndRemoveOnUninstall'>
+				<RegistryKey Root='HKLM' Key='SOFTWARE\Microsoft\NetSh'>
 					<RegistryValue Type='string' Name='sctpmon' Value='[!sctpmon.dll]'/>
 				</RegistryKey>
 			</Component>
