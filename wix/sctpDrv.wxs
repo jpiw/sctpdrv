@@ -61,55 +61,23 @@
 		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
 		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="$(var.PlatformProgramFilesFolder)">
-				<Directory Id="SctpDrv" Name="SctpDrv">
-					<Directory Id="bin" Name="bin"/>
-					<Directory Id='lib' Name='lib'/>
-					<Directory Id='inc' Name='inc'>
-						<Directory Id='netinet' Name='netinet'/>
-					</Directory>
-					<Directory Id='src' Name='src'/>
-				</Directory>
-			</Directory>
-			<?if $(var.Platform)=x64 ?>
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="SctpDrv32" Name="SctpDrv">
-					<Directory Id="bin32" Name="bin"/>
-					<Directory Id="lib32" Name="lib"/>
-				</Directory>
-			</Directory>
-			<?endif ?>
-		</Directory>
+      <Merge Id="SctpDrv" 
+             Language="$(var.Language)"
+             SourceFile="$(env.MSICULTURE)\SctpDrv-$(env.DDK_TARGET_OS)-$(env._BUILDARCH).msm" 
+             DiskId="1" />
+    </Directory>
 
-		<Feature Id="Complete" Title='SctpDrv' Description='The complete package.'
-				Display='expand' Level='1'>
-			<ComponentGroupRef Id="root"/>
-			<ComponentGroupRef Id="bin"/>
-			<ComponentGroupRef Id="inc"/>
-			<ComponentGroupRef Id="lib"/>
-			<ComponentGroupRef Id="src"/>
-		</Feature>
+    <Feature Id="Complete" Title='SctpDrv' Description='The complete package.' Display='expand' Level='1'>
+      <MergeRef Id='SctpDrv'/>
+    </Feature>
 
-		<InstallExecuteSequence>
-			<?if $(var.Platform)=x64 ?>
-			<Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
-			<Custom Action="SctpInstallProviderSysWow64" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
-			<Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
-			<Custom Action="SctpUninstallProviderSysWow64" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
-			<?endif ?>
-			<?if $(var.Platform)=x86 ?>
-			<Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
-			<Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
-
-			<Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
-				<![CDATA[MsiAMD64 OR Intel64]]>
-			</Custom>
-			<?endif ?>
-
-			<?if $(env.DDK_TARGET_OS)!=WinNET and $(env.DDK_TARGET_OS)!=WinXP ?>
-			<Custom Action="SctpAddFirewallRule" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
-			<?endif ?>
-		</InstallExecuteSequence>
+    <InstallExecuteSequence>
+      <?if $(var.Platform)=x86 ?>
+      <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
+        <![CDATA[MsiAMD64 OR Intel64]]>
+      </Custom>
+      <?endif ?>
+    </InstallExecuteSequence>
 
 		<InstallUISequence>
 			<!-- Only schedule this custom action for the 32-bit MSI.-->

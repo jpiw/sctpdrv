@@ -55,13 +55,33 @@ clean:
 .wxs.wixobj$(MSIARCH):
 	$(CANDLE) -dPlatform=$(MSIARCH) -dLanguage=$(LANGID) -dCodepage=$(CODEPAGE) -ext WixDifxAppExtension -out $(@B).wixobj$(MSIARCH)  $<
 	
-SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH) sctpDrv.wixobj$(MSIARCH) \
-		module-common.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) \
-		$(TREE)\sctpsp.dll ..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.lib $(TREE)\sctpmon.dll $(TREE)\sctp.sys \
-		$(TREE)\spinstall.exe $(TREE)\echo_client.exe $(TREE)\echo_server.exe
-	$(LIGHT) -ext WixUIExtension -cultures:$(MSICULTURE) -dPlatform=$(MSIARCH) sctpDrv.wixobj$(MSIARCH) setup.wixobj$(MSIARCH) module-common.wixobj$(MSIARCH) \
-		module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) -ext WixDifxAppExtension "$(WIX)bin\difxapp_$(MSIARCH).wixlib" \
+SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: \
+				$(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm \
+				sctpdrv.wixobj$(MSIARCH)
+		$(LIGHT) -ext WixUIExtension -cultures:$(MSICULTURE) \
+		-dPlatform=$(MSIARCH) \
+		sctpDrv.wixobj$(MSIARCH) \
 		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
+		
+$(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm: \
+					sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH)              \
+					module-common.wixobj$(MSIARCH)                      \
+					module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) \
+					..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.lib \
+					setup.wixobj$(MSIARCH)                              \
+					sctpDrv.wixobj$(MSIARCH)                            \
+					$(TREE)\sctpsp.dll                                  \
+					$(TREE)\sctpmon.dll $(TREE)\sctp.sys                \
+					$(TREE)\spinstall.exe $(TREE)\echo_client.exe       \
+					$(TREE)\echo_server.exe
+		$(LIGHT) -cultures:$(MSICULTURE)                               \
+		-dPlatform=$(MSIARCH)                                          \
+		setup.wixobj$(MSIARCH)                                         \
+		module-common.wixobj$(MSIARCH)                                 \
+		module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH)            \
+		-ext WixDifxAppExtension "$(WIX)bin\difxapp_$(MSIARCH).wixlib" \
+		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm
+						
 
 sctpCat-winxp-x86: sctp-winxp.inf
 	copy /Y sctp-winxp.inf $(TREE)\Sctp.inf

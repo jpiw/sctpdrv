@@ -2,7 +2,7 @@
 <!--
 /*
  * Copyright (c) 2008 CO-CONV, Corp.
- * Copyright (C) 2009 Bruce Cran.
+ * Copyright (C) 2010 Bruce Cran.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,28 +29,64 @@
 -->
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
 	xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
-<Fragment>
 
-	<?include config.wxi ?>
+  <?include config.wxi ?>
+  
+  <Module Id='SctpDrv'
+          Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)"
+          Language="$(var.Language)"
+          Codepage="$(var.Codepage)">
 
-	<DirectoryRef Id='bin'>
-		<Component Id="sctpsp32.dll" Guid="22408cd8-b619-4b67-aa74-528b51806b30">
-			<File Id="sctpsp32.dll" Name="sctpsp.dll" KeyPath="yes"
-				Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
-		</Component>
-		
-		<Component Id="sctpsp32.pdb" Guid="24990176-bcf3-4e5c-a19c-72a007f26c50">
-			<File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes" 
-			Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
-		</Component>
-	</DirectoryRef>
-	
-	<DirectoryRef Id="lib">
-		<Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
-			<File Id="sctpsp32.lib" Name="sctpsp.lib" KeyPath="yes"
-				Source="..\sp\dll\obj$(env.DDKBUILDENV)_wlh_x86\i386\sctpsp.lib" />
-		</Component>
-	</DirectoryRef>
+    <Package Id="587e72d5-1610-4f24-a88c-2f5b6e6c1930"
+        Description="SctpDrv" InstallPrivileges="elevated" InstallScope="perMachine"
+        Comments="SCTP Driver" InstallerVersion="301"
+        Platform="$(var.Platform)" Manufacturer="Bruce Cran"
+        Keywords="Installer,MSI,Database" Languages="$(var.Language)" SummaryCodepage="$(var.Codepage)" />
 
-</Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="SctpDrv" Name="SctpDrv">
+          <Directory Id="bin" Name="bin"/>
+          <Directory Id='lib' Name='lib'/>
+          <Directory Id='inc' Name='inc'>
+            <Directory Id='netinet' Name='netinet'/>
+          </Directory>
+          <Directory Id='src' Name='src'/>
+        </Directory>
+      </Directory>
+      <?if $(var.Platform)=x64 ?>
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="SctpDrv32" Name="SctpDrv">
+          <Directory Id="bin32" Name="bin"/>
+          <Directory Id="lib32" Name="lib"/>
+        </Directory>
+      </Directory>
+      <?endif ?>
+    </Directory>
+
+    <ComponentGroupRef Id="root"/>
+    <ComponentGroupRef Id="inc"/>
+    <ComponentGroupRef Id="lib"/>
+    <ComponentGroupRef Id="bin"/>
+    <ComponentGroupRef Id="src"/>
+
+    <DirectoryRef Id='bin'>
+      <Component Id="sctpsp32.dll" Guid="22408cd8-b619-4b67-aa74-528b51806b30">
+        <File Id="sctpsp32.dll" Name="sctpsp.dll" KeyPath="yes"
+          Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" />
+      </Component>
+
+      <Component Id="sctpsp32.pdb" Guid="24990176-bcf3-4e5c-a19c-72a007f26c50">
+        <File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes"
+        Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="lib">
+      <Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
+        <File Id="sctpsp32.lib" Name="sctpsp.lib" KeyPath="yes"
+          Source="..\sp\dll\obj$(env.DDKBUILDENV)_wlh_x86\i386\sctpsp.lib" />
+      </Component>
+    </DirectoryRef>
+</Module>
 </Wix>

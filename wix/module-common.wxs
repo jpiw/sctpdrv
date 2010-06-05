@@ -172,5 +172,22 @@
 				<File Id="SctpDrv.pfx" Name="SctpDrv.pfx" KeyPath="yes" Source="..\drv\SctpDrv.pfx"/>
 			</Component>
 		</DirectoryRef>
+
+    <InstallExecuteSequence>
+      <?if $(var.Platform)=x64 ?>
+      <Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpInstallProviderSysWow64" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <Custom Action="SctpUninstallProviderSysWow64" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <?endif ?>
+      <?if $(var.Platform)=x86 ?>
+      <Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <?endif ?>
+
+      <?if $(env.DDK_TARGET_OS)!=WinNET and $(env.DDK_TARGET_OS)!=WinXP ?>
+      <Custom Action="SctpAddFirewallRule" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
+      <?endif ?>
+    </InstallExecuteSequence>
 	</Fragment>
 </Wix>
