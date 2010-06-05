@@ -12,14 +12,12 @@ TARGETTYPE=DYNLINK
 
 UMTYPE=windows
 
-!if "$(_BUILDARCH)"=="IA64"
-LIBARCHSUFFIX=_ia64
-!else 
 !if "$(_BUILDARCH)"=="AMD64"
 LIBARCHSUFFIX=_x64
+LIBARCHDIR=\x64
 !else
 LIBARCHSUFFIX=
-!endif
+LIBARCHDIR=
 !endif
 
 TARGETLIBS= $(TARGETLIBS) \
@@ -37,7 +35,7 @@ TARGETLIBS= $(TARGETLIBS) \
 INCLUDES= $(INCLUDES); \
 	..\sp; \
 	..\inc; \
-	..\lib
+	..\lib$(LIBARCHDIR)
 
 SOURCES= \
     setup.cpp

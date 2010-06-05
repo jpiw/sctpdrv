@@ -2,8 +2,9 @@
 set PROJDIR=%CD%
 set SIGNCMD=signtool sign -p "Stream Control Transmission Protocol" /f drv\sctpDrv.pfx
 if [%DEBUG%]==[1] (set BUILDTYPE=chk) else (set BUILDTYPE=fre)
-if not exist "%WINDOWSSDKDIR%\Include\msi.h" set WINDOWSSDKDIR=C:\Program Files\Microsoft SDKs\Windows\v7.0
+if not exist "%WINDOWSSDKDIR%\Include\msi.h" set WINDOWSSDKDIR=C:\Program Files\Microsoft SDKs\Windows\v7.1
 if not exist "%WDKPATH%\bin\setenv.bat" set WDKPATH=C:\WinDDK\7600.16385.1
+if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles
 if not exist "%WDKPATH%\bin\setenv.bat" goto missingfiles
 if not exist "%WIX%bin\candle.exe" goto missingfiles
 if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles
@@ -11,29 +12,25 @@ if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles
 cd %PROJDIR%
 mkdir inc
 mkdir lib
-mkdir lib\ia64
 mkdir lib\x64
-copy /Y "%WIX%SDK\inc\wcautil.h" inc
-copy /Y "%WIX%SDK\inc\dutil.h" inc
-copy /Y "%WINDOWSSDKDIR%\Include\netsh.h" inc
-copy /Y "%WINDOWSSDKDIR%\Include\netfw.h" inc
+copy /Y "%WIX%SDK\inc\wcautil.h"             inc
+copy /Y "%WIX%SDK\inc\dutil.h"               inc
+copy /Y "%WINDOWSSDKDIR%\Include\netsh.h"    inc
+copy /Y "%WINDOWSSDKDIR%\Include\netfw.h"    inc
 copy /Y "%WINDOWSSDKDIR%\Include\icftypes.h" inc
-copy /Y "%WINDOWSSDKDIR%\Include\msi.h" inc
+copy /Y "%WINDOWSSDKDIR%\Include\msi.h"      inc
 copy /Y "%WINDOWSSDKDIR%\Include\msiquery.h" inc
-copy /Y "%WINDOWSSDKDIR%\Include\netsh.h" inc
+copy /Y "%WINDOWSSDKDIR%\Include\netsh.h"    inc
 
-copy /Y "%WIX%SDK\lib\wcautil_ia64.lib" lib
-copy /Y "%WIX%SDK\lib\dutil_ia64.lib" lib
-copy /Y "%WINDOWSSDKDIR%\Lib\ia64\netfw.tlb" lib
-copy /Y "%WINDOWSSDKDIR%\Lib\ia64\netsh.lib" lib\ia64
-copy /Y "%WIX%SDK\lib\wcautil_x64.lib" lib
-copy /Y "%WIX%SDK\lib\dutil_x64.lib" lib
-copy /Y "%WINDOWSSDKDIR%\Lib\x64\netfw.tlb" lib
+copy /Y "%WIX%SDK\lib\wcautil_x64.lib"      lib\x64
+copy /Y "%WIX%SDK\lib\dutil_x64.lib"        lib\x64
+copy /Y "%WINDOWSSDKDIR%\Lib\x64\netfw.tlb" lib\x64
 copy /Y "%WINDOWSSDKDIR%\Lib\x64\netsh.lib" lib\x64
-copy /Y "%WIX%SDK\lib\wcautil.lib" lib
-copy /Y "%WIX%SDK\lib\dutil.lib" lib
-copy /Y "%WINDOWSSDKDIR%\Lib\netfw.tlb" lib
-copy /Y "%WINDOWSSDKDIR%\Lib\netsh.lib" lib
+
+copy /Y "%WIX%SDK\lib\wcautil.lib"          lib
+copy /Y "%WIX%SDK\lib\dutil.lib"            lib
+copy /Y "%WINDOWSSDKDIR%\Lib\netfw.tlb"     lib
+copy /Y "%WINDOWSSDKDIR%\Lib\netsh.lib"     lib
 
 echo on
 REM Build the i386 Windows XP driver

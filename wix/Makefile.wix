@@ -89,16 +89,16 @@ sctpCat-winxp-x86: sctp-winxp.inf
 
 sctpCat-winlh-x86: sctp-winlh.inf
 	copy /Y sctp-winlh.inf $(TREE)\Sctp.inf
-	inf2cat /driver:$(TREE) /os:Vista_X86
+	inf2cat /driver:$(TREE) /os:Vista_X86,Server2008_X86
 	
 sctpCat-winlh-AMD64: sctp-winlh.inf
 	copy /Y sctp-winlh.inf $(TREE)\Sctp.inf
-	inf2cat /driver:$(TREE) /os:Vista_X64
+	inf2cat /driver:$(TREE) /os:Vista_X64,Server2008_X64
 	
 sctpCat-win7-x86: sctp-win7.inf
 	copy /Y sctp-win7.inf $(TREE)\Sctp.inf
-	inf2cat /driver:$(TREE) /os:7_X86,Server2008_X86
+	inf2cat /driver:$(TREE) /os:7_X86
 	
 sctpCat-win7-AMD64: sctp-win7.inf
 	copy /Y sctp-win7.inf $(TREE)\Sctp.inf
-	inf2cat /driver:$(TREE) /os:7_X64,Server2008_X64,Server2008R2_X64
+	inf2cat /driver:$(TREE) /os:7_X64,Server2008R2_X64

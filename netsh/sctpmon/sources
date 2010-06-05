@@ -7,14 +7,10 @@ TARGETTYPE=DYNLINK
 USE_MSVCRT=1
 UMTYPE=windows
 
-!if "$(_BUILDARCH)"=="IA64"
-TARGETLIBS=..\..\lib\ia64\Netsh.lib
-!else 
 !if "$(_BUILDARCH)"=="AMD64"
 TARGETLIBS=..\..\lib\x64\netsh.lib
 !else
 TARGETLIBS=..\..\lib\netsh.lib
-!endif
 !endif
 
 TARGETLIBS= $(TARGETLIBS) \
