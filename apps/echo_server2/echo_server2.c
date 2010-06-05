@@ -220,7 +220,7 @@ main(
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSARecvMsg_GUID, sizeof(WSARecvMsg_GUID),
-			&WSARecvMsg, sizeof(WSARecvMsg),
+			&WSARecvMsg, sizeof((void*)WSARecvMsg),
 			&bytes, NULL, NULL) != 0) {
 			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSARecvMsg)");
 			/*NOTREACHED*/
@@ -228,7 +228,7 @@ main(
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSASendMsg_GUID, sizeof(WSASendMsg_GUID),
-			&WSASendMsg, sizeof(WSASendMsg),
+			&WSASendMsg, sizeof((void*)WSASendMsg),
 			&bytes, NULL, NULL) != 0) {
 			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSASendMsg)");
 			/*NOTREACHED*/

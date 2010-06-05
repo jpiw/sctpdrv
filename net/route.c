@@ -1037,7 +1037,7 @@ route_ipv4_check(
 	    sizeof(tcp_req),
 	    &ipSnmpInfo,
 	    sizeof(ipSnmpInfo));
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "route_ipv4_check - leave#3,status=%d\n", status);
 		return -1;
 	}
@@ -1174,7 +1174,7 @@ route_ipv6_check(
 		    sizeof(qroute),
 		    &route,
 		    sizeof(route));
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			DebugPrint(DEBUG_NET_VERBOSE, "route_ipv6_check - leave#3, status=%08x\n", status);
 			return -1;
 		}
@@ -1391,7 +1391,7 @@ route_load(
 	DebugPrint(DEBUG_NET_VERBOSE, "route_load - enter\n");
 
 	status = GetIpForwardTable2(family, &ipForwardTable);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "route_load - leave#1,status=%08x\n", status);
 		return;
 	}

@@ -104,7 +104,7 @@ if_init(void)
 	ClientInterfaceInfo.DelAddressHandlerV2 = ClientPnPDelNetAddress;
 
 	status = TdiRegisterPnPHandlers(&ClientInterfaceInfo, sizeof(ClientInterfaceInfo), &BindingHandle);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		BindingHandle = NULL;
 		DebugPrint(DEBUG_NET_VERBOSE, "if_init - leave#1\n");
 		return -1;
@@ -199,7 +199,7 @@ ClientPnPAddNetAddress(
 	}
 
 	status = RtlGUIDFromString(&guidStr, &guid);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPAddNetAddress - leave#2\n");
 		return;
 	}
@@ -375,7 +375,7 @@ ClientPnPDelNetAddress(
 	}
 
 	status = RtlGUIDFromString(&guidStr, &guid);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#1\n");
 		return;
 	}
@@ -556,7 +556,7 @@ ifnet_create_by_ipaddr(
 	    sizeof(tcp_req),
 	    &ipSnmpInfo,
 	    sizeof(ipSnmpInfo));
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_ipaddr - leave#2,status=%08x\n", status);
 		goto done;
 	}
@@ -581,7 +581,7 @@ ifnet_create_by_ipaddr(
 	    sizeof(tcp_req),
 	    ipAddr,
 	    ipAddr_size);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_ipaddr - leave#4,status=%08x\n", status);
 		goto done;
 	}
@@ -621,7 +621,7 @@ ifnet_create_by_ipaddr(
 		    sizeof(tcp_req),
 		    ifEntry,
 		    ifEntry_size);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			fail_cnt++;
 			continue;
 		}
@@ -737,7 +737,7 @@ ifnet_create_by_in_addr(
 	    sizeof(tcp_req),
 	    &ipSnmpInfo,
 	    sizeof(ipSnmpInfo));
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_ipaddr - leave#2,status=%08x\n", status);
 		goto done;
 	}
@@ -762,7 +762,7 @@ ifnet_create_by_in_addr(
 	    sizeof(tcp_req),
 	    ipAddr,
 	    ipAddr_size);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_ipaddr - leave#4,status=%08x\n", status);
 		goto done;
 	}
@@ -802,7 +802,7 @@ ifnet_create_by_in_addr(
 		    sizeof(tcp_req),
 		    ifEntry,
 		    ifEntry_size);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			fail_cnt++;
 			continue;
 		}
@@ -907,7 +907,7 @@ ifnet_create_by_guid(
 		    1179652,
 		    &ifQuery, sizeof(ifQuery),
 		    ifInfo, ifInfo_size);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_guid - leave#3,status=%08x\n", status);
 			goto done;
 		}
@@ -1020,7 +1020,7 @@ ifnet_create_by_index(
 		    sizeof(tcp_req),
 		    &ipSnmpInfo,
 		    sizeof(ipSnmpInfo));
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_index - leave#3,status=%08x\n", status);
 			goto done;
 		}
@@ -1049,7 +1049,7 @@ ifnet_create_by_index(
 			    sizeof(tcp_req),
 			    ifEntry,
 			    ifEntry_size);
-			if (status != STATUS_SUCCESS) {
+			if (!NT_SUCCESS(status)) {
 				fail_cnt++;
 				continue;
 			}
@@ -1089,7 +1089,7 @@ ifnet_create_by_index(
 			    1179652,
 			    &ifQuery, sizeof(ifQuery),
 			    ifInfo, ifInfo_size);
-			if (status != STATUS_SUCCESS) {
+			if (!NT_SUCCESS(status)) {
 				DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_index - leave#6,status=%08x\n", status);
 				goto done;
 			}
@@ -1182,7 +1182,7 @@ ifnet_create_by_guid(
 	DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_guid - enter\n");
 
 	status = GetIfTable2(&pIfTable);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_guid - leave#1\n");
 		goto done;
 	}

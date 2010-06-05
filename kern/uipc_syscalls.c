@@ -243,7 +243,7 @@ SCTPDispatchOpenRequest(
 	if (error == 0)
 		socketContext->socket = so;
 	else
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchOpenRequest - leave\n");
 	return status;
@@ -277,7 +277,7 @@ SCTPDispatchBindRequest(
 
 	error = sobind(so, sa, NULL);
 	if (error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchBindReqest- leave\n");
 	return status;
@@ -342,7 +342,7 @@ SCTPDispatchConnectRequest(
 	SOCK_UNLOCK(so);
 done:
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchConnectReqest - leave\n");
 	return status;
@@ -378,7 +378,7 @@ SCTPDispatchListenRequest(
 
 	error = solisten(so, backlog, NULL);
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchListenReqest - leave\n");
 	return status;
@@ -442,7 +442,7 @@ SCTPDispatchAcceptRequest(
 	    &fileObj,
 	    NULL);
 
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchAcceptReqest - leave#2\n");
 		goto done;
 	}
@@ -532,7 +532,7 @@ done:
 		free(sa, M_SONAME);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -590,7 +590,7 @@ SCTPDispatchPeeloffRequest(
 	    UserMode,
 	    &fileObj,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchPeeloffRequest - leave#2\n");
 		goto done;
 	}
@@ -636,7 +636,7 @@ done:
 		ObDereferenceObject(fileObj);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -831,7 +831,7 @@ done:
 	}
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendRequest - leave\n");
 	return status;
@@ -913,7 +913,7 @@ done:
 
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendRequestDeferred - leave\n");
 	return status;
@@ -1146,7 +1146,7 @@ done:
 		ExFreePool(localReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendMsgRequest - leave\n");
 	return status;
@@ -1236,7 +1236,7 @@ done:
 		free(sendMsgParam, M_SYSCALL);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF))
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendMsgRequestDeferred - leave\n");
 	return status;
@@ -1391,7 +1391,7 @@ done:
 		ExFreePool(localSendReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSctpSendRequest - leave\n");
 	return status;
@@ -1655,7 +1655,7 @@ done:
 		ExFreePool(localWsabuf);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -1773,7 +1773,7 @@ done:
 		ExFreePool(fromsa);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -1926,7 +1926,7 @@ SCTPDispatchRecvMsgRequest(
 	}
 
 	status = LockBuffer(recvMsgReq->lpMsg, sizeof(SOCKET_WSAMSG), IoModifyAccess, &recvMsgParam->msgMdl);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchRecvMsgRequest - leave#4\n");
 		goto done;
 	}
@@ -1946,7 +1946,7 @@ SCTPDispatchRecvMsgRequest(
 
         status = LockWsabuf(recvMsgParam->msg->lpBuffers, recvMsgParam->msg->dwBufferCount, IoWriteAccess,
 	    &recvMsgParam->iov);
-        if (status != STATUS_SUCCESS) {
+        if (!NT_SUCCESS(status)) {
                 DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendMsgRequest - leave#7\n");
                 goto done;
         }
@@ -1960,7 +1960,7 @@ SCTPDispatchRecvMsgRequest(
         }
 
 	status = LockBuffer(recvMsgParam->msg->name, recvMsgParam->msg->namelen, IoWriteAccess, &recvMsgParam->nameMdl);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchRecvMsgRequest - leave#9\n");
 		goto done;
 	}
@@ -1975,7 +1975,7 @@ SCTPDispatchRecvMsgRequest(
 	if (recvMsgParam->msg->Control.buf != NULL && recvMsgParam->msg->Control.len > 0) {
 		 status = LockBuffer(recvMsgParam->msg->Control.buf, recvMsgParam->msg->Control.len, IoWriteAccess,
 		    &recvMsgParam->controlMdl);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchRecvMsgRequest - leave#11\n");
 			goto done;
 		}
@@ -2112,7 +2112,7 @@ done:
 		ExFreePool(localWsabuf);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -2261,7 +2261,7 @@ done:
 		m_freem(control);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -2369,7 +2369,7 @@ SCTPDispatchSctpRecvRequest(
 		copyin(sctpRecvReq->fromlen, &fromlen, sizeof(fromlen));
 
 	status = LockBuffer(sctpRecvReq->data, sctpRecvReq->len, IoWriteAccess, &mdl);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSctpRecvRequest - leave#2\n");
 		goto done;
 	}
@@ -2449,7 +2449,7 @@ done:
 		ExFreePool(localSctpRecvReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -2644,7 +2644,7 @@ SCTPDispatchSelectRequest(
 		    KernelMode, \
 		    (PVOID *)&(objs)[i], \
 		    NULL); \
-		if (status != STATUS_SUCCESS) { \
+		if (!NT_SUCCESS(status)) { \
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#8\n"); \
 			goto done; \
 		} \
@@ -2818,7 +2818,7 @@ done2:
 		ExFreePool(localSelectReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -2892,7 +2892,7 @@ SCTPDispatchEventSelectRequest(
 	    UserMode,
 	    &selEvent,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		status = STATUS_INVALID_PARAMETER;
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchEventSelectRequest - leave#4\n");
 		goto done;
@@ -3097,7 +3097,7 @@ SCTPDispatchSetOptionRequest(
 	sopt.sopt_name = optReq->optname;
 
 	status = LockBuffer(optReq->optval, optReq->optlen, IoReadAccess, &mdl);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSetOptionRequest - leave#2\n");
 		goto done;
 	}
@@ -3124,7 +3124,7 @@ done:
 		UnlockBuffer(mdl);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSetOptionRequest - leave\n");
 	return status;
@@ -3227,7 +3227,7 @@ done:
 		ExFreePool(localOptReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchGetOptionRequest - leave\n");
 	return status;
@@ -3298,7 +3298,7 @@ done:
 		ExFreePool(sa);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -3369,7 +3369,7 @@ done:
 		ExFreePool(sa);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -3405,7 +3405,7 @@ SCTPDispatchShutdown(
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchShutdown - leave\n");
 done:
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -3504,7 +3504,7 @@ done:
 		ExFreePool(localIoctlReq);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -3535,7 +3535,7 @@ SCTPCloseSocket(
 	error = soclose(so);
 
 	if (error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPCloseSocket - leave\n");
 done:
@@ -3697,7 +3697,7 @@ SCTPDispatchTdiAssociateAddress(
 
 	status = ObReferenceObjectByHandle(associateInformation->AddressHandle,
 	    0, *IoFileObjectType, KernelMode, &fileObject, NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiAssociateAddress - leave#3\n");
 		return status;
 	}
@@ -3805,7 +3805,7 @@ SCTPDispatchTdiConnect(
 		}
 	}
 
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiConnect - leave#2\n");
 		goto done;
 	}
@@ -3973,7 +3973,7 @@ SCTPDispatchTdiSend(
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiSend - leave\n");
 done:
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -4034,7 +4034,7 @@ SCTPDispatchTdiReceive(
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiReceive - leave\n");
 done:
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -4130,7 +4130,7 @@ done:
 		m_freem(control);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -4238,7 +4238,7 @@ done:
 		m_freem(control);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | error);
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	return status;
 }
@@ -4375,7 +4375,7 @@ SCTPDispatchTdiQueryInformation(
 		status = STATUS_NOT_IMPLEMENTED;
 	}
 
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiQueryInformation - leave#2\n");
 		goto done;
 	}
@@ -4431,7 +4431,7 @@ SCTPDispatchTdiQueryInformation(
 		break;
 	}
 
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchTdiQueryInformation - leave#3\n");
 		goto done;
 	}

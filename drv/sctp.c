@@ -447,7 +447,8 @@ DriverEntry(
 #endif
 
 	if (SctpRawObject != NULL) {
-		if ((status = SetupSctp(SctpRawObject, SctpInput, NULL)) != STATUS_SUCCESS) {
+		status = SetupSctp(SctpRawObject, SctpInput, NULL);
+		if (!NT_SUCCESS(status)) {
 			CloseSctp(&SctpRawHandle, &SctpRawObject);
 			WriteEventLog(MSG_ERROR, NULL, L"Failed to setup the RawIP for SCTP, code=%08x", status);
 			DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to setup the RawIP for SCTP, code=%08x\n", status);
@@ -455,7 +456,8 @@ DriverEntry(
 		}
 	}
 	if (SctpRaw6Object != NULL) {
-		if ((status = SetupSctp(SctpRaw6Object, Sctp6Input, NULL)) != STATUS_SUCCESS) {
+		status = SetupSctp(SctpRaw6Object, Sctp6Input, NULL);
+		if (!NT_SUCCESS(status)) {
 			CloseSctp(&SctpRaw6Handle, &SctpRaw6Object);
 			WriteEventLog(MSG_ERROR, NULL, L"Failed to setup the RawIP6 for SCTP, code=%08x", status);
 			DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to setup the RawIP6 for SCTP, code=%08x\n", status);
@@ -467,7 +469,7 @@ DriverEntry(
 
 #if NTDDI_VERSION >= NTDDI_LONGHORN
 	status = OpenEngine();
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to open the firewall engine, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to open the firewall engine, code=%08x\n", status);
 		goto error;
@@ -498,7 +500,7 @@ DriverEntry(
 		}
 #else
 		status = OpenIcmp();
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			WriteEventLog(MSG_WARN, NULL, L"SctpDrv cannot process ICMP correctly.");
 			DebugPrint(DEBUG_GENERIC_WARN, "[sctp] SctpDrv cannot process ICMP correctly.\n");
 		}
@@ -511,7 +513,7 @@ DriverEntry(
 #else
 		status = OpenIcmp6();
 #endif
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			WriteEventLog(MSG_WARN, NULL, L"SctpDrv cannot process ICMP6 correctly.");
 			DebugPrint(DEBUG_GENERIC_WARN, "[sctp] SctpDrv cannot process ICMP6 correctly.\n");
 		}
@@ -521,7 +523,7 @@ DriverEntry(
 	RtlInitUnicodeString(&devname, DD_SCTP_ONE_TO_ONE_DEVICE_NAME);
 	status = IoCreateDeviceSecure(DriverObject, 0, &devname, FILE_DEVICE_NETWORK, FILE_DEVICE_SECURE_OPEN, FALSE,
 						&SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX, &DD_SCTP_ONE_TO_ONE_DEVICE_GUID, &SctpTdiTcpDeviceObject);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to create a device, code=%08x: %wZ", status, &devname);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to create a device, code=%08x: %wZ\n", status, &devname);
 		goto error;
@@ -530,7 +532,7 @@ DriverEntry(
 	RtlInitUnicodeString(&devname, DD_SCTP_ONE_TO_MANY_DEVICE_NAME);
 	status = IoCreateDeviceSecure(DriverObject, 0, &devname, FILE_DEVICE_NETWORK, FILE_DEVICE_SECURE_OPEN, FALSE,
 					&SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX, &DD_SCTP_ONE_TO_MANY_DEVICE_GUID, &SctpTdiUdpDeviceObject);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to create a device, code=%08x: %wZ", status, &devname);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to create a device, code=%08x: %wZ\n", status, &devname);
 		goto error;
@@ -539,7 +541,7 @@ DriverEntry(
 	RtlInitUnicodeString(&devname, DD_SCTP_SOCKET_DEVICE_NAME);
 	status = IoCreateDeviceSecure(DriverObject, 0, &devname, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE,
 					&SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX, &DD_SCTP_SOCKET_DEVICE_GUID,&SctpSocketDeviceObject);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to create a device, code=%08x: %wZ", status, &devname);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to create a device, code=%08x: %wZ\n", status, &devname);
 		goto error;
@@ -547,7 +549,7 @@ DriverEntry(
 
 	RtlInitUnicodeString(&win_devname, L"\\??\\" SCTP_SOCKET_DEVICE_NAME);
 	status = IoCreateSymbolicLink(&win_devname, &devname);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to create a symbolic link, code=%08x: %wZ", status, &win_devname);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to create a symbolic link, code=%08x: %wZ\n", status, &win_devname);
 		goto error;
@@ -721,13 +723,13 @@ ReloadThread(
 
 		status = OpenUdpSctp(AF_INET, (uint16_t)SCTP_BASE_SYSCTL(sctp_udp_tunneling_port),
 		    &SctpUdpHandle, &SctpUdpObject);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) = 0;
 			continue;
 		}
 
 		status = SetupSctp(SctpUdpObject, UdpInput, NULL);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			WriteEventLog(MSG_ERROR, NULL, L"Failed to setup the UDP, port=%hu, code=%08x.",
 			    (uint16_t)SCTP_BASE_SYSCTL(sctp_udp_tunneling_port), status);
 			DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to setup the UDP, port=%hu, code=%08x.",
@@ -782,7 +784,7 @@ StartReloadThread(VOID)
 	    NULL,
 	    ReloadThread,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to start a thread to manage UDP, code=%08x.", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "Failed to start a thread to manage UDP, code=%08x\n.", status);
 		return status;
@@ -929,7 +931,7 @@ OpenRawSctp(
 	    0L,
 	    eaInfo,
 	    eaLength);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to open the RawIP for SCTP, family=%hhu, cause=Failure to create, code=%08x", Family, status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to open the RawIP for SCTP, family=%hhu, cause=Failure to create, code=%08x\n", Family, status);
 		goto done;
@@ -941,7 +943,7 @@ OpenRawSctp(
 	    KernelMode,
 	    ppObject,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		ZwClose(*pHandle);
 		*pHandle = NULL;
 		WriteEventLog(MSG_ERROR, NULL, L"Failed to open the RawIP for SCTP, family=%hhu, cause=Failure to get object, code=%08x", Family, status);
@@ -969,7 +971,7 @@ OpenRawSctp(
 		    sizeof(*tcp_req) + sizeof(hdrIncl),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1001,7 +1003,7 @@ OpenRawSctp(
 		    sizeof(*tcp_req) + sizeof(hdrIncl),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1025,7 +1027,7 @@ OpenRawSctp(
 		    sizeof(*tcp_req) + sizeof(hdrIncl),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1049,7 +1051,7 @@ OpenRawSctp(
 		    sizeof(*tcp_req) + sizeof(hdrIncl),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1190,7 +1192,7 @@ OpenUdpSctp(
 	    0L,
 	    eaInfo,
 	    eaLength);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		*pHandle = NULL;
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenUdpSctp] Failed to create, code=%08x, family=%hhu, port=%hhu",
 		    status, Family, Port);
@@ -1205,7 +1207,7 @@ OpenUdpSctp(
 	    KernelMode,
 	    ppObject,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		ZwClose(*pHandle);
 		*pHandle = NULL;
 		*ppObject = NULL;
@@ -1237,7 +1239,7 @@ OpenUdpSctp(
 		    sizeof(*tcp_req) + sizeof(value),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1267,7 +1269,7 @@ OpenUdpSctp(
 		    sizeof(*tcp_req) + sizeof(value),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1294,7 +1296,7 @@ OpenUdpSctp(
 		    sizeof(*tcp_req) + sizeof(value),
 		    NULL,
 		    0);
-		if (status != STATUS_SUCCESS) {
+		if (!NT_SUCCESS(status)) {
 			ObDereferenceObject(*ppObject);
 			*ppObject = NULL;
 			ZwClose(*pHandle);
@@ -1382,7 +1384,7 @@ SetFirewall(PacketFilterExtensionPtr pfep)
 	RtlInitUnicodeString(&usFilterName, DD_IPFLTRDRVR_DEVICE_NAME);
 	status= IoGetDeviceObjectPointer(&usFilterName,
 	    STANDARD_RIGHTS_ALL, &fileObject, &deviceObject);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[SetFirewall] Failed to get pointer, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [SetFirewall] Failed to get pointer, code=%08x\n", status);
 		goto done;
@@ -1533,14 +1535,14 @@ OpenEngine(void)
 	    NULL,
 	    &session,
 	    &EngineHandle);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenEngine] Failed to open, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenEngine] Failed to open, code=%08x\n", status);
 		goto error;
 	}
 
 	status = FwpmTransactionBegin0(EngineHandle, 0);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenEngine] Failed to transact, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenEngine] Failed to transact, code=%08x\n", status);
 		goto error;
@@ -1556,14 +1558,14 @@ OpenEngine(void)
 	icmpSubLayer.weight = FWP_EMPTY;
 
 	status = FwpmSubLayerAdd0(EngineHandle, &icmpSubLayer, NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenEngine] Failed to add, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenEngine] Failed to add, code=%08x\n", status);
 		goto error;
 	}
 
 	status = FwpmTransactionCommit0(EngineHandle);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenEngine] Failed to commit, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenEngine] Failed to commit, code=%08x\n", status);
 		goto error;
@@ -1612,14 +1614,14 @@ OpenIcmpCommon(
 	    SctpDeviceObject,
 	    &registerCallout,
 	    calloutId);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenIcmpCommon] Failed to register, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenIcmpCommon] Failed to register, code=%08x\n", status);
 		return status;
 	}
 
 	status = FwpmTransactionBegin0(EngineHandle, 0);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenIcmpCommon] Failed to transact, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenIcmpCommon] Failed to transact, code=%08x\n", status);
 		return status;
@@ -1637,7 +1639,7 @@ OpenIcmpCommon(
 	    &addCallout,
 	    NULL,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenIcmpCommon] Failed to add callout, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenIcmpCommon] Failed to add callout, code=%08x\n", status);
 		goto error;
@@ -1671,14 +1673,14 @@ OpenIcmpCommon(
 	    &filter,
 	    NULL,
 	    NULL);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenIcmpCommon] Failed to add filter, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenIcmpCommon] Failed to add filter, code=%08x\n", status);
 		goto error;
 	}
 
 	status = FwpmTransactionCommit0(EngineHandle);
-	if (status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		WriteEventLog(MSG_ERROR, NULL, L"[OpenIcmpCommon] Failed to commit, code=%08x", status);
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] [OpenIcmpCommon] Failed to commit, code=%08x\n", status);
 		goto error;
