@@ -22,18 +22,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
- 
+
  #include <winsock2.h>
  #include <ws2tcpip.h>
- 
+
+#ifndef IPPROTO_SCTP
+#define IPPROTO_SCTP	132
+#endif
+
 // {E9BAC45A-85E4-4569-8B40-5532D722AFD4}
 #define SCTP_PROVIDER_GUID_INIT \
 	{ 0xe9bac45a, 0x85e4, 0x4569, \
 	  {0x8b, 0x40, 0x55, 0x32, 0xd7, 0x22, 0xaf, 0xd4}}
 
 #define SCTP_SERVICE_PROVIDER_PATH	L"%ProgramFiles%\\SctpDrv\\bin\\sctpsp.dll"
-
-#define IPPROTO_SCTP			132
 
 static GUID SctpProviderGuid = SCTP_PROVIDER_GUID_INIT;
 

@@ -160,7 +160,7 @@ in6_sin6_2_sin(struct sockaddr_in *sin, struct sockaddr_in6 *sin6)
 
 int
 WSAAPI
-sctp_getaddrlen2(sa_family_t family)
+internal_sctp_getaddrlen(sa_family_t family)
 {
 	int error;
 	SOCKET sd;
@@ -190,7 +190,7 @@ sctp_getaddrlen2(sa_family_t family)
 
 int
 WSAAPI
-sctp_connectx2(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
+internal_sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 	      sctp_assoc_t *id)
 {
 	char buf[SCTP_STACK_BUF_SIZE];
@@ -204,9 +204,7 @@ sctp_connectx2(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 
 	/* validate the address count and list */
 	if ((addrs == NULL) || (addrcnt <= 0)) {
-#if !defined(__Windows__)
-		errno = EINVAL;
-#endif
+		WSASetLastError(WSAEINVAL);
 		return (-1);
 	}
 	at = addrs;
@@ -215,26 +213,13 @@ sctp_connectx2(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 	/* validate all the addresses and get the size */
 	for (i = 0; i < addrcnt; i++) {
 		if (at->sa_family == AF_INET) {
-#if !defined(__Windows__)
-			if (at->sa_len != sizeof(struct sockaddr_in)) {
-				errno = EINVAL;
-				return (-1);
-			}
-#else
 			salen = sizeof(struct sockaddr_in);
-#endif
 			memcpy(cpto, at, sizeof(struct sockaddr_in));
 			cpto = ((caddr_t)cpto + sizeof(struct sockaddr_in));
 			len += sizeof(struct sockaddr_in);
 		} else if (at->sa_family == AF_INET6) {
-#if !defined(__Windows__)
-			if (at->sa_len != sizeof(struct sockaddr_in6)) {
-				errno = EINVAL;
-				return (-1);
-			}
-#else
 			salen = sizeof(struct sockaddr_in6);
-#endif
+
 			if (IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)at)->sin6_addr)) {
 				len += sizeof(struct sockaddr_in);
 				in6_sin6_2_sin((struct sockaddr_in *)cpto, (struct sockaddr_in6 *)at);
@@ -275,7 +260,7 @@ sctp_connectx2(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
 
 int
 WSAAPI
-sctp_bindx2(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
+internal_sctp_bindx(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
 {
 	struct sctp_getaddresses *gaddrs;
 	struct sockaddr *sa;
@@ -382,7 +367,7 @@ sctp_bindx2(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
 
 int
 WSAAPI
-sctp_opt_info2(SOCKET sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size)
+internal_sctp_opt_info(SOCKET sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size)
 {
 	if (arg == NULL) {
 		WSASetLastError(WSAEINVAL);
@@ -442,7 +427,7 @@ sctp_opt_info2(SOCKET sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size)
 
 int
 WSAAPI
-sctp_getpaddrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
+internal_sctp_getpaddrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 {
 	struct sctp_getaddresses *addrs;
 	struct sockaddr *sa;
@@ -468,6 +453,7 @@ sctp_getpaddrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 	siz += sizeof(struct sctp_getaddresses);
 	addrs = calloc(1, siz);
 	if (addrs == NULL) {
+		WSASetLastError(WSAENOBUFS);
 		return (-1);
 	}
 	addrs->sget_assoc_id = id;
@@ -475,6 +461,7 @@ sctp_getpaddrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 	if (getsockopt(sd, IPPROTO_SCTP, SCTP_GET_PEER_ADDRESSES,
 	    (char *)addrs,  &siz) == SOCKET_ERROR) {
 		free(addrs);
+		WSASetLastError(WSAENOBUFS);
 		return (-1);
 	}
 	re = (struct sockaddr *)&addrs->addr[0];
@@ -505,7 +492,7 @@ sctp_getpaddrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 
 void
 WSAAPI
-sctp_freepaddrs2(struct sockaddr *addrs)
+internal_sctp_freepaddrs(struct sockaddr *addrs)
 {
 	/* Take away the hidden association id */
 	void *fr_addr;
@@ -517,7 +504,7 @@ sctp_freepaddrs2(struct sockaddr *addrs)
 
 int
 WSAAPI
-sctp_getladdrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
+internal_sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 {
 	struct sctp_getaddresses *addrs;
 	struct sockaddr *re;
@@ -586,7 +573,7 @@ sctp_getladdrs2(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
 
 void
 WSAAPI
-sctp_freeladdrs2(struct sockaddr *addrs)
+internal_sctp_freeladdrs(struct sockaddr *addrs)
 {
 	/* Take away the hidden association id */
 	void *fr_addr;
@@ -602,7 +589,7 @@ int sctp_generic_sendmsg(SOCKET, const void *, size_t, const struct sockaddr *,
 
 ssize_t
 WSAAPI
-sctp_sendmsg2(
+internal_sctp_sendmsg(
     SOCKET s,
     const void *data,
     size_t len,
@@ -631,7 +618,7 @@ sctp_sendmsg2(
 
 sctp_assoc_t
 WSAAPI
-sctp_getassocid2(SOCKET sd, struct sockaddr *sa)
+internal_sctp_getassocid(SOCKET sd, struct sockaddr *sa)
 {
 	struct sctp_paddrinfo sp;
 	socklen_t siz;
@@ -662,7 +649,7 @@ sctp_getassocid2(SOCKET sd, struct sockaddr *sa)
 
 ssize_t
 WSAAPI
-sctp_send2(
+internal_sctp_send(
     SOCKET s,
     const void *data,
     size_t len,
@@ -678,7 +665,7 @@ sctp_send2(
 
 ssize_t
 WSAAPI
-sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
+internal_sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
     struct sockaddr *addrs, int addrcnt,
     struct sctp_sndrcvinfo *sinfo,
     int flags)
@@ -711,6 +698,7 @@ sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
 			l = sizeof(struct sockaddr_in6);
 			break;
 		default:
+			WSASetLastError(WSAEINVAL);
 			return -1;
 		}
 		return (sctp_generic_sendmsg(sd,
@@ -741,6 +729,7 @@ sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
 	}
 	buf = malloc(len);
 	if (buf == NULL) {
+		WSASetLastError(WSAENOBUFS);
 		return (-1);
 	}
 	aa = (int *)buf;
@@ -752,6 +741,7 @@ sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
 
 	free(buf);
 	if (ret != 0) {
+		WSASetLastError(WSAENOBUFS);
 		return (ret);
 	}
 	sinfo->sinfo_assoc_id = sctp_getassocid(sd, addrs);
@@ -784,6 +774,7 @@ sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
 			salen = sizeof(struct sockaddr_in6);
 			break;
 		default:
+			WSASetLastError(WSAEINVAL);
 			return -1;
 		}
 		(void)setsockopt(sd, IPPROTO_SCTP, SCTP_CONNECT_X_COMPLETE, (void *)addrs,
@@ -796,7 +787,7 @@ sctp_sendx2(SOCKET sd, const void *msg, size_t msg_len,
 
 ssize_t
 WSAAPI
-sctp_sendmsgx2(SOCKET sd,
+internal_sctp_sendmsgx(SOCKET sd,
     const void *msg,
     size_t len,
     struct sockaddr *addrs,
@@ -824,7 +815,7 @@ ssize_t WSAAPI sctp_generic_recvmsg(SOCKET, char *, size_t, struct sockaddr *, s
 
 ssize_t
 WSAAPI
-sctp_recvmsg2(
+internal_sctp_recvmsg(
     SOCKET s,
     char *data,
     size_t len,
@@ -844,7 +835,7 @@ sctp_recvmsg2(
 
 SOCKET
 WSAAPI
-sctp_peeloff2(SOCKET sd, sctp_assoc_t assoc_id)
+internal_sctp_peeloff(SOCKET sd, sctp_assoc_t assoc_id)
 {
 	struct sctp_peeloff_opt peeloff;
 	int result;
@@ -859,6 +850,7 @@ sctp_peeloff2(SOCKET sd, sctp_assoc_t assoc_id)
 	result = getsockopt(sd, IPPROTO_SCTP, SCTP_PEELOFF, (void *)&peeloff, &optlen);
 
 	if (result < 0) {
+		WSASetLastError(WSAENOBUFS);
 		return (-1);
 	} else {
 		return ((SOCKET)peeloff.new_sd);

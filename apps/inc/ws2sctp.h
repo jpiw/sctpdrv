@@ -1391,52 +1391,146 @@ INT
 #endif
 
 
-int WSAAPI sctp_peeloff2(SOCKET, sctp_assoc_t);
-int WSAAPI sctp_bindx2(SOCKET, struct sockaddr *, int, int);
-int WSAAPI sctp_connectx2(SOCKET, const struct sockaddr *, int, sctp_assoc_t *);
-int WSAAPI sctp_getaddrlen2(int);
-int WSAAPI sctp_getpaddrs2(SOCKET, sctp_assoc_t, struct sockaddr **);
-void WSAAPI sctp_freepaddrs2(struct sockaddr *);
-int WSAAPI sctp_getladdrs2(SOCKET, sctp_assoc_t, struct sockaddr **);
-void WSAAPI sctp_freeladdrs2(struct sockaddr *);
-int WSAAPI sctp_opt_info2(SOCKET, sctp_assoc_t, int, void *, socklen_t *);
+SOCKET WSAAPI internal_sctp_peeloff (SOCKET, sctp_assoc_t);
+int  WSAAPI internal_sctp_bindx (SOCKET, struct sockaddr *, int, int);
+int  WSAAPI internal_sctp_connectx (SOCKET, const struct sockaddr *, int, sctp_assoc_t *);
+int  WSAAPI internal_sctp_getaddrlen (unsigned short);
+int  WSAAPI internal_sctp_getpaddrs (SOCKET, sctp_assoc_t, struct sockaddr **);
+void WSAAPI internal_sctp_freepaddrs (struct sockaddr *);
+int  WSAAPI internal_sctp_getladdrs (SOCKET, sctp_assoc_t, struct sockaddr **);
+void WSAAPI internal_sctp_freeladdrs (struct sockaddr *);
+int  WSAAPI internal_sctp_opt_info (SOCKET, sctp_assoc_t, int, void *, socklen_t *);
 
-int WSAAPI sctp_sendmsg2(SOCKET, const void *, size_t,
-    const struct sockaddr *, socklen_t,
+long WSAAPI internal_sctp_sendmsg (SOCKET, const void *, size_t,
+    const struct sockaddr *,
+    socklen_t, unsigned long, unsigned long, unsigned short, unsigned long, unsigned long);
+
+long WSAAPI internal_sctp_send (SOCKET sd, const void *msg, size_t len,
+    const struct sctp_sndrcvinfo *sinfo, int flags);
+
+long	WSAAPI internal_sctp_sendx (SOCKET sd, const void *msg, size_t len,
+    struct sockaddr *addrs, int addrcnt,
+    struct sctp_sndrcvinfo *sinfo, int flags);
+
+long	WSAAPI internal_sctp_sendmsgx (SOCKET sd, const void *, size_t,
+    struct sockaddr *, int,
     unsigned long, unsigned long, unsigned short, unsigned long, unsigned long);
 
-int WSAAPI sctp_send2(SOCKET, const void *, size_t,
-    const struct sctp_sndrcvinfo *, int);
+sctp_assoc_t WSAAPI internal_sctp_getassocid (SOCKET sd, struct sockaddr *sa);
 
-int WSAAPI sctp_sendx2(SOCKET, const void *, size_t,
-    struct sockaddr *, int,
-    struct sctp_sndrcvinfo *, int);
-
-int WSAAPI sctp_sendmsgx2(SOCKET, const void *, size_t,
-    struct sockaddr *, int,
-    unsigned long, unsigned long, unsigned short, unsigned long, unsigned long);
-
-sctp_assoc_t WSAAPI sctp_getassocid2(SOCKET, struct sockaddr *);
-
-int WSAAPI sctp_recvmsg2(SOCKET, void *, size_t, struct sockaddr *,
+long WSAAPI internal_sctp_recvmsg (SOCKET, void *, size_t, struct sockaddr *,
     socklen_t *, struct sctp_sndrcvinfo *, int *);
-/* <== The above definitions are based on netinet/sctp_uio.h (Revision 1.209) */
 
-#define sctp_peeloff     sctp_peeloff2
-#define sctp_bindx       sctp_bindx2
-#define sctp_connectx    sctp_connectx2
-#define sctp_getaddrlen  sctp_getaddrlen2
-#define sctp_getpaddrs   sctp_getpaddrs2
-#define sctp_freepaddrs  sctp_freepaddrs2
-#define sctp_getladdrs   sctp_getladdrs2
-#define sctp_freeladdrs  sctp_freeladdrs2
-#define sctp_opt_info    sctp_opt_info2
-#define sctp_sendmsg     sctp_sendmsg2
-#define sctp_send        sctp_send2
-#define sctp_sendx       sctp_sendx2
-#define sctp_sendmsgx    sctp_sendmsgx2
-#define sctp_getassocid  sctp_getassocid2
-#define sctp_recvmsg     sctp_recvmsg2
+__inline SOCKET WSAAPI sctp_peeloff(SOCKET sd, sctp_assoc_t associd)
+{
+	return internal_sctp_peeloff(sd, associd);
+}
+
+__inline int WSAAPI sctp_bindx(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
+{
+	return internal_sctp_bindx(sd, addrs, addrcnt, flags);
+}
+
+__inline int WSAAPI sctp_connectx(SOCKET sd, const struct sockaddr *addrs, int addrcnt,
+	      sctp_assoc_t *id)
+{
+	return internal_sctp_connectx(sd, addrs, addrcnt, id);
+}
+
+__inline int WSAAPI sctp_getaddrlen(unsigned short family)
+{
+	return internal_sctp_getaddrlen(family);
+}
+
+__inline int WSAAPI sctp_getpaddrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **raddrs)
+{
+	return internal_sctp_getpaddrs(sd, id, raddrs);
+}
+
+__inline void WSAAPI sctp_freepaddrs(struct sockaddr *addrs)
+{
+	internal_sctp_freepaddrs(addrs);
+}
+
+__inline int WSAAPI sctp_getladdrs(SOCKET sd, sctp_assoc_t id, struct sockaddr **addrs)
+{
+	return internal_sctp_getladdrs(sd, id, addrs);
+}
+
+__inline void WSAAPI sctp_freeladdrs(struct sockaddr *addrs)
+{
+	internal_sctp_freeladdrs(addrs);
+}
+
+__inline int WSAAPI sctp_opt_info(SOCKET sd, sctp_assoc_t id, int opt, void *arg, socklen_t *size)
+{
+	return internal_sctp_opt_info(sd, id, opt, arg, size);
+}
+
+__inline long WSAAPI sctp_sendmsg(
+    SOCKET s,
+    const void *data,
+    size_t len,
+    const struct sockaddr *to,
+    socklen_t tolen,
+    unsigned long ppid,
+    unsigned long flags,
+    unsigned short stream_no,
+    unsigned long timetolive,
+    unsigned long context)
+{
+	return internal_sctp_sendmsg(s, data, len, to, tolen, ppid, flags, stream_no, timetolive, context);
+}
+
+__inline long WSAAPI sctp_send(
+    SOCKET s,
+    const void *data,
+    size_t len,
+    const struct sctp_sndrcvinfo *sinfo,
+    int flags)
+{
+	return internal_sctp_send(s, data, len, sinfo, flags);
+}
+
+__inline long WSAAPI sctp_sendx(SOCKET sd, const void *msg, size_t msg_len,
+    struct sockaddr *addrs, int addrcnt,
+    struct sctp_sndrcvinfo *sinfo,
+    int flags)
+{
+	return internal_sctp_sendx(sd, msg, msg_len, addrs, addrcnt, sinfo, flags);
+}
+
+__inline long WSAAPI sctp_sendmsgx(SOCKET sd,
+    const void *msg,
+    size_t len,
+    struct sockaddr *addrs,
+    int addrcnt,
+    unsigned long ppid,
+    unsigned long flags,
+    unsigned short stream_no,
+    unsigned long timetolive,
+    unsigned long context)
+{
+	return internal_sctp_sendmsgx(sd, msg, len, addrs, addrcnt, ppid, flags, stream_no, timetolive, context);
+}
+
+__inline sctp_assoc_t WSAAPI sctp_getassocid(SOCKET sd, struct sockaddr *sa)
+{
+	return internal_sctp_getassocid(sd, sa);
+}
+
+__inline long WSAAPI sctp_recvmsg(
+    SOCKET s,
+    char *data,
+    size_t len,
+    struct sockaddr *from,
+    socklen_t *fromlen,
+    struct sctp_sndrcvinfo *sinfo,
+    int *msg_flags)
+{
+	return internal_sctp_recvmsg(s, data, len, from, fromlen, sinfo, msg_flags);
+}
+
 
 #ifdef __cplusplus
 }

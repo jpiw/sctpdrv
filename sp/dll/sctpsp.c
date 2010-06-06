@@ -38,16 +38,15 @@
 #include <strsafe.h>
 #include <stdio.h>
 
-#include <sctpsp.h>
-
 #include <sys/errno.h>
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/systm.h>
-#include <netinet/sctp_uio.h>
+
 #include <netinet/sctp.h>
 #include <netinet/sctp_peeloff.h>
+#include <sctpsp.h>
 
 struct SocketInfo
 {

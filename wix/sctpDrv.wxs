@@ -68,7 +68,7 @@
 		<?if $(env.DDK_TARGET_OS)=Win7 ?>
 		<Condition Message="This installer is for Windows 7/2008R2 or newer. You can find installers for other version of Windows on the SctpDrv web site.">
 			<![CDATA[
-			(VersionNT > "601")
+			(VersionNT > "600")
 			]]>
 		</Condition>
 		<?endif ?>
