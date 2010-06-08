@@ -626,6 +626,11 @@ HandleSetSysctl(
 	switch (kind & CTLTYPE_MASK) {
 	case CTLTYPE_INT:
 		new_intdata = _wtoi(ppwcArguments[3 + dwtTags[1]]);
+		if (new_intdata == INT_MIN || new_intdata == INT_MAX) {
+			PrintMessage(L"Value out of range\n");
+			goto done;
+		}
+
 		req.data = (void *)&intdata;
 		req.datalen = sizeof(intdata);
 		req.new_data = (void *)&new_intdata;

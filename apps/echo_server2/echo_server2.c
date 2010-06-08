@@ -64,7 +64,7 @@ err(
 	va_end(ap);
 
 	FormatMessageA(
-	    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+	    FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	    FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    WSAGetLastError(),
@@ -104,7 +104,7 @@ warn(
 	va_end(ap);
 
 	FormatMessageA(
-	    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+	    FORMAT_MESSAGE_ALLOCATE_BUFFER |
 	    FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    WSAGetLastError(),
@@ -220,7 +220,7 @@ main(
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSARecvMsg_GUID, sizeof(WSARecvMsg_GUID),
-			&WSARecvMsg, sizeof((void*)WSARecvMsg),
+			&WSARecvMsg, sizeof(void*),
 			&bytes, NULL, NULL) != 0) {
 			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSARecvMsg)");
 			/*NOTREACHED*/
@@ -228,7 +228,7 @@ main(
 
 		if (WSAIoctl(sfd, SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&WSASendMsg_GUID, sizeof(WSASendMsg_GUID),
-			&WSASendMsg, sizeof((void*)WSASendMsg),
+			&WSASendMsg, sizeof(void*),
 			&bytes, NULL, NULL) != 0) {
 			err(1, "WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,WSASendMsg)");
 			/*NOTREACHED*/
@@ -256,7 +256,7 @@ main(
 			sfd = INVALID_SOCKET;
 			continue;
 		}
-					
+
 		fprintf(stderr, "Listening Completed.\n");
 		break;
 	}

@@ -1,6 +1,5 @@
 @echo off
 set PROJDIR=%CD%
-set SIGNCMD=signtool sign -p "Stream Control Transmission Protocol" /f drv\sctpDrv.pfx
 if [%DEBUG%]==[1] (set BUILDTYPE=chk) else (set BUILDTYPE=fre)
 if not exist "%WINDOWSSDKDIR%\Include\msi.h" set WINDOWSSDKDIR=C:\Program Files\Microsoft SDKs\Windows\v7.1
 if not exist "%WDKPATH%\bin\setenv.bat" set WDKPATH=C:\WinDDK\7600.16385.1
@@ -8,6 +7,7 @@ if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles
 if not exist "%WDKPATH%\bin\setenv.bat" goto missingfiles
 if not exist "%WIX%bin\candle.exe" goto missingfiles
 if not exist "%WINDOWSSDKDIR%\Include\msi.h" goto missingfiles
+set WDK=cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE%
 
 cd %PROJDIR%
 mkdir inc
@@ -34,23 +34,33 @@ copy /Y "%WINDOWSSDKDIR%\Lib\netsh.lib"     lib
 
 echo on
 REM Build the i386 Windows XP driver
-cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE% x86 wxp  && CD %PROJDIR% && build/c && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
+%WDK% x86 wxp && CD %PROJDIR% && build/c"
+@if %ERRORLEVEL% neq 0 goto builderror
+%WDK% x86 wxp && CD %PROJDIR% && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
 
 REM Build the i386 Windows Vista driver
-cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE% x86 wlh && CD %PROJDIR% && build/c && %SIGNCMD% drv\obj%BUILDTYPE%_wlh_x86\i386\sctp.sys && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
+%WDK% x86 wlh && CD %PROJDIR% && build/c"
+@if %ERRORLEVEL% neq 0 goto builderror
+%WDK% x86 wlh && CD %PROJDIR% && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
 
 REM Build the amd64 Windows Vista driver
-cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE% x64 wlh && CD %PROJDIR% && build/c && %SIGNCMD% drv\obj%BUILDTYPE%_wlh_amd64\amd64\sctp.sys && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
+%WDK% x64 wlh && CD %PROJDIR% && build/c
+@if %ERRORLEVEL% neq 0 goto builderror
+%WDK% x64 wlh && CD %PROJDIR% && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
 
 REM Build the i386 Windows 7 driver
-cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE% x86 win7 && CD %PROJDIR% && build/c && %SIGNCMD% drv\obj%BUILDTYPE%_win7_x86\i386\sctp.sys && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
+%WDK% x86 win7 && CD %PROJDIR% && build/c
+@if %ERRORLEVEL% neq 0 goto builderror
+%WDK% x86 win7 && CD %PROJDIR% && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
 
 REM Build the amd64 Windows 7 driver
-cmd /c "%WDKPATH%\bin\setenv.bat %WDKPATH% %BUILDTYPE% x64 win7 && CD %PROJDIR% && build/c && %SIGNCMD% drv\obj%BUILDTYPE%_win7_amd64\amd64\sctp.sys && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
+%WDK% x64 win7 && CD %PROJDIR% && build/c
+@if %ERRORLEVEL% neq 0 goto builderror
+%WDK% x64 win7 && CD %PROJDIR% && CD wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
 @goto done
 

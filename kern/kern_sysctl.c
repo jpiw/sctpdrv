@@ -371,5 +371,8 @@ SCTPDispatchSysctl(
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSysctl - leave\n");
 done:
+	if (name != NULL)
+		FREE(name, LPWSTR);
+
 	return status;
 }

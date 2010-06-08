@@ -37,7 +37,6 @@
 			<ComponentRef Id='README.txt'/>
 			<ComponentRef Id='CHANGES.txt'/>
 			<ComponentRef Id='SctpDrv.chm'/>
-			<ComponentRef Id='SctpDrv.pfx'/>
 		</ComponentGroup>
 
 		<ComponentGroup Id='bin'>
@@ -167,9 +166,6 @@
 			</Component>
 			<Component Id="SctpDrv.chm" Win64="$(var.Win64)" Guid="0e7fdaeb-cbc1-4050-99e1-d1e7479fb27e">
 				<File Id="SctpDrv.chm" Name="SctpDrv.chm" KeyPath="yes" Source="..\doc\SctpDrv.chm"/>
-			</Component>
-			<Component Id="SctpDrv.pfx" Win64="$(var.Win64)" Guid="fc96b3c8-2e01-4073-8568-95848f8e2668">
-				<File Id="SctpDrv.pfx" Name="SctpDrv.pfx" KeyPath="yes" Source="..\drv\SctpDrv.pfx"/>
 			</Component>
 		</DirectoryRef>
 

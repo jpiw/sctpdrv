@@ -58,13 +58,15 @@ clean:
 SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: \
 				$(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm \
 				sctpdrv.wixobj$(MSIARCH)
-		$(LIGHT) -ext WixUIExtension -cultures:$(MSICULTURE) \
+		$(LIGHT) -sw1076 -pedantic -ext WixUIExtension -cultures:$(MSICULTURE) \
 		-dPlatform=$(MSIARCH) \
 		sctpDrv.wixobj$(MSIARCH) \
 		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
+		if [%HAVE_CERT%]==[1] ( signtool sign /ac ..\drv\MSCV-GlobalSign.cer /s my /n "Bruce Cran" /t http://timestamp.globalsign.com/scripts/timstamp.dll $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi )
 		
 $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm: \
 					sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH)              \
+					sctpSign                                            \
 					module-common.wixobj$(MSIARCH)                      \
 					module-$(DDK_TARGET_OS)_$(MSIARCH).wixobj$(MSIARCH) \
 					..\sp\dll\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\sctpsp.lib \
@@ -102,3 +104,7 @@ sctpCat-win7-x86: sctp-win7.inf
 sctpCat-win7-AMD64: sctp-win7.inf
 	copy /Y sctp-win7.inf $(TREE)\Sctp.inf
 	inf2cat /driver:$(TREE) /os:7_X64,Server2008R2_X64
+
+sctpSign:
+	set TREE=$(TREE)
+	sign.bat
