@@ -1236,7 +1236,7 @@ done:
 		free(sendMsgParam, M_SYSCALL);
 
 	if (NT_SUCCESS(status) && error != 0)
-		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF))
+		status = (NTSTATUS)(0xE0FF0000 | (error & 0xFFFF));
 
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSendMsgRequestDeferred - leave\n");
 	return status;

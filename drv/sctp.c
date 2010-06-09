@@ -186,7 +186,7 @@ static KSTART_ROUTINE ReloadThread;
 MALLOC_DEFINE(M_DRV, 'dm00', "drv", "driver");
 LARGE_INTEGER StartTime = {0};
 #ifdef DBG
-uint32_t debug_on = DEBUG_GENERIC_ERROR |
+uint32_t debug_on = DEBUG_GENERIC_ERROR | SCTP_DEBUG_NOISY | DEBUG_NET_VERBOSE | SCTP_DEBUG_TIMER1 |
 					DEBUG_KERN_ERROR |
 					DEBUG_NET_ERROR |
 					DEBUG_LOCK_ERROR;

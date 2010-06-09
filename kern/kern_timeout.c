@@ -55,9 +55,6 @@ CustomTimerDpc(
 
 	atomic_add_int(&c->c_pending, -1);
 
-	/* XXX do we need to acquire the lock here?
-	KeAcquireSpinLockAtDpcLevel(&c->c_lock);
-	*/
 	if (c_mtx != NULL) {
 		KeAcquireSpinLockAtDpcLevel(c_mtx);
 	}
@@ -67,10 +64,6 @@ CustomTimerDpc(
 	if (c_mtx != NULL && (c_flags & CALLOUT_RETURNUNLOCKED) == 0) {
 		KeReleaseSpinLockFromDpcLevel(c_mtx);
 	}
-	
-	/* XXX
-	KeReleaseSpinLockFromDpcLevel(&c->c_lock);
-	*/
 
 #ifdef DBG
 	if (KeGetCurrentIrql() != oldIrql) {
@@ -159,22 +152,21 @@ callout_stop(
 	return ret;
 }
 
-#if 0
 int
 callout_drain(
     struct callout *c)
 {
 	int ret = 0;
+	KIRQL irql;
 
 	if (KeCancelTimer(&c->c_tmr)) {
 		atomic_add_int(&c->c_pending, -1);
 		ret++;
 	} else {
-		KeAcquireSpinLockAtDpcLevel(&c->c_lock);
-		KeReleaseSpinLockFromDpcLevel(&c->c_lock);
+		KeAcquireSpinLock(&c->c_lock, &irql);
+		KeReleaseSpinLock(&c->c_lock, irql);
 	}
 	c->c_flags &= ~CALLOUT_ACTIVE;
 
 	return ret;
 }
-#endif
