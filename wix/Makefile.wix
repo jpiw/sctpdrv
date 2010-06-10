@@ -28,7 +28,7 @@ CODEPAGE=1252
 ! If "$(NO_TIMESTAMP)"=="1"
 TIMESTAMP=
 ! Else
-TIMESTAMP=/t http://timestamp.globalsign.com/scripts/timstamp.dll
+TIMESTAMP=/t http://timestamp.verisign.com/scripts/timstamp.dll
 ! Endif
 
 all: \

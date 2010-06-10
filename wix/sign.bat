@@ -1,5 +1,5 @@
 @echo off
-set TIMESERVER=http://timestamp.globalsign.com/scripts/timstamp.dll
+set TIMESERVER=http://timestamp.verisign.com/scripts/timstamp.dll
 if [%NO_TIMESTAMP%]==[1] ( set TIMESTAMP= ) else ( set TIMESTAMP=/t %TIMESERVER% )
 set CROSSCERT=..\drv\MSCV-GlobalSign.cer
 set CN="Bruce Cran"
