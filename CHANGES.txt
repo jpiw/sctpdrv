@@ -1,4 +1,4 @@
-Version 1.1.5 - 5th June 2010
+Version 1.1.5 - 10th June 2010
 Bug fixes and new features since 1.1.4
     * Fixed select() function when called via WOW64
     * Created a Vista build.
@@ -13,6 +13,7 @@ Bug fixes and new features since 1.1.4
       to be removed. Now only the value is removed, not the entire key.
     * A merge module is now produced for each platform/architecture to allow users to 
       integrate SctpDrv into their own products.
+    * Lots of fixes to the core SCTP stack merged from BSD.
 
 Version 1.1.4 - 3rd February 2010
 Bug fixes and new features since 1.1.3
