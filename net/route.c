@@ -111,8 +111,10 @@ void
 rtalloc(struct route *ro)
 {	
 	struct rtentry *rt = NULL;
+	struct radix_node_head *rnh = NULL;
 	struct _sockaddr_storage dst;
 	int i;
+	KLOCK_QUEUE_HANDLE lockqueue;
 
 	DebugPrint(DEBUG_NET_VERBOSE, "rtalloc - enter\n");
 
@@ -121,19 +123,23 @@ rtalloc(struct route *ro)
 	case AF_INET:
 		dst.ss_len = sizeof(struct _sockaddr_in);
 		RtlCopyMemory(&dst.ss, &ro->ro_dst, sizeof(struct sockaddr_in));
+		rnh = rnh_ipv4;
 		break;
 	case AF_INET6:
 		dst.ss_len = sizeof(struct _sockaddr_in6);
 		RtlCopyMemory(&dst.ss, &ro->ro_dst, sizeof(struct sockaddr_in6));
+		rnh = rnh_ipv6;
 		break;
 	default:
 		DebugPrint(DEBUG_NET_VERBOSE, "rtalloc - leave#1\n");
 		return;
 	}
 
+	RADIX_NODE_HEAD_LOCK(rnh, &lockqueue);
 	rt = ro->ro_rt;
 	if (rt != NULL) {
 		if (rt->rt_ifp != NULL && (rt->rt_flags & RTF_UP) != 0) {
+			RADIX_NODE_HEAD_UNLOCK(rnh, &lockqueue);
 			DebugPrint(DEBUG_NET_VERBOSE, "rtalloc - leave#2\n");
 			return;
 		}
@@ -144,6 +150,8 @@ rtalloc(struct route *ro)
 	if (ro->ro_rt) {
 		RT_UNLOCK(ro->ro_rt);
 	}
+
+	RADIX_NODE_HEAD_UNLOCK(rnh, &lockqueue);
 	DebugPrint(DEBUG_NET_VERBOSE, "rtalloc - leave\n");
 }
 
@@ -168,14 +176,12 @@ rtalloc1(struct _sockaddr *dst)
 		return NULL;
 	}
 
-	RADIX_NODE_HEAD_LOCK(rnh);
 	rn = rnh->rnh_matchaddr(dst, rnh);
 	if (rn != NULL && (rn->rn_flags & RNF_ROOT) == 0) {
 		rt = (struct rtentry *)rn;
 		RT_LOCK(rt);
 		RT_ADDREF(rt);
 	}
-	RADIX_NODE_HEAD_UNLOCK(rnh);
 
 	DebugPrint(DEBUG_NET_VERBOSE, "rtalloc1 - leave\n");
 
@@ -365,6 +371,7 @@ route_add(
 	ULONG i;
 	struct ifnet *ifp = NULL;
 	struct ifaddr *ifa = NULL;
+	KLOCK_QUEUE_HANDLE lockqueue;
 
 	DebugPrint(DEBUG_NET_VERBOSE, "route_add - enter\n");
 
@@ -683,7 +690,7 @@ route_add(
 		rt_mask(rt) = &rt->_rt_netmask._sa;
 	}
 
-	RADIX_NODE_HEAD_LOCK(rnh);
+	RADIX_NODE_HEAD_LOCK(rnh, &lockqueue);
 
 #ifdef RADIX_MPATH
 	if (rn_mpath_capable(rnh)) {
@@ -719,7 +726,7 @@ route_add(
 	DebugPrint(DEBUG_NET_VERBOSE, "route_add - leave\n");
 
 done:
-	RADIX_NODE_HEAD_UNLOCK(rnh);
+	RADIX_NODE_HEAD_UNLOCK(rnh, &lockqueue);
 	return rn;
 }
     
@@ -744,6 +751,7 @@ route_del(
 	struct sockaddr *nexthop = NULL;
 	struct sockaddr_in in_nexthop;
 	struct sockaddr_in6 in6_nexthop;
+	KLOCK_QUEUE_HANDLE lockqueue;
 
 	DebugPrint(DEBUG_NET_VERBOSE, "route_del - enter\n");
 
@@ -895,7 +903,7 @@ route_del(
 	}
 #endif
 
-	RADIX_NODE_HEAD_LOCK(rnh);
+	RADIX_NODE_HEAD_LOCK(rnh, &lockqueue);
 
 	rn = rnh->rnh_lookup(dst, netmask, rnh);
 	if (rn == NULL) {
@@ -937,7 +945,7 @@ route_del(
 #endif
 
 done:
-	RADIX_NODE_HEAD_UNLOCK(rnh);
+	RADIX_NODE_HEAD_UNLOCK(rnh, &lockqueue);
 	DebugPrint(DEBUG_NET_VERBOSE, "route_del - leave\n");
 }
 

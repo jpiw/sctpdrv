@@ -186,7 +186,7 @@ static KSTART_ROUTINE ReloadThread;
 MALLOC_DEFINE(M_DRV, 'dm00', "drv", "driver");
 LARGE_INTEGER StartTime = {0};
 #ifdef DBG
-uint32_t debug_on = DEBUG_GENERIC_ERROR | DEBUG_LOCK_VERBOSE |
+uint32_t debug_on = DEBUG_GENERIC_ERROR |
 					DEBUG_KERN_ERROR |
 					DEBUG_NET_ERROR |
 					DEBUG_LOCK_ERROR;
@@ -2889,8 +2889,7 @@ icmp_input(struct mbuf *m, int off)
 		    (struct sockaddr *)&from, &inp, &net, 1, vrf_id);
 		if (stcb != NULL) {
 			SCTP_TCB_UNLOCK(stcb);
-		} else if (
-		    inp != NULL) {
+		} else if (inp != NULL) {
 			SCTP_INP_WLOCK(inp);
 			SCTP_INP_DECR_REF(inp);
 			SCTP_INP_WUNLOCK(inp);

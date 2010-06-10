@@ -145,14 +145,14 @@ extern int max_keylen;
 	SCTPDBG(SCTP_DEBUG_NOISY, "RADIX_NODE_HEAD_DESTROY(%p) @ %s[%d]\n", (rnh), __FILE__, __LINE__) ; \
 } while (0)
 
-#define	RADIX_NODE_HEAD_LOCK(rnh) do { \
+#define	RADIX_NODE_HEAD_LOCK(rnh, lockqueue) do { \
 	SCTPDBG(SCTP_DEBUG_NOISY, "RADIX_NODE_HEAD_LOCK(%p) @ %s[%d]\n", (rnh), __FILE__, __LINE__) ; \
-	KeAcquireInStackQueuedSpinLock(&(rnh)->rnh_spinlock, &(rnh)->rnh_lockqueue); \
+	KeAcquireInStackQueuedSpinLock(&(rnh)->rnh_spinlock, lockqueue); \
 } while (0)
 
-#define	RADIX_NODE_HEAD_UNLOCK(rnh) do { \
+#define	RADIX_NODE_HEAD_UNLOCK(rnh, lockqueue) do { \
 	SCTPDBG(SCTP_DEBUG_NOISY, "RADIX_NODE_HEAD_UNLOCK(%p) @ %s[%d]\n", (rnh), __FILE__, __LINE__) ; \
-	KeReleaseInStackQueuedSpinLock(&(rnh)->rnh_lockqueue); \
+	KeReleaseInStackQueuedSpinLock(lockqueue); \
 } while (0)
 
 #define	RADIX_NODE_HEAD_LOCK_ASSERT(rnh)
