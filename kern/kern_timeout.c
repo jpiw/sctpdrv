@@ -54,6 +54,10 @@ CustomTimerDpc(
 	c_mtx = c->c_mtx;
 	c_flags = c->c_flags;
 
+	// don't do anything is the callout isn't marked active
+	if ((c_flags & CALLOUT_ACTIVE) == 0)
+		return;
+
 	atomic_add_int(&c->c_pending, -1);
 
 	KeAcquireSpinLockAtDpcLevel(&Giant);
@@ -146,12 +150,13 @@ callout_stop(
 {
 	int ret = 0;
 
+	callout_deactivate(c);
+
 	if (KeCancelTimer(&c->c_tmr)) {
 		atomic_add_int(&c->c_pending, -1);
 		ret++;
 	}
 
-	c->c_flags &= ~CALLOUT_ACTIVE;
 	return ret;
 }
 
@@ -162,6 +167,8 @@ callout_drain(
 	int ret = 0;
 	KIRQL irql;
 
+	callout_deactivate(c);
+
 	if (KeCancelTimer(&c->c_tmr)) {
 		atomic_add_int(&c->c_pending, -1);
 		ret++;
@@ -170,6 +177,5 @@ callout_drain(
 		KeReleaseSpinLock(&Giant, irql);
 	}
 
-	c->c_flags &= ~CALLOUT_ACTIVE;
 	return ret;
 }
