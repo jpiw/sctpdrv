@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/systm.h>
 #include <sys/lock.h>
+#include <sys/spinlock.h>
 #include <sys/callout.h>
 
 extern uint32_t debug_on;
@@ -55,6 +56,8 @@ CustomTimerDpc(
 
 	atomic_add_int(&c->c_pending, -1);
 
+	KeAcquireSpinLockAtDpcLevel(&Giant);
+
 	if (c_mtx != NULL) {
 		KeAcquireSpinLockAtDpcLevel(c_mtx);
 	}
@@ -64,6 +67,8 @@ CustomTimerDpc(
 	if (c_mtx != NULL && (c_flags & CALLOUT_RETURNUNLOCKED) == 0) {
 		KeReleaseSpinLockFromDpcLevel(c_mtx);
 	}
+
+	KeReleaseSpinLockFromDpcLevel(&Giant);
 
 #ifdef DBG
 	if (KeGetCurrentIrql() != oldIrql) {
@@ -85,13 +90,12 @@ callout_init(
 	RtlZeroMemory(c, sizeof(struct callout));
 	KeInitializeTimer(&c->c_tmr);
 	KeInitializeDpc(&c->c_dpc, CustomTimerDpc, c);
-	KeInitializeSpinLock(&c->c_lock);
 
 	if (mpsafe) {
 		c->c_mtx = NULL;
 		c->c_flags |= CALLOUT_RETURNUNLOCKED;
 	} else {
-		/* XXX Currently, no giant lock exists.*/
+		/* Nothing to do: Giant is already initialized */
 	}
 }
 
@@ -104,7 +108,6 @@ callout_init_mtx(
 	RtlZeroMemory(c, sizeof(struct callout));
 	KeInitializeTimer(&c->c_tmr);
 	KeInitializeDpc(&c->c_dpc, CustomTimerDpc, c);
-	KeInitializeSpinLock(&c->c_lock);
 
 	c->c_mtx = mtx;
 	c->c_flags = flags & CALLOUT_RETURNUNLOCKED;
@@ -147,8 +150,8 @@ callout_stop(
 		atomic_add_int(&c->c_pending, -1);
 		ret++;
 	}
-	c->c_flags &= ~CALLOUT_ACTIVE;
 
+	c->c_flags &= ~CALLOUT_ACTIVE;
 	return ret;
 }
 
@@ -163,10 +166,10 @@ callout_drain(
 		atomic_add_int(&c->c_pending, -1);
 		ret++;
 	} else {
-		KeAcquireSpinLock(&c->c_lock, &irql);
-		KeReleaseSpinLock(&c->c_lock, irql);
+		KeAcquireSpinLock(&Giant, &irql);
+		KeReleaseSpinLock(&Giant, irql);
 	}
-	c->c_flags &= ~CALLOUT_ACTIVE;
 
+	c->c_flags &= ~CALLOUT_ACTIVE;
 	return ret;
 }

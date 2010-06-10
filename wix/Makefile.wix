@@ -62,7 +62,8 @@ SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: \
 		-dPlatform=$(MSIARCH) \
 		sctpDrv.wixobj$(MSIARCH) \
 		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
-		if [%HAVE_CERT%]==[1] ( signtool sign /ac ..\drv\MSCV-GlobalSign.cer /s my /n "Bruce Cran" /t http://timestamp.globalsign.com/scripts/timstamp.dll $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi )
+		if [%HAVE_CERT%]==[1] ( signtool sign /ac ..\drv\MSCV-GlobalSign.cer /s my /n "Bruce Cran" /t http://timestamp.globalsign.com/scripts/timstamp.dll \
+		$(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm )
 		
 $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm: \
 					sctpCat-$(DDK_TARGET_OS)-$(_BUILDARCH)              \

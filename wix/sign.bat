@@ -1,3 +1,4 @@
+@echo off
 set TIMESERVER=http://timestamp.globalsign.com/scripts/timstamp.dll
 set CROSSCERT=..\drv\MSCV-GlobalSign.cer
 set CN="Bruce Cran"
@@ -6,3 +7,4 @@ signtool sign /ac %CROSSCERT% /s my /n %CN% /t %TIMESERVER% %TREE%\sctp.cat %TRE
 ) else (
 signtool sign -p "Stream Control Transmission Protocol" /f ..\drv\sctpDrv.pfx %TREE%\sctp.sys
 )
+@echo on

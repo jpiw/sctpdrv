@@ -210,8 +210,9 @@ ClientPnPAddNetAddress(
 			break;
 		}
 	}
+	IFNET_WUNLOCK();
+
 	if (ifp == NULL) {
-		IFNET_WUNLOCK();
 		if ((Address->AddressType == TDI_ADDRESS_TYPE_IP)) {
 #if NTDDI_VERSION < NTDDI_LONGHORN
 			ifp = ifnet_create_by_ipaddr((PTDI_ADDRESS_IP)Address->Address, &guid);
@@ -240,17 +241,15 @@ ClientPnPAddNetAddress(
 			DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPAddNetAddress - leave#3\n");
 			return;
 		}
-		IFNET_WLOCK();
 		IFFREE(ifp);
-		IF_LOCK(ifp);
-		IFNET_WUNLOCK();
-	} else {
-		IF_LOCK(ifp);
-		IFNET_WUNLOCK();
 	}
+
+	IF_LOCK(ifp);
 
 	DebugPrint(DEBUG_NET_INFO, "ClientPnPAddNetAddress: if_index=%d,if_ifIndex=%d,if_type=%d,if_mtu=%d\n",
 	    ifp->if_index, ifp->if_ifIndex, ifp->if_type, ifp->if_mtu);
+
+	IF_UNLOCK(ifp);
 
 	RtlZeroMemory(&addr, sizeof(addr));
 	switch (Address->AddressType) {
@@ -269,6 +268,7 @@ ClientPnPAddNetAddress(
 		break;
 	}
 
+	IF_LOCK(ifp);
 	ifa = ifnet_append_address(ifp, (struct sockaddr *)&addr);
 	IF_UNLOCK(ifp);
 	if (ifa == NULL) {

@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 208891 2010-06-07 11:33:20Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 208970 2010-06-09 22:05:29Z rrs $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2497,6 +2497,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 		 * in protosw
 		 */
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, EOPNOTSUPP);
+		so->so_pcb = NULL;
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_ep), inp);
 		return (EOPNOTSUPP);
 	}
@@ -2515,6 +2516,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 	if (inp->sctp_tcbhash == NULL) {
 		SCTP_PRINTF("Out of SCTP-INPCB->hashinit - no resources\n");
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, ENOBUFS);
+		so->so_pcb = NULL;
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_ep), inp);
 		return (ENOBUFS);
 	}
@@ -2524,6 +2526,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 		    (sizeof(uint32_t) * inp->vrf_size), SCTP_M_MVRF);
 	if (inp->m_vrf_ids == NULL) {
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, ENOBUFS);
+		so->so_pcb = NULL;
 		SCTP_HASH_FREE(inp->sctp_tcbhash, inp->sctp_hashmark);
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_ep), inp);
 		return (ENOBUFS);
@@ -2542,6 +2545,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 		SCTP_FREE(inp->m_vrf_ids, SCTP_M_MVRF);
 #endif
 		SCTP_HASH_FREE(inp->sctp_tcbhash, inp->sctp_hashmark);
+		so->so_pcb = NULL;
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_ep), inp);
 		SCTP_UNLOCK_EXC(SCTP_BASE_INFO(ipi_ep_mtx));
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, ENOMEM);
@@ -3648,10 +3652,10 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 		}
 		/* now is there some left in our SHUTDOWN state? */
 		if (cnt_in_sd) {
-			inp->sctp_socket = NULL;
 #ifdef SCTP_LOG_CLOSING
 			sctp_log_closing(inp, NULL, 2);
 #endif
+			inp->sctp_socket = NULL;
 			SCTP_INP_WUNLOCK(inp);
 			SCTP_ASOC_CREATE_UNLOCK(inp);
 			SCTP_INP_INFO_WUNLOCK();
@@ -3732,12 +3736,11 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 		/* Ok we have someone out there that will kill us */
 		(void)SCTP_OS_TIMER_STOP(&inp->sctp_ep.signature_change.timer);
 #ifdef SCTP_LOG_CLOSING
-				sctp_log_closing(inp, NULL, 3);
+		sctp_log_closing(inp, NULL, 3);
 #endif
 		SCTP_INP_WUNLOCK(inp);
 		SCTP_ASOC_CREATE_UNLOCK(inp);
 		SCTP_INP_INFO_WUNLOCK();
-
 		return;
 	}
 	if (SCTP_INP_LOCK_CONTENDED(inp)) 
@@ -3751,14 +3754,13 @@ sctp_inpcb_free(struct sctp_inpcb *inp, int immediate, int from)
 	     (being_refed) ||
 	     (inp->sctp_flags & SCTP_PCB_FLAGS_CLOSE_IP)) {
 		(void)SCTP_OS_TIMER_STOP(&inp->sctp_ep.signature_change.timer);
-		sctp_timer_start(SCTP_TIMER_TYPE_INPKILL, inp, NULL, NULL);
 #ifdef SCTP_LOG_CLOSING
-				sctp_log_closing(inp, NULL, 4);
+		sctp_log_closing(inp, NULL, 4);
 #endif
+		sctp_timer_start(SCTP_TIMER_TYPE_INPKILL, inp, NULL, NULL);
 		SCTP_INP_WUNLOCK(inp);
 		SCTP_ASOC_CREATE_UNLOCK(inp);
 		SCTP_INP_INFO_WUNLOCK();
-
 		return;
 	}
 	inp->sctp_ep.signature_change.type = 0;

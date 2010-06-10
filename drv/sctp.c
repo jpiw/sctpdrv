@@ -186,7 +186,7 @@ static KSTART_ROUTINE ReloadThread;
 MALLOC_DEFINE(M_DRV, 'dm00', "drv", "driver");
 LARGE_INTEGER StartTime = {0};
 #ifdef DBG
-uint32_t debug_on = DEBUG_GENERIC_ERROR | SCTP_DEBUG_NOISY | DEBUG_NET_VERBOSE | SCTP_DEBUG_TIMER1 |
+uint32_t debug_on = DEBUG_GENERIC_ERROR | DEBUG_LOCK_VERBOSE |
 					DEBUG_KERN_ERROR |
 					DEBUG_NET_ERROR |
 					DEBUG_LOCK_ERROR;
@@ -210,6 +210,7 @@ IO_CSQ aioCsq;
 LIST_ENTRY aioIrpList;
 KSPIN_LOCK aioLock;
 KLOCK_QUEUE_HANDLE aioLockQueue;
+KSPIN_LOCK Giant;
 #if NTDDI_VERSION >= NTDDI_LONGHORN
 HANDLE EngineHandle;
 UINT32 IcmpCalloutIdV4;
@@ -417,6 +418,8 @@ DriverEntry(
 		DebugPrint(DEBUG_GENERIC_ERROR, "[sctp] Failed to prepare lock\n");
 		goto error;
 	}
+
+	KeInitializeSpinLock(&Giant);
 
 	aio_swake = aio_swake_cb;
 	domaininit();

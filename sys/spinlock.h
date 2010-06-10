@@ -33,6 +33,8 @@ struct spinlock {
 	int			locked;
 };
 
+extern KSPIN_LOCK Giant;
+
 #ifdef _KERNEL
 
 #define SPINLOCK_NOPROFILE	0x00000001
