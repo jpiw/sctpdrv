@@ -31,7 +31,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 194355 2009-06-17 12:34:56Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 209289 2010-06-18 09:01:44Z tuexen $");
 
 #endif
 #ifndef _NETINET_SCTP_H_
@@ -448,6 +448,7 @@ struct sctp_error_unrecognized_chunk {
 #define SCTP_PCB_FLAGS_BLOCKING_IO	0x08000000
 #define SCTP_PCB_FLAGS_SOCKET_GONE	0x10000000
 #define SCTP_PCB_FLAGS_SOCKET_ALLGONE	0x20000000
+#define SCTP_PCB_FLAGS_SOCKET_CANT_READ	0x40000000
 /* flags to copy to new PCB */
 #define SCTP_PCB_COPY_FLAGS		(SCTP_PCB_FLAGS_BOUNDALL|\
 					 SCTP_PCB_FLAGS_WAKEINPUT|\

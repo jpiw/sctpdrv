@@ -621,5 +621,4 @@ struct sctp_auth_invalid_hmac {
 			      sizeof(struct sctphdr))
 
 #undef SCTP_PACKED
-
 #endif				/* !__sctp_header_h__ */

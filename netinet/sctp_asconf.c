@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 207099 2010-04-23 08:19:47Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 209178 2010-06-14 21:25:07Z tuexen $");
 #endif
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_var.h>
@@ -850,6 +850,7 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 	ack->serial_number = serial_num;
 	ack->last_sent_to = NULL;
 	ack->data = m_ack;
+	ack->len = 0;
 	n = m_ack;
 	while(n) {
 		ack->len += SCTP_BUF_LEN(n);
@@ -1060,7 +1061,8 @@ sctp_asconf_nets_cleanup(struct sctp_tcb *stcb, struct sctp_ifn *ifn)
 		 * address.
 		 */
 		if (SCTP_ROUTE_HAS_VALID_IFN(&net->ro) &&
-		    SCTP_GET_IF_INDEX_FROM_ROUTE(&net->ro) != ifn->ifn_index) {
+		    ((ifn == NULL) ||
+		     (SCTP_GET_IF_INDEX_FROM_ROUTE(&net->ro) != ifn->ifn_index))) {
 			/* clear any cached route */
 			RTFREE(net->ro.ro_rt);
 			net->ro.ro_rt = NULL;

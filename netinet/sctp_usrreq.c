@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 208863 2010-06-06 02:32:20Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 209289 2010-06-18 09:01:44Z tuexen $");
 #endif
 #include <netinet/sctp_os.h>
 #ifdef __FreeBSD__
@@ -1187,21 +1187,40 @@ sctp_flush(struct socket *so, int how)
 	 * will not be able to read the data, the socket
 	 * will block that from happening.
 	 */
+	struct sctp_inpcb *inp;
+
+	inp = (struct sctp_inpcb *)so->so_pcb;
+	if (inp == NULL) {
+		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
+		return EINVAL;
+	}
+	SCTP_INP_RLOCK(inp);
+	/* For the 1 to many model this does nothing */
+	if (inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE) {
+		SCTP_INP_RUNLOCK(inp);
+		return (0);
+	}
+	SCTP_INP_RUNLOCK(inp);
         if ((how == PRU_FLUSH_RD) || (how == PRU_FLUSH_RDWR)) {
-               /* First make sure the sb will be happy, we don't
-                * use these except maybe the count
-                */
-               so->so_rcv.sb_cc = 0;
-               so->so_rcv.sb_mbcnt = 0;
-               so->so_rcv.sb_mb = NULL;
+		/* First make sure the sb will be happy, we don't
+		 * use these except maybe the count
+		 */
+		SCTP_INP_WLOCK(inp);
+		SCTP_INP_READ_LOCK(inp);
+		inp->sctp_flags |= SCTP_PCB_FLAGS_SOCKET_CANT_READ;	
+		SCTP_INP_READ_UNLOCK(inp);
+		SCTP_INP_WUNLOCK(inp);
+		so->so_rcv.sb_cc = 0;
+		so->so_rcv.sb_mbcnt = 0;
+		so->so_rcv.sb_mb = NULL;
 	}
         if ((how == PRU_FLUSH_WR) || (how == PRU_FLUSH_RDWR)) {
-               /* First make sure the sb will be happy, we don't
-                * use these except maybe the count
-		*/
-	       so->so_snd.sb_cc = 0;
-	       so->so_snd.sb_mbcnt = 0;
-	       so->so_snd.sb_mb = NULL;
+		/* First make sure the sb will be happy, we don't
+		 * use these except maybe the count
+		 */
+		so->so_snd.sb_cc = 0;
+		so->so_snd.sb_mbcnt = 0;
+		so->so_snd.sb_mb = NULL;
 
 	}
 	return (0);
