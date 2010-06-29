@@ -81,9 +81,7 @@ has been adapted from the FreeBSD manual pages which can be viewed online at <a 
 <p>
 To use SctpDrv you must be running Windows XP, Windows Vista or
 Windows 7 (it should also work on Windows Server 2003 and Windows
-Server 2008, but is untested). Only 32-bit Windows XP is supported, but
-SctpDrv can be installed on both 32-bit and 64-bit versions of Windows
-Vista or newer.
+Server 2008, but is untested).
 </p><p>
 Download the latest version from <a href="http://www.bluestop.org/SctpDrv/releases/">http://www.bluestop.org/SctpDrv/releases/</a>
 and double-click the MSI file.
@@ -94,17 +92,11 @@ pass inbound through the firewall. If Windows XP is running or a
 3rd-party firewall is installed, no firewall configuration will be done
 and you must allow <em>protocol 132</em> to pass through the firewall in order for remote communications to work.
 </p><p>
-Running SctpDrv on 64-bit versions of Windows requires a few extra steps, since normally drivers must be
-digitally signed; unfortunately since I'm an independent developer the process is prohibitively expensive.
-So, in order to use SctpDrv on x64 Windows it must either be booted with driver signature enforcement disabled
-entirely, or (from version 1.1.4 onwards) with test-signing enabled and the SctpDrv test certificate installed
-as a root certificate. For details, see the README.txt file in C:\Program Files\SctpDrv.
-</p><p>
 Once installed, you can verifiy
 the installation by runnning the <em>echo_client.exe
 </em>and <em>echo_server.exe</em>
 progams in C:\Program Files\SctpDrv\bin . These verify that loopback SCTP
-communication is working. On Vista or newer, you can test remote operation by running <em>iperf.exe</em> too.
+communication is working.
 </p>
 
 <h2>Tuning</h2>
@@ -151,10 +143,10 @@ function call. The SCTP specific functions such as <code>sctp_send</code>
 are provided by linking to <code>sctpsp.lib</code>.
 </p><p>
 For information about using SctpDrv as a developer as opposed to
-an end-user, please see <a href="developing.html">this page</a>.<br>
+an end-user, please see <a href="development.html">this page</a>.<br>
 
 <hr>
-Time: 14:46:05 GMT, January 10, 2010<br>
+Time: 13:16:10 GMT, June 29, 2010<br>
 <i>Windows is a registered trademark of Microsoft Corporation in
 the United States and other countries.</i><br>
 

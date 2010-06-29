@@ -64,12 +64,9 @@ variable to 1 and then doing a build:<br>
 Doing that will build debug symbols and enable you to step through the
 code using WinDBG.&nbsp; To enable debug output for the Windows
 specific SCTP code, edit drv\sctp.c and add flags from <span style="font-style: italic;">sys\systm.h</span> to
-the <code>debug_on</code> variable around line 189.&nbsp; To get debug
-output for
-the protocol code (incl. routing etc.) you need to add flags from
-<span style="font-style: italic;">netinet\sctp_constants.h</span> to <code>SCTPCTL_DEBUG_DEFAULT</code>
-in <span style="font-style: italic;">netinet\sctp_sysctl.h</span> and add <code>-DSCTP_DEBUG</code>
-to sources.inc in the root of SctpDrv.<br>
+the <code>debug_on</code> variable around line 189.&nbsp; To obtain debug
+output for the protocol code (incl. routing etc.) you need to build SctpDrv with -DSCTP_DEBUG (add it in sources.inc in the root of the source hierarchy) and add flags from
+<span style="font-style: italic;">netinet\sctp_constants.h</span> to the <code>debug</code> sysctl via netsh.<br>
 <br>
 For example, to see which driver functions are called, use
 <code>DEBUG_GENERIC_VERBOSE</code>.<br>
