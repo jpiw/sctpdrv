@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.c 208878 2010-06-06 19:24:32Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.c 209663 2010-07-03 14:03:31Z rrs $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1289,6 +1289,7 @@ sctp_iterator_work(struct sctp_iterator *it)
 	int first_in=1;
 	struct sctp_inpcb *tinp;
 	
+	SCTP_INP_INFO_RLOCK();
 	SCTP_ITERATOR_LOCK();
  	if (it->inp) {
 		SCTP_INP_RLOCK(it->inp);
@@ -1298,10 +1299,11 @@ sctp_iterator_work(struct sctp_iterator *it)
 		/* iterator is complete */
 done_with_iterator:
 		SCTP_ITERATOR_UNLOCK();
+		SCTP_INP_INFO_RUNLOCK();
 		if (it->function_atend != NULL) {
 			(*it->function_atend) (it->pointer, it->val);
 		}
-		SCTP_FREE(it,SCTP_M_ITER);
+		SCTP_FREE(it, SCTP_M_ITER);
 		return;
 	}
 select_a_new_ep:
@@ -1362,6 +1364,8 @@ select_a_new_ep:
 			SCTP_INP_INCR_REF(it->inp);
 			SCTP_INP_RUNLOCK(it->inp);
 			SCTP_ITERATOR_UNLOCK();
+			SCTP_INP_INFO_RUNLOCK();
+			SCTP_INP_INFO_RLOCK();
 			SCTP_ITERATOR_LOCK();
 			if (sctp_it_ctl.iterator_flags) {
 				/* We won't be staying here */
@@ -1422,9 +1426,7 @@ select_a_new_ep:
 	if (it->iterator_flags & SCTP_ITERATOR_DO_SINGLE_INP) {
 		it->inp = NULL;
 	} else {
-		SCTP_INP_INFO_RLOCK();
 		it->inp = LIST_NEXT(it->inp, sctp_list);
-		SCTP_INP_INFO_RUNLOCK();
 	}
 	if (it->inp == NULL) {
 		goto done_with_iterator;
@@ -3256,6 +3258,9 @@ sctp_notify_partial_delivery_indication(struct sctp_tcb *stcb, uint32_t error,
 		/* event not enabled */
 		return;
 	}
+	if (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_CANT_READ) {
+		return;
+	}
 	
 	m_notify = sctp_get_mbuf_for_msg(sizeof(struct sctp_pdapi_event), 0, M_DONTWAIT, 1, MT_DATA);
 	if (m_notify == NULL)
@@ -3776,6 +3781,10 @@ sctp_report_all_outbound(struct sctp_tcb *stcb, int holds_lock, int so_locked
 	if (stcb == NULL) {
 		return;
 	}
+	if (stcb->asoc.state & SCTP_STATE_ABOUT_TO_BE_FREED) {
+		/* already being freed */
+		return;
+	}
 #if defined(__APPLE__)
 	if (so_locked) {
 		sctp_lock_assert(SCTP_INP_SO(stcb->sctp_ep));
@@ -3842,11 +3851,13 @@ sctp_report_all_outbound(struct sctp_tcb *stcb, int holds_lock, int so_locked
 			stcb->asoc.stream_queue_cnt--;
 			TAILQ_REMOVE(&outs->outqueue, sp, next);
 			sctp_free_spbufspace(stcb, asoc, sp);
-			sctp_ulp_notify(SCTP_NOTIFY_SPECIAL_SP_FAIL, stcb,
-			    SCTP_NOTIFY_DATAGRAM_UNSENT, (void *)sp, so_locked);
 			if (sp->data) {
-				sctp_m_freem(sp->data);
-				sp->data = NULL;
+				sctp_ulp_notify(SCTP_NOTIFY_SPECIAL_SP_FAIL, stcb,
+						SCTP_NOTIFY_DATAGRAM_UNSENT, (void *)sp, so_locked);
+				if (sp->data) {
+					sctp_m_freem(sp->data);
+					sp->data = NULL;
+				}
 			}
 			if (sp->net)
 				sctp_free_remote_addr(sp->net);
@@ -4565,6 +4576,17 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
 #endif
 	if (inp_read_lock_held == 0)
 		SCTP_INP_READ_LOCK(inp);
+	if (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_CANT_READ) {
+		sctp_free_remote_addr(control->whoFrom);
+		if (control->data) {
+			sctp_m_freem(control->data);
+			control->data = NULL;
+		}
+		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_readq), control);
+		if (inp_read_lock_held == 0)
+			SCTP_INP_READ_UNLOCK(inp);
+		return;
+	}
 	if (!(control->spec_flags & M_NOTIFICATION)) {
 		atomic_add_int(&inp->total_recvs, 1);
 		if (!control->do_not_ref_stcb) {
@@ -4605,6 +4627,8 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
 		control->tail_mbuf = prev;
 	} else {
 		/* Everything got collapsed out?? */
+		sctp_free_remote_addr(control->whoFrom);
+		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_readq), control);
 		if (inp_read_lock_held == 0)
 			SCTP_INP_READ_UNLOCK(inp);
 		return;
@@ -4676,6 +4700,10 @@ sctp_append_to_readq(struct sctp_inpcb *inp,
 			SCTP_INP_READ_UNLOCK(inp);
 		}
 		return (-1);
+	}
+	if (inp && (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_CANT_READ)) {
+		SCTP_INP_READ_UNLOCK(inp);
+		return 0;
 	}
 	if (control->end_added) {
 		/* huh this one is complete? */
