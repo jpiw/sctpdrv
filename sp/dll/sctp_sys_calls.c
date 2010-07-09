@@ -326,7 +326,7 @@ internal_sctp_bindx(SOCKET sd, struct sockaddr *addrs, int addrcnt, int flags)
 			goto out_error;
 		}
 
-
+		sa = (struct sockaddr *)((caddr_t)sa + sz);
 	}
 	sa = addrs;
 	/* Now if there was a port mentioned, assure that
