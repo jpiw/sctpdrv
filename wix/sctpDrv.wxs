@@ -50,7 +50,7 @@
 		</Condition>
 		
 		<?if $(env.DDK_TARGET_OS)=WinXP ?>
-		<Condition Message="This installer is for Windows XP/2003 only. You can find installers for other version of Windows on the SctpDrv web site.">
+		<Condition Message="This installer is for Windows XP and Windows 2003. You can find installers for other versions of Windows on the SctpDrv web site.">
 			<![CDATA[
 			(VersionNT > "500") AND (VersionNT < "600")
 			]]>
@@ -58,7 +58,7 @@
 		<?endif ?>
 		
 		<?if $(env.DDK_TARGET_OS)=WinLH ?>
-		<Condition Message="This installer is for Windows Vista/2008 only. You can find installers for other version of Windows on the SctpDrv web site.">
+		<Condition Message="This installer is for Windows Vista and Windows 2008. You can find installers for other versions of Windows on the SctpDrv web site.">
 			<![CDATA[
 			(VersionNT = 600)
 			]]>
@@ -66,7 +66,7 @@
 		<?endif ?>
 		
 		<?if $(env.DDK_TARGET_OS)=Win7 ?>
-		<Condition Message="This installer is for Windows 7/2008R2 or newer. You can find installers for other version of Windows on the SctpDrv web site.">
+		<Condition Message="This installer is for Windows 7 and Windows 2008 R2. You can find installers for other versions of Windows on the SctpDrv web site.">
 			<![CDATA[
 			(VersionNT > "600")
 			]]>
@@ -74,7 +74,7 @@
 		<?endif ?>
 
 		<?if $(var.Platform)=x86 ?>
-		<CustomAction Id="CA_Err32BitMsiOn64BitOS" Error="The 32-bit version of this product cannot be installed on a 64-bit version of Microsoft Windows."/>
+		<CustomAction Id="CA_Err32BitMsiOn64BitOS" Error="This installer is for 32-bit Windows, but the computer is running 64-bit Windows. You can find installers for 64-bit Windows on the SctpDrv web site."/>
 		<?endif ?>
 
 		<Media Id="1" Cabinet="Product.cab" EmbedCab="yes" />
