@@ -50,7 +50,7 @@ int	rn_mpath_count(struct radix_node *);
 struct rtentry *rt_mpath_matchgate(struct rtentry *, struct sockaddr *);
 int	rt_mpath_conflict(struct radix_node_head *, struct rtentry *,
 	struct _sockaddr *, int);
-void	rtalloc_mpath(struct route *, u_int32_t *, u_int tableid);
+void	rtalloc_mpath(struct route *, uint32_t *, u_int tableid);
 int	rn_mpath_inithead(void **, int);
 #endif
 

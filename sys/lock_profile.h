@@ -39,7 +39,7 @@ LIST_HEAD(lpohead, lock_profile_object);
 #include <sys/lock.h>
 
 #ifndef USE_CPU_NANOSECONDS
-u_int64_t nanoseconds(void);
+uint64_t nanoseconds(void);
 #endif
 
 extern int lock_prof_enable;

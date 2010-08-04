@@ -50,12 +50,12 @@
 extern int ipmultipath;
 extern int ip6_multipath;
 
-u_int32_t rn_mpath_hash(struct route *, u_int32_t *);
+uint32_t rn_mpath_hash(struct route *, uint32_t *);
 
 /*
  * give some jitter to hash, to avoid synchronization between routers
  */
-static u_int32_t hashjitter;
+static uint32_t hashjitter;
 
 int
 rn_mpath_capable(struct radix_node_head *rnh)
@@ -230,7 +230,7 @@ rt_mpath_conflict(struct radix_node_head *rnh, struct rtentry *rt,
  * allocate a route, potentially using multipath to select the peer.
  */
 void
-rtalloc_mpath(struct route *ro, u_int32_t *srcaddrp, u_int tableid)
+rtalloc_mpath(struct route *ro, uint32_t *srcaddrp, u_int tableid)
 {
 #if defined(INET) || defined(INET6)
 	struct radix_node *rn;
@@ -331,10 +331,10 @@ rn_mpath_inithead(void **head, int off)
 		c -= a; c -= b; c ^= (b >> 15);	\
 	} while (0)
 
-u_int32_t
-rn_mpath_hash(struct route *ro, u_int32_t *srcaddrp)
+uint32_t
+rn_mpath_hash(struct route *ro, uint32_t *srcaddrp)
 {
-	u_int32_t a, b, c;
+	uint32_t a, b, c;
 
 	a = b = 0x9e3779b9;
 	c = hashjitter;
@@ -358,20 +358,20 @@ rn_mpath_hash(struct route *ro, u_int32_t *srcaddrp)
 		struct sockaddr_in6 *sin6_dst;
 
 		sin6_dst = (struct sockaddr_in6 *)&ro->ro_dst;
-		a += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[0]);
-		b += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[8]);
+		a += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[0]);
+		b += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[8]);
 		c += srcaddrp ? srcaddrp[0] : 0;
 		mix(a, b, c);
-		a += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[4]);
-		b += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[12]);
+		a += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[4]);
+		b += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[12]);
 		c += srcaddrp ? srcaddrp[1] : 0;
 		mix(a, b, c);
-		a += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[8]);
-		b += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[4]);
+		a += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[8]);
+		b += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[4]);
 		c += srcaddrp ? srcaddrp[2] : 0;
 		mix(a, b, c);
-		a += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[12]);
-		b += *((u_int32_t *)&sin6_dst->sin6_addr.s6_addr[0]);
+		a += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[12]);
+		b += *((uint32_t *)&sin6_dst->sin6_addr.s6_addr[0]);
 		c += srcaddrp ? srcaddrp[3] : 0;
 		mix(a, b, c);
 		break;

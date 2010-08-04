@@ -105,12 +105,12 @@
 struct ip6_hdr {
 	union {
 		struct ip6_hdrctl {
-			u_int32_t ip6_un1_flow;	/* 20 bits of flow-ID */
-			u_int16_t ip6_un1_plen;	/* payload length */
-			u_int8_t  ip6_un1_nxt;	/* next header */
-			u_int8_t  ip6_un1_hlim;	/* hop limit */
+			uint32_t ip6_un1_flow;	/* 20 bits of flow-ID */
+			uint16_t ip6_un1_plen;	/* payload length */
+			uint8_t  ip6_un1_nxt;	/* next header */
+			uint8_t  ip6_un1_hlim;	/* hop limit */
 		} ip6_un1;
-		u_int8_t ip6_un2_vfc;	/* 4 bits version, top 4 bits class */
+		uint8_t ip6_un2_vfc;	/* 4 bits version, top 4 bits class */
 	} ip6_ctlun;
 	struct in6_addr ip6_src;	/* source address */
 	struct in6_addr ip6_dst;	/* destination address */
@@ -127,10 +127,10 @@ struct ip6_hdr {
 
 
 struct icmp6_hdr {
-	u_int8_t	icmp6_type;
-	u_int8_t	icmp6_code;
-	u_int16_t	icmp6_cksum;
-	u_int32_t	icmp6_mtu;
+	uint8_t	icmp6_type;
+	uint8_t	icmp6_code;
+	uint16_t	icmp6_cksum;
+	uint32_t	icmp6_mtu;
 	struct ip6_hdr	icmp6_ip6;
 };
 
@@ -151,7 +151,7 @@ struct ip6ctlparam {
 	struct sockaddr_in6	*ip6c_dst;
 	struct in6_addr		*ip6c_finaldst;
 	void			*ip6c_cmdarg;
-	u_int8_t		ip6c_nxt;
+	uint8_t		ip6c_nxt;
 };
 
 

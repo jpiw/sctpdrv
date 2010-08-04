@@ -93,9 +93,9 @@ struct m_hdr {
  */
 struct m_tag {
 	SLIST_ENTRY(m_tag)	m_tag_link;	/* List of packet tags */
-	u_int16_t		m_tag_id;	/* Tag ID */
-	u_int16_t		m_tag_len;	/* Length of data */
-	u_int32_t		m_tag_cookie;	/* ABI/Module ID */
+	uint16_t		m_tag_id;	/* Tag ID */
+	uint16_t		m_tag_len;	/* Length of data */
+	uint32_t		m_tag_cookie;	/* ABI/Module ID */
 	void			(*m_tag_free)(struct m_tag *);
 };
 
@@ -110,10 +110,10 @@ struct pkthdr {
 	/* variables for hardware checksum */
 	int		 csum_flags;	/* flags regarding checksum */
 	int		 csum_data;	/* data field used by csum routines */
-	u_int16_t	 tso_segsz;	/* TSO segment size */
-	u_int16_t	 ether_vtag;	/* Ethernet 802.1p+q vlan tag */
-	u_int16_t	 udp_sport;	/* over UDP's source port */
-	u_int16_t	 udp_dport;	/* over UDP's destination port */
+	uint16_t	 tso_segsz;	/* TSO segment size */
+	uint16_t	 ether_vtag;	/* Ethernet 802.1p+q vlan tag */
+	uint16_t	 udp_sport;	/* over UDP's source port */
+	uint16_t	 udp_dport;	/* over UDP's destination port */
 	SLIST_HEAD(packet_tags, m_tag) tags; /* list of packet tags */
 };
 
@@ -906,11 +906,11 @@ struct mbuf	*m_unshare(struct mbuf *, int how);
 /* Specific cookies and tags. */
 
 /* Packet tag routines. */
-struct m_tag	*m_tag_alloc(u_int32_t, int, int, int);
+struct m_tag	*m_tag_alloc(uint32_t, int, int, int);
 void		 m_tag_delete(struct mbuf *, struct m_tag *);
 void		 m_tag_delete_chain(struct mbuf *, struct m_tag *);
 void		 m_tag_free_default(struct m_tag *);
-struct m_tag	*m_tag_locate(struct mbuf *, u_int32_t, int, struct m_tag *);
+struct m_tag	*m_tag_locate(struct mbuf *, uint32_t, int, struct m_tag *);
 struct m_tag	*m_tag_copy(struct m_tag *, int);
 int		 m_tag_copy_chain(struct mbuf *, struct mbuf *, int);
 void		 m_tag_delete_nonpersistent(struct mbuf *);
@@ -932,7 +932,7 @@ m_tag_init(struct mbuf *m)
  * XXX probably should be called m_tag_init, but that was already taken.
  */
 static __inline void
-m_tag_setup(struct m_tag *t, u_int32_t cookie, int type, int len)
+m_tag_setup(struct m_tag *t, uint32_t cookie, int type, int len)
 {
 
 	t->m_tag_id = (uint16_t)type;

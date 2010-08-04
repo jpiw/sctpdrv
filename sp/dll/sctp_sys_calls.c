@@ -792,11 +792,11 @@ internal_sctp_sendmsgx(SOCKET sd,
     size_t len,
     struct sockaddr *addrs,
     int addrcnt,
-    u_int32_t ppid,
-    u_int32_t flags,
-    u_int16_t stream_no,
-    u_int32_t timetolive,
-    u_int32_t context)
+    uint32_t ppid,
+    uint32_t flags,
+    uint16_t stream_no,
+    uint32_t timetolive,
+    uint32_t context)
 {
 	struct sctp_sndrcvinfo sinfo;
 

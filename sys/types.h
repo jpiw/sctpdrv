@@ -35,9 +35,9 @@ typedef short			int16_t;
 typedef long			int32_t;
 typedef long long		int64_t;
 typedef unsigned char		u_int8_t, uint8_t, u_char;
-typedef unsigned short		u_int16_t, uint16_t, u_short, n_short, sa_family_t, in_port_t;
-typedef unsigned long		u_int32_t, uint32_t, u_long, n_long, n_time, DWORD, in_addr_t;
-typedef unsigned long long 	u_int64_t, uint64_t, u_quad_t;
+typedef unsigned short		uint16_t, uint16_t, u_short, n_short, sa_family_t, in_port_t;
+typedef unsigned long		uint32_t, uint32_t, u_long, n_long, n_time, DWORD, in_addr_t;
+typedef unsigned long long 	uint64_t, uint64_t, u_quad_t;
 #if defined(_KERNEL)
 typedef unsigned long		u_int, socklen_t;
 typedef unsigned long long 	off_t;

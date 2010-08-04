@@ -60,7 +60,7 @@ typedef	u_quad_t	inp_gen_t;
  * the following structure.
  */
 struct in_addr_4in6 {
-	u_int32_t	ia46_pad32[3];
+	uint32_t	ia46_pad32[3];
 	struct	in_addr	ia46_addr4;
 };
 
@@ -69,8 +69,8 @@ struct in_addr_4in6 {
  * some extra padding to accomplish this.
  */
 struct in_endpoints {
-	u_int16_t	ie_fport;		/* foreign port */
-	u_int16_t	ie_lport;		/* local port */
+	uint16_t	ie_fport;		/* foreign port */
+	uint16_t	ie_lport;		/* local port */
 	/* protocol dependent part, local and foreign addr */
 	union {
 		/* foreign host table entry */
@@ -93,9 +93,9 @@ struct in_endpoints {
  * references.
  */
 struct in_conninfo {
-	u_int8_t	inc_flags;
-	u_int8_t	inc_len;
-	u_int16_t	inc_pad;	/* XXX alignment for in_endpoints */
+	uint8_t	inc_flags;
+	uint8_t	inc_len;
+	uint16_t	inc_pad;	/* XXX alignment for in_endpoints */
 	/* protocol dependent part */
 	struct	in_endpoints inc_ie;
 };
@@ -116,7 +116,7 @@ struct inpcb {
 	struct	inpcbinfo *inp_pcbinfo;	/* PCB list info */
 	struct	socket *inp_socket;	/* back pointer to socket */
 
-	u_int32_t	inp_flow;
+	uint32_t	inp_flow;
 	int	inp_flags;		/* generic IP/datagram flags */
 
 	u_char	inp_vflag;		/* IP version flag (v4/v6) */

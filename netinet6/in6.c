@@ -145,7 +145,7 @@ in6_embedscope(
     struct in6_addr *in6,
     const struct sockaddr_in6 *sin6)
 {
-	u_int32_t scope_id;
+	uint32_t scope_id;
 	struct ifnet *ifp = NULL;
 
 	scope_id = sin6->sin6_scope_id;
@@ -176,7 +176,7 @@ in6_recoverscope(
     const struct in6_addr *in6,
     struct ifnet *ifp)
 {
-	u_int32_t scope_id;
+	uint32_t scope_id;
 
 	sin6->sin6_addr = *in6;
 
@@ -217,8 +217,8 @@ ip6_sprintf(addr)
 	static char ip6buf[8][48];
 	int i;
 	char *cp;
-	const u_int16_t *a = (const u_int16_t *)addr;
-	const u_int8_t *d;
+	const uint16_t *a = (const uint16_t *)addr;
+	const uint8_t *d;
 	int dcolon = 0;
 
 	ip6round = (ip6round + 1) & 7;

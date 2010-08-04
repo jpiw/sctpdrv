@@ -144,8 +144,8 @@ struct lock_profile_object {
 	int		lpo_line;
 	uint16_t	lpo_ref;
 	uint16_t	lpo_cnt;
-	u_int64_t	lpo_acqtime;
-	u_int64_t	lpo_waittime;
+	uint64_t	lpo_acqtime;
+	uint64_t	lpo_waittime;
 	u_int		lpo_contest_locking;
 };
 
@@ -211,7 +211,7 @@ static int lock_prof_skipspin;
 static int lock_prof_skipcount;
 
 #ifndef USE_CPU_NANOSECONDS
-u_int64_t
+uint64_t
 nanoseconds(void)
 {
 	return KeQueryInterruptTime(); /* XXX */
