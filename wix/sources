@@ -29,8 +29,8 @@ TARGETLIBS= $(TARGETLIBS) \
 	$(SDK_LIB_PATH)\msi.lib \
 	$(SDK_LIB_PATH)\advapi32.lib \
 	$(SDK_LIB_PATH)\Version.lib \
-	..\lib$(LIBARCHDIR)\wcautil$(LIBARCHSUFFIX).lib \
-	..\lib$(LIBARCHDIR)\dutil$(LIBARCHSUFFIX).lib \
+	..\lib$(LIBARCHDIR)\wcautil_2010$(LIBARCHSUFFIX).lib \
+	..\lib$(LIBARCHDIR)\dutil_2010$(LIBARCHSUFFIX).lib \
 
 INCLUDES= $(INCLUDES); \
 	..\sp; \

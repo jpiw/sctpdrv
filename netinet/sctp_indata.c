@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 208952 2010-06-09 16:39:18Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 210599 2010-07-29 11:37:04Z rrs $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -93,8 +93,10 @@ sctp_calc_rwnd(struct sctp_tcb *stcb, struct sctp_association *asoc)
 	 * take out what has NOT been put on socket queue and we yet hold
 	 * for putting up.
 	 */
-	calc = sctp_sbspace_sub(calc, (uint32_t) asoc->size_on_reasm_queue);
-	calc = sctp_sbspace_sub(calc, (uint32_t) asoc->size_on_all_streams);
+	calc = sctp_sbspace_sub(calc, (uint32_t)(asoc->size_on_reasm_queue +
+	                                         asoc->cnt_on_reasm_queue * MSIZE));
+	calc = sctp_sbspace_sub(calc, (uint32_t)(asoc->size_on_all_streams +
+	                                         asoc->cnt_on_all_streams * MSIZE));
 
 	if (calc == 0) {
 		/* out of space */
@@ -3315,6 +3317,10 @@ sctp_strike_gap_ack_chunks(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		if (tp1->sent >= SCTP_DATAGRAM_RESEND) {
 			/* either a RESEND, ACKED, or MARKED */
 			/* skip */
+			if (tp1->sent == SCTP_FORWARD_TSN_SKIP) {
+				/* Continue strikin FWD-TSN chunks */
+				tp1->rec.data.fwd_tsn_cnt++;
+			}
 			tp1 = TAILQ_NEXT(tp1, sctp_next);
 			continue;
 		}
@@ -3684,7 +3690,6 @@ sctp_try_advance_peer_ack_point(struct sctp_tcb *stcb,
 	tp1 = TAILQ_FIRST(&asoc->sent_queue);
 	while (tp1) {
 		if (tp1->sent != SCTP_FORWARD_TSN_SKIP &&
-		    tp1->sent != SCTP_DATAGRAM_ACKED &&
 		    tp1->sent != SCTP_DATAGRAM_RESEND) {
 			/* no chance to advance, out of here */
 			break;
@@ -3745,8 +3750,7 @@ sctp_try_advance_peer_ack_point(struct sctp_tcb *stcb,
 		 * the chunk, advance our peer ack point and we can check
 		 * the next chunk.
 		 */
-		if ((tp1->sent == SCTP_FORWARD_TSN_SKIP)  ||
-		    (tp1->sent == SCTP_DATAGRAM_ACKED)) {
+		if (tp1->sent == SCTP_FORWARD_TSN_SKIP) {
 			/* advance PeerAckPoint goes forward */
 			if (compare_with_wrap(tp1->rec.data.TSN_seq,
 					      asoc->advanced_peer_ack_point,
@@ -3886,7 +3890,7 @@ sctp_express_handle_sack(struct sctp_tcb *stcb, uint32_t cumack,
 	} else if (asoc->last_acked_seq == cumack) {
 		/* Window update sack */
 		asoc->peers_rwnd = sctp_sbspace_sub(rwnd,
-						    (uint32_t) (asoc->total_flight + (asoc->sent_queue_cnt * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
+						    (uint32_t) (asoc->total_flight + (asoc->total_flight_count * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
 		if (asoc->peers_rwnd < stcb->sctp_ep->sctp_ep.sctp_sws_sender) {
 			/* SWS sender side engages */
 			asoc->peers_rwnd = 0;
@@ -4173,7 +4177,7 @@ sctp_express_handle_sack(struct sctp_tcb *stcb, uint32_t cumack,
 
 	/* RWND update */
 	asoc->peers_rwnd = sctp_sbspace_sub(rwnd,
-					    (uint32_t) (asoc->total_flight + (asoc->sent_queue_cnt * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
+					    (uint32_t) (asoc->total_flight + (asoc->total_flight_count * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
 	if (asoc->peers_rwnd < stcb->sctp_ep->sctp_ep.sctp_sws_sender) {
 		/* SWS sender side engages */
 		asoc->peers_rwnd = 0;
@@ -4382,10 +4386,8 @@ again:
 				asoc->nonce_resync_tsn = asoc->advanced_peer_ack_point;
 			} else if (lchk) {
 				/* try to FR fwd-tsn's that get lost too */
-				lchk->rec.data.fwd_tsn_cnt++;
-				if (lchk->rec.data.fwd_tsn_cnt > 3) {
+				if (lchk->rec.data.fwd_tsn_cnt >= 3) {
 					send_forward_tsn(stcb, asoc);
-					lchk->rec.data.fwd_tsn_cnt = 0;
 				}
 			}
 		}
@@ -5165,10 +5167,10 @@ done_with_it:
 	/* Adjust and set the new rwnd value */
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LOG_RWND_ENABLE) {
 		sctp_log_rwnd_set(SCTP_SET_PEER_RWND_VIA_SACK,
-		                  asoc->peers_rwnd, asoc->total_flight, (asoc->sent_queue_cnt * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh)), a_rwnd);
+		                  asoc->peers_rwnd, asoc->total_flight, (asoc->total_flight_count * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh)), a_rwnd);
 	}
 	asoc->peers_rwnd = sctp_sbspace_sub(a_rwnd,
-	                                    (uint32_t) (asoc->total_flight + (asoc->sent_queue_cnt * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
+	                                    (uint32_t) (asoc->total_flight + (asoc->total_flight_count * SCTP_BASE_SYSCTL(sctp_peer_chunk_oh))));
 	if (asoc->peers_rwnd < stcb->sctp_ep->sctp_ep.sctp_sws_sender) {
 		/* SWS sender side engages */
 		asoc->peers_rwnd = 0;
@@ -5288,6 +5290,7 @@ again:
 			}
 			if (compare_with_wrap(asoc->advanced_peer_ack_point, old_adv_peer_ack_point,
 				              MAX_TSN)) {
+
 				send_forward_tsn(stcb, asoc);
 				/*
 				 * ECN Nonce: Disable Nonce Sum check when FWD TSN
@@ -5297,10 +5300,8 @@ again:
 				asoc->nonce_resync_tsn = asoc->advanced_peer_ack_point;
 			} else if (lchk) {
 				/* try to FR fwd-tsn's that get lost too */
-				lchk->rec.data.fwd_tsn_cnt++;
-				if (lchk->rec.data.fwd_tsn_cnt > 3) {
+				if (lchk->rec.data.fwd_tsn_cnt >= 3) {
 					send_forward_tsn(stcb, asoc);
-					lchk->rec.data.fwd_tsn_cnt = 0;
 				}
 			}
 		}

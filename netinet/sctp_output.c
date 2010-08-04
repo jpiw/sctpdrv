@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 208855 2010-06-05 21:27:43Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 210714 2010-08-01 08:06:59Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2198,7 +2198,7 @@ sctp_is_ifa_addr_preferred(struct sctp_ifa *ifa,
 	/* dest_is_priv is true if destination is a private address */
         /* dest_is_loop is true if destination is a loopback addresses */
 
-	/*
+	/**
 	 * Here we determine if its a preferred address. A preferred address
 	 * means it is the same scope or higher scope then the destination.
 	 * L = loopback, P = private, G = global
@@ -2774,6 +2774,15 @@ sctp_select_nth_preferred_addr_from_ifn_boundall(struct sctp_ifn *ifn,
 		}
 #endif
 		if (stcb) {
+			if (sctp_is_address_in_scope(ifa,
+			                             stcb->asoc.ipv4_addr_legal,
+			                             stcb->asoc.ipv6_addr_legal,
+			                             stcb->asoc.loopback_scope,
+			                             stcb->asoc.ipv4_local_scope,
+			                             stcb->asoc.local_scope,
+			                             stcb->asoc.site_scope, 0) == 0) {
+				continue;
+			}
 			if (((non_asoc_addr_ok == 0) &&
 			     (sctp_is_addr_restricted(stcb, sifa))) ||
 			    (non_asoc_addr_ok &&
@@ -2817,6 +2826,15 @@ sctp_count_num_preferred_boundall(struct sctp_ifn *ifn,
 			continue;
 		}
 		if (stcb) {
+			if (sctp_is_address_in_scope(ifa,
+			                             stcb->asoc.ipv4_addr_legal,
+			                             stcb->asoc.ipv6_addr_legal,
+			                             stcb->asoc.loopback_scope,
+			                             stcb->asoc.ipv4_local_scope,
+			                             stcb->asoc.local_scope,
+			                             stcb->asoc.site_scope, 0) == 0) {
+				continue;
+			}
 			if (((non_asoc_addr_ok == 0) &&
 			     (sctp_is_addr_restricted(stcb, sifa))) ||
 			    (non_asoc_addr_ok &&
@@ -2996,6 +3014,15 @@ sctp_choose_boundall(struct sctp_inpcb *inp,
 		if (sifa == NULL)
 			continue;
 		if (stcb) {
+			if (sctp_is_address_in_scope(sifa,
+			                             stcb->asoc.ipv4_addr_legal,
+			                             stcb->asoc.ipv6_addr_legal,
+			                             stcb->asoc.loopback_scope,
+			                             stcb->asoc.ipv4_local_scope,
+			                             stcb->asoc.local_scope,
+			                             stcb->asoc.site_scope, 0) == 0) {
+				continue;
+			}
 			if (((non_asoc_addr_ok == 0) &&
 			     (sctp_is_addr_restricted(stcb, sifa))) ||
 			    (non_asoc_addr_ok &&
@@ -3039,6 +3066,15 @@ sctp_choose_boundall(struct sctp_inpcb *inp,
 			if (sifa == NULL)
 				continue;
 			if (stcb) {
+				if (sctp_is_address_in_scope(sifa,
+				                             stcb->asoc.ipv4_addr_legal,
+				                             stcb->asoc.ipv6_addr_legal,
+				                             stcb->asoc.loopback_scope,
+				                             stcb->asoc.ipv4_local_scope,
+				                             stcb->asoc.local_scope,
+				                             stcb->asoc.site_scope, 0) == 0) {
+					continue;
+				}
 				if (((non_asoc_addr_ok == 0) &&
 				     (sctp_is_addr_restricted(stcb, sifa))) ||
 				    (non_asoc_addr_ok &&
@@ -6748,6 +6784,8 @@ sctp_clean_up_ctl(struct sctp_tcb *stcb, struct sctp_association *asoc)
 				chk->data = NULL;
 			}
 			asoc->ctrl_queue_cnt--;
+			if (chk->rec.chunk_id.id == SCTP_FORWARD_CUM_TSN)
+				asoc->fwd_tsn_cnt--;
 			sctp_free_a_chunk(stcb, chk);
 		} else if (chk->rec.chunk_id.id == SCTP_STREAM_RESET) {
 			/* special handling, we must look into the param */
@@ -7970,7 +8008,7 @@ again_one_more_time:
 			} else
 				omtu = 0;
 			/* Here we do NOT factor the r_mtu */
-			if ((chk->send_size < (int)(mtu - omtu)) ||
+			if ((chk->send_size <= (int)(mtu - omtu)) ||
 			    (chk->flags & CHUNK_FLAGS_FRAGMENT_OK)) {
 				/*
 				 * We probably should glom the mbuf chain
@@ -9879,6 +9917,7 @@ send_forward_tsn(struct sctp_tcb *stcb,
 	if (chk == NULL) {
 		return;
 	}
+	asoc->fwd_tsn_cnt++;
 	chk->copy_by_ref = 0;
 	chk->rec.chunk_id.id = SCTP_FORWARD_CUM_TSN;
 	chk->rec.chunk_id.can_take_data = 0;
@@ -9910,8 +9949,7 @@ sctp_fill_in_rest:
 		unsigned int cnt_of_skipped = 0;
 
 		TAILQ_FOREACH(at, &asoc->sent_queue, sctp_next) {
-			if ((at->sent != SCTP_FORWARD_TSN_SKIP) &&
-			    (at->sent != SCTP_DATAGRAM_ACKED)) {
+			if (at->sent != SCTP_FORWARD_TSN_SKIP) {
 				/* no more to look at */
 				break;
 			}

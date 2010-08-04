@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 208160 2010-05-16 17:03:56Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 210599 2010-07-29 11:37:04Z rrs $");
 #endif
 
 #ifndef __sctp_structs_h__
@@ -895,6 +895,7 @@ struct sctp_association {
 
 	unsigned int size_on_reasm_queue;
 	unsigned int cnt_on_reasm_queue;
+	unsigned int fwd_tsn_cnt;
 	/* amount of data (bytes) currently in flight (on all destinations) */
 	unsigned int total_flight;
 	/* Total book size in flight */

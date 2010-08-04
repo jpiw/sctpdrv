@@ -22,13 +22,13 @@ copy /Y "%WINDOWSSDKDIR%\Include\msi.h"      inc
 copy /Y "%WINDOWSSDKDIR%\Include\msiquery.h" inc
 copy /Y "%WINDOWSSDKDIR%\Include\netsh.h"    inc
 
-copy /Y "%WIX%SDK\lib\wcautil_x64.lib"      lib\x64
-copy /Y "%WIX%SDK\lib\dutil_x64.lib"        lib\x64
+copy /Y "%WIX%SDK\lib\wcautil_2010_x64.lib" lib\x64
+copy /Y "%WIX%SDK\lib\dutil_2010_x64.lib"   lib\x64
 copy /Y "%WINDOWSSDKDIR%\Lib\x64\netfw.tlb" lib\x64
 copy /Y "%WINDOWSSDKDIR%\Lib\x64\netsh.lib" lib\x64
 
-copy /Y "%WIX%SDK\lib\wcautil.lib"          lib
-copy /Y "%WIX%SDK\lib\dutil.lib"            lib
+copy /Y "%WIX%SDK\lib\wcautil_2010.lib"     lib
+copy /Y "%WIX%SDK\lib\dutil_2010.lib"       lib
 copy /Y "%WINDOWSSDKDIR%\Lib\netfw.tlb"     lib
 copy /Y "%WINDOWSSDKDIR%\Lib\netsh.lib"     lib
 

@@ -41,7 +41,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 203847 2010-02-13 21:38:15Z t
 #if defined(__Windows__)
 #include <packon.h>
 #endif
-
 #include <sys/time.h>
 #include <netinet/sctp.h>
 #include <netinet/sctp_constants.h>
@@ -627,6 +626,5 @@ struct sctp_auth_invalid_hmac {
 #if defined(__Windows__)
 #include <packoff.h>
 #endif
-
 #undef SCTP_PACKED
 #endif				/* !__sctp_header_h__ */
