@@ -115,12 +115,12 @@ static void getsocket(fd_set *fds, SOCKET *s);
 static BOOL
 WSPAPI
 ConfigureOverlapped(
-		LPWSAOVERLAPPED lpOverlapped,
-		SOCKET s,
-		LPVOID buffer,
-		LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
-		LPWSATHREADID lpThreadId,
-		LPINT lpErrno);
+	LPWSAOVERLAPPED lpOverlapped,
+	SOCKET s,
+	LPVOID buffer,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+	LPWSATHREADID lpThreadId,
+	LPINT lpErrno);
 
 static void
 WSPAPI
@@ -317,7 +317,6 @@ ConfigureOverlapped(
 		LPINT lpErrno)
 {
 	int bSuccess = TRUE;
-	HANDLE hEvent;
 	OverlappedInfo *info = NULL;
 
 	/* Check if there's anything for us to do */
@@ -339,13 +338,17 @@ ConfigureOverlapped(
 
 		lpOverlapped->Offset = OVERLAPPED_TYPE_CALLBACK;
 
+		lpOverlapped->hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+		if (lpOverlapped->hEvent == NULL) {
+			bSuccess = FALSE;
+			SetErrorCode(lpErrno);
+		}
+
 		info->socket = s;
 		info->buffer = buffer;
 		info->lpCompletionRoutine = lpCompletionRoutine;
 		CopyMemory(&info->threadId, lpThreadId, sizeof(info->threadId));
-
-		hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		lpOverlapped->hEvent = hEvent;
 
 		lpOverlapped->Pointer = info;
 
@@ -356,15 +359,6 @@ ConfigureOverlapped(
 	} else {
 		lpOverlapped->Offset = OVERLAPPED_TYPE_EVENT;
 		lpOverlapped->Pointer = buffer;
-	}
-
-	if (lpOverlapped->hEvent == NULL) {
-		bSuccess = FALSE;
-		SetErrorCode(lpErrno);
-		if (info != NULL)
-			free(info);
-
-		info = NULL;
 	}
 
 	return bSuccess;
@@ -1201,12 +1195,6 @@ WSPIoctl(
 		DBGPRINT("WSPIoctl - leave#1\n");
 		return SOCKET_ERROR;
 	}
-	if (lpOverlapped != NULL || lpCompletionRoutine != NULL) {
-		/* Not supported */
-		*lpErrno = WSAEOPNOTSUPP;
-		DBGPRINT("WSPIoctl - leave#2\n");
-		return SOCKET_ERROR;
-	}
 
 	if (dwIoControlCode == SIO_GET_EXTENSION_FUNCTION_POINTER &&
 				(lpvInBuffer == NULL || lpvOutBuffer == NULL ||
@@ -1217,6 +1205,7 @@ WSPIoctl(
 	}
 
 	if (dwIoControlCode == SIO_GET_EXTENSION_FUNCTION_POINTER) {
+		// Gets the function pointer for WSARecvMsg
 		if (IsEqualGUID((GUID *)lpvInBuffer, &WSARecvMsg_GUID)) {
 			if (cbOutBuffer >= sizeof(LPFN_WSARECVMSG)) {
 				*(LPFN_WSARECVMSG *)lpvOutBuffer = &_WSARecvMsg;
@@ -1228,6 +1217,7 @@ WSPIoctl(
 #if (_WIN32_WINNT >= 0x0600)
 		else if (
 		    IsEqualGUID((GUID *)lpvInBuffer, &WSASendMsg_GUID)) {
+				// Gets the function pointer for WSASendMsg
 				if (cbOutBuffer >= sizeof(LPFN_WSASENDMSG)) {
 					*(LPFN_WSASENDMSG *)lpvOutBuffer = &_WSASendMsg;
 				} else {
@@ -1242,6 +1232,8 @@ WSPIoctl(
 			ret = SOCKET_ERROR;
 		}
 	} else {
+		// Pass on any other request to the driver
+		
 		BOOL bSuccess;
 		DWORD bytesReturned;
 		DWORD *bytesTransferred;
@@ -1254,10 +1246,8 @@ WSPIoctl(
 		ioctlReq.lpvOutBuffer = lpvOutBuffer;
 		ioctlReq.cbOutBuffer = cbOutBuffer;
 
-		/* XXX do something with FIONBIO */
-
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, NULL, lpCompletionRoutine, lpThreadId, lpErrno);
-
+		
 		bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_IOCTL,
 						&ioctlReq, sizeof(ioctlReq),
 						NULL, 0,
@@ -1357,10 +1347,12 @@ ApcFunc(
 		status = GetLastError();
 
 	/* XXX check this */
-	if (info->buffer != NULL)
+	if (info->buffer != NULL) {
 		bytesTransferred = (DWORD) *((DWORD*)info->buffer);
-	else
+
+	} else {
 		bytesTransferred = bytesReturned;
+	}
 
 	if (ret && status == ERROR_IO_PENDING)
 		DBGPRINT("ApcFunc was called but I/O isn't finished!\n");
@@ -1416,7 +1408,7 @@ WSPRecv(
 
 	DBGPRINT("WSPRecv - enter\n");
 
-	if (lpBuffers == NULL || lpNumberOfBytesRecvd == NULL || lpFlags == NULL) {
+	if (lpBuffers == NULL || lpFlags == NULL) {
 		*lpErrno = WSAEFAULT;
 		DBGPRINT("WSPRecv - leave#1\n");
 		return SOCKET_ERROR;
@@ -1425,13 +1417,11 @@ WSPRecv(
 	ZeroMemory(&recvReq, sizeof(recvReq));
 	recvReq.lpBuffers = (PSOCKET_WSABUF)lpBuffers;
 	recvReq.dwBufferCount = dwBufferCount;
-	if (lpOverlapped != NULL)
-		recvReq.lpFlags = (DWORD*)&(lpOverlapped->OffsetHigh);
-	else
-		recvReq.lpFlags = lpFlags;
+	recvReq.lpFlags = lpFlags;
 
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		bytesTransferred = malloc(sizeof(DWORD));
+		ZeroMemory(bytesTransferred, sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
 	} else {
@@ -1446,8 +1436,8 @@ WSPRecv(
 			bytesTransferred, byteCount,
 			&bytesReturned,
 			lpOverlapped);
-
-	DBGPRINT("IOCTL_SOCKET_RECV: bSuccess=%d,bytesReturned=%d\n", bSuccess, bytesReturned);
+			
+	DBGPRINT("IOCTL_SOCKET_RECV: bSuccess=%d, bytesReturned=%d\n", bSuccess, bytesReturned);
 
 	if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING))) {
@@ -1458,14 +1448,15 @@ WSPRecv(
 		SetErrorCode(lpErrno);
 		ret = SOCKET_ERROR;
 	}
-
+	
 	// If the operation fully completed now and we're doing overlapped IO
 	// OR we're doing overlapped IO and the request isn't pending, then free the memory
-	if ((bSuccess && lpOverlapped != NULL) ||
-	        (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
-		if (lpOverlapped != NULL)
-			*lpFlags = lpOverlapped->OffsetHigh;
+	if ((bSuccess && lpOverlapped != NULL) || (!bSuccess && lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
+		DBGPRINT("WSPRecv: got %d (%d) bytes\n", *lpNumberOfBytesRecvd, *bytesTransferred);
+
+		*lpFlags = lpOverlapped->OffsetHigh;
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
 	}
 
 	DBGPRINT("WSPRecv - leave\n");
@@ -1509,7 +1500,7 @@ WSPRecvFrom(
 
 	DBGPRINT("WSPRecvFrom - enter\n");
 
-	if (lpBuffers == NULL || lpNumberOfBytesRecvd == NULL || lpFlags == NULL || lpFrom == NULL || lpFromlen == NULL) {
+	if (lpBuffers == NULL || lpFlags == NULL) {
 		*lpErrno = WSAEFAULT;
 		DBGPRINT("WSPRecvFrom - leave#1\n");
 		return SOCKET_ERROR;
@@ -1519,12 +1510,9 @@ WSPRecvFrom(
 	recvReq.dwBufferCount = dwBufferCount;
 	recvReq.lpFrom = lpFrom;
 	recvReq.lpFromlen = lpFromlen;
-	if (lpOverlapped != NULL)
-		recvReq.lpFlags = &(lpOverlapped->OffsetHigh);
-	else
-		recvReq.lpFlags = lpFlags;
+	recvReq.lpFlags = lpFlags;
 
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		bytesTransferred = malloc(sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
@@ -1552,9 +1540,10 @@ WSPRecvFrom(
 
 	// If we're doing overlapped IO and the operation fully finished now, OR
 	// we're doing overlapped IO and the operation isn't pending, free the memory
-	if ((bSuccess && lpOverlapped != NULL) ||
-	       (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
+	if ((bSuccess && lpOverlapped != NULL) || (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
+
 		if (lpOverlapped != NULL)
 			*lpFlags = lpOverlapped->OffsetHigh;
 	}
@@ -1585,7 +1574,7 @@ _WSARecvMsg(
 
 	DBGPRINT("WSARecvMsg - enter\n");
 
-	if (lpMsg == NULL || lpdwNumberOfBytesRecvd == NULL) {
+	if (lpMsg == NULL) {
 		WSASetLastError(WSAEFAULT);
 		DBGPRINT("WSARecvMsg - leave#1\n");
 		return SOCKET_ERROR;
@@ -1593,7 +1582,7 @@ _WSARecvMsg(
 
 	recvMsgReq.lpMsg = (PSOCKET_WSAMSG)lpMsg;
 
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		threadId.ThreadHandle = GetCurrentThread();
 		bytesTransferred = malloc(sizeof(DWORD));
 		byteCount = sizeof(DWORD);
@@ -1619,9 +1608,9 @@ _WSARecvMsg(
 		ret = SOCKET_ERROR;
 	}
 
-	if ((bSuccess && lpOverlapped != NULL) ||
-			(lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
+	if ((bSuccess && lpOverlapped != NULL) || (lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
 	}
 
 	DBGPRINT("WSARecvMsg - leave\n");
@@ -1698,7 +1687,7 @@ WSPSend(
 	SOCKET_SEND_REQUEST sendReq;
 	BOOL bSuccess;
 	DWORD bytesReturned;
-	DWORD *bytesTransferred;
+	DWORD *bytesTransferred = NULL;
 	INT byteCount = 0;
 
 	DBGPRINT("WSPSend - enter\n");
@@ -1709,9 +1698,9 @@ WSPSend(
 		return SOCKET_ERROR;
 	}
 
-
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		bytesTransferred = malloc(sizeof(DWORD));
+		ZeroMemory(bytesTransferred, sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
 	} else {
@@ -1730,7 +1719,7 @@ WSPSend(
 			bytesTransferred, byteCount,
 			&bytesReturned, lpOverlapped);
 
-	DBGPRINT("IOCTL_SOCKET_SEND: bSuccess=%d\n", bSuccess);
+	DBGPRINT("IOCTL_SOCKET_SEND: bSuccess=%d, bytesReturned=%d, bytesTransferred=%d\n", bSuccess, bytesReturned, *bytesTransferred);
 	if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
@@ -1740,9 +1729,9 @@ WSPSend(
 		ret = SOCKET_ERROR;
 	}
 
-	if ((bSuccess && lpOverlapped != NULL) ||
-			(lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
+	if ((bSuccess && lpOverlapped != NULL) || (!bSuccess && lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
 	}
 
 	DBGPRINT("WSPSend - leave\n");
@@ -1787,6 +1776,8 @@ WSPSendTo(
 
 	DBGPRINT("WSPSendTo - enter\n");
 
+	// User must either give a pointer to hold the number of bytes sent, or 
+	// be doing overlapped IO
 	if (lpNumberOfBytesSent == NULL && lpOverlapped == NULL) {
 		ret = SOCKET_ERROR;
 		*lpErrno = WSAEFAULT;
@@ -1794,7 +1785,7 @@ WSPSendTo(
 		return SOCKET_ERROR;
 	}
 
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		bytesTransferred = malloc(sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, lpThreadId, lpErrno);
@@ -1825,9 +1816,9 @@ WSPSendTo(
 		ret = SOCKET_ERROR;
 	}
 
-	if ((bSuccess && lpOverlapped != NULL) ||
-			(lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
+	if ((bSuccess && lpOverlapped != NULL) || (lpOverlapped != NULL && *lpErrno != ERROR_IO_PENDING)) {
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
 	}
 
 	DBGPRINT("WSPSendTo - leave\n");
@@ -1865,7 +1856,7 @@ _WSASendMsg(
 	threadId.ThreadHandle = GetCurrentThread();
 	threadId.Reserved = 0;
 
-	if (lpOverlapped != NULL) {
+	if (lpOverlapped != NULL && lpCompletionRoutine != NULL) {
 		bytesTransferred = malloc(sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
@@ -1889,16 +1880,18 @@ _WSASendMsg(
 			(bSuccess || (!bSuccess && GetLastError() != ERROR_IO_PENDING)))
 		free(lpOverlapped->Pointer);
 
-	if (bSuccess && lpOverlapped != NULL && lpNumberOfBytesSent != NULL) {
-			*lpNumberOfBytesSent = *bytesTransferred;
-	} else if (!bSuccess) {
+	if (!bSuccess) {
 		SetErrorCode(NULL);
 		ret = SOCKET_ERROR;
 	}
+		
+	if (bSuccess && lpOverlapped != NULL && lpNumberOfBytesSent != NULL) {
+			*lpNumberOfBytesSent = *bytesTransferred;
+	}
 
-	if ((bSuccess && lpOverlapped != NULL) ||
-			(lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
-		free(bytesTransferred);
+	if ((bSuccess && lpOverlapped != NULL) || (lpOverlapped != NULL && GetLastError() != ERROR_IO_PENDING)) {
+		if (lpCompletionRoutine != NULL)
+			free(bytesTransferred);
 	}
 
 	DBGPRINT("WSPSendMsg - leave\n");

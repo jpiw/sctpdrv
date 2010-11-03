@@ -430,8 +430,8 @@ ClientPnPDelNetAddress(
 
 	TAILQ_REMOVE(&ifp->if_addrhead, ifa, ifa_link);
 
-	if (TAILQ_EMPTY(&ifp->if_addrhead)) {
 #if NTDDI_VERSION < NTDDI_LONGHORN
+	if (TAILQ_EMPTY(&ifp->if_addrhead)) {
 		if (Address->AddressType == TDI_ADDRESS_TYPE_IP6) {
 			IPv6RouteEntry routeV6Entry1;
 
@@ -443,11 +443,10 @@ ClientPnPDelNetAddress(
 
 			route_ipv6_del(&routeV6Entry1);
 		}
-#endif
-		IFFREE_LOCKED(ifp);
-	} else {
-		IF_UNLOCK(ifp);
 	}
+#endif
+
+	IF_UNLOCK(ifp);
 
 #if NTDDI_VERSION < NTDDI_LONGHORN
 	switch (Address->AddressType) {
@@ -461,6 +460,10 @@ ClientPnPDelNetAddress(
 #endif
 
 	sctp_addr_change(ifa, RTM_DELETE);
+	if (TAILQ_EMPTY(&ifp->if_addrhead)) {
+		IFFREE(ifp);
+	}
+
 	IFAFREE(ifa);
 
 	DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave\n");

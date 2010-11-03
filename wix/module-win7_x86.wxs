@@ -54,14 +54,6 @@
           <Directory Id='src' Name='src'/>
         </Directory>
       </Directory>
-      <?if $(var.Platform)=x64 ?>
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="SctpDrv32" Name="SctpDrv">
-          <Directory Id="bin32" Name="bin"/>
-          <Directory Id="lib32" Name="lib"/>
-        </Directory>
-      </Directory>
-      <?endif ?>
     </Directory>
 
     <ComponentGroupRef Id="root"/>
@@ -80,11 +72,29 @@
         <File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes"
         Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
       </Component>
+
+      <Component Id="SctpDrv.SctpSocket32.dll" Guid="bf9d6d37-e6b3-4acb-903d-c0537a9b89c8">
+        <File Id="SctpDrv.SctpSocket32.dll" Name="SctpDrv.SctpSocket.dll" KeyPath="yes"
+        Source="bin\$(env.BUILD_ALT_DIR)\SctpDrv.SctpSocket.dll"/>
+      </Component>
+
+      <Component Id="SctpDrv.SctpSocket32.dll_VS" Guid="711ecb68-e84e-4eae-9bff-58b6a420f055" Win64="no">
+        <RegistryValue Id="SctpDrv.SctpSocket32.dll_VS" Root="HKLM" Key="SOFTWARE\Microsoft\.NETFramework\v4.0.30319\AssemblyFoldersEx\[ProductName] x86" Value="[$SctpDrv.SctpSocket32.dll]" Type="string"/>
+      </Component>
+
+		<Component Id="SctpDrv.SctpSocket32.pdb" Guid="47dc68de-272e-4805-bf20-4b63bc0c1825">
+			<File Id="SctpDrv.SctpSocket32.pdb" Name="SctpDrv.SctpSocket.pdb" KeyPath="yes"
+			Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\SctpDrv.SctpSocket.pdb"/>
+		</Component>
     </DirectoryRef>
 
     <DirectoryRef Id="lib">
       <Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
         <File Id="sctpsp32.lib" Name="sctpsp.lib" KeyPath="yes"
+          Source="..\sp\dll\obj$(env.DDKBUILDENV)_win7_x86\i386\sctpsp.lib" />
+      </Component>
+      <Component Id="libsctp32.a" Guid="5feb1152-a930-4234-b741-345b9d762488">
+        <File Id="libsctp32.a" Name="libsctp.a" KeyPath="yes"
           Source="..\sp\dll\obj$(env.DDKBUILDENV)_win7_x86\i386\sctpsp.lib" />
       </Component>
     </DirectoryRef>

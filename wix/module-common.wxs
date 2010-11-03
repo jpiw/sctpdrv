@@ -45,9 +45,15 @@
 			<ComponentRef Id='echo_server.exe'/>
 			<ComponentRef Id='sctpsp32.dll'/>
 			<ComponentRef Id='sctpsp32.pdb'/>
+			<ComponentRef Id='SctpDrv.SctpSocket32.dll'/>
+			<ComponentRef Id='SctpDrv.SctpSocket32.dll_VS'/>
+			<ComponentRef Id='SctpDrv.SctpSocket32.pdb'/> 
 			<?if $(var.Platform)=x64 ?>
 			<ComponentRef Id='sctpsp64.dll'/>
 			<ComponentRef Id='sctpsp64.pdb'/>
+			<ComponentRef Id='SctpDrv.SctpSocket64.dll'/>
+			<ComponentRef Id='SctpDrv.SctpSocket64.dll_VS'/>
+			<ComponentRef Id='SctpDrv.SctpSocket64.pdb'/>
 			<?endif ?>
 			<ComponentRef Id='sctpmon.dll'/>
 			<ComponentRef Id='sctp.inf'/>

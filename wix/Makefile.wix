@@ -12,9 +12,11 @@ SYMSTORE_PUBLIC=..\..\sctpDrv_symstore_pub
 ! If "$(_BUILDARCH)"=="AMD64"
 ARCHDIR=amd64
 MSIARCH=x64
+CPPARCH=x64
 ! Else
 ARCHDIR=i386
 MSIARCH=x86
+CPPARCH=Win32
 ! Endif
 
 ! If "$(MSICULTURE)"=="ja-jp"
@@ -44,6 +46,8 @@ binplace:
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_client\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_client.exe
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server.exe
 	-binplace -p placefil.txt -r $(TREE) -a -x -y -s $(SYMBOL)\public -n $(SYMBOL)\private ..\apps\echo_server2\obj$(BUILD_ALT_DIR)\$(ARCHDIR)\echo_server2.exe
+	-copy /Y ..\sp\SctpSocket\$(MSBUILDCONFIGURATION)\$(CPPARCH)\SctpDrv.SctpSocket.dll $(TREE)
+	-copy /Y ..\sp\SctpSocket\$(MSBUILDCONFIGURATION)\$(CPPARCH)\SctpDrv.SctpSocket.pdb $(SYMBOL)\private\dll
 
 symstore:
 	-symstore add /o /l /r /f $(SYMBOL)\*.pdb /s $(SYMSTORE) /compress /t "SctpDrv for $(DDK_TARGET_OS) $(_BUILDARCH)" /z pri
@@ -68,7 +72,7 @@ SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi: \
 		-dPlatform=$(MSIARCH) \
 		sctpDrv.wixobj$(MSIARCH) \
 		-out $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi
-		if [%RELEASE_SIGN%]==[1] ( signtool sign /ac ..\drv\MSCV-GlobalSign.cer /s my /n "Bruce Cran" $(TIMESTAMP) \
+		if [%RELEASE_SIGN%]==[1] ( signtool sign /ac ..\drv\MSCV-GlobalSign.cer /d "SctpDrv" /s my /n "Bruce Cran" $(TIMESTAMP) \
 		$(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msi $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm )
 		
 $(MSICULTURE)\SctpDrv-$(DDK_TARGET_OS)-$(_BUILDARCH).msm: \

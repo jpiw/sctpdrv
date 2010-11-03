@@ -11,10 +11,9 @@ SCTP driver for Windows. All the code is distributed under
 the modified BSD license.
 
 Explanation:
-	apps/		Sample apps (including iperf)
+	apps/		Sample apps
 	drv/		Driver's entry point etc.
 	kern/		Kernel interface for Winsock, etc.
-	mingw/		Cygwin/MinGW import library
 	net/		Network interface, routing, etc.
 	netinet/	SCTP (derived from FreeBSD SCTP code)
 	netinet6/	IPv6 specific 

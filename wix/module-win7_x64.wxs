@@ -80,11 +80,29 @@
       <File Id="sctpsp32.pdb" Name="sctpsp.pdb" KeyPath="yes"
         Source="symbol\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\private\dll\sctpsp.pdb"/>
     </Component>
+
+    <Component Id="SctpDrv.SctpSocket32.dll" Guid="bf9d6d37-e6b3-4acb-903d-c0537a9b89c8">
+      <File Id="SctpDrv.SctpSocket32.dll" Name="SctpDrv.SctpSocket.dll" KeyPath="yes"
+      Source="bin\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\SctpDrv.SctpSocket.dll"/>
+    </Component>
+
+    <Component Id="SctpDrv.SctpSocket32.dll_VS" Guid="5165055e-84a9-4582-b30c-37350b318fde" Win64="no">
+      <RegistryValue Id="SctpDrv.SctpSocket32DT.dll_VS" Root="HKLM" Key="SOFTWARE\Microsoft\.NETFramework\v4.0.30319\AssemblyFoldersEx\[ProductName] x86" Value="[$SctpDrv.SctpSocket32.dll]" Type="string"/>
+    </Component>
+
+	<Component Id="SctpDrv.SctpSocket32.pdb" Guid="47dc68de-272e-4805-bf20-4b63bc0c1825">
+		<File Id="SctpDrv.SctpSocket32.pdb" Name="SctpDrv.SctpSocket.pdb" KeyPath="yes"
+		Source="symbol\$(env.DDKBUILDENV)_$(env.DDK_TARGET_OS)_x86\private\dll\SctpDrv.SctpSocket.pdb"/>
+	</Component>	  
   </DirectoryRef>
   
   <DirectoryRef Id="lib32">
     <Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
       <File Id="sctpsp32.lib" Name="sctpsp.lib" KeyPath="yes"
+        Source="..\sp\dll\obj$(env.DDKBUILDENV)_win7_x86\i386\sctpsp.lib" />
+    </Component>
+    <Component Id="libsctp32.a" Guid="b269038f-0bae-4e0d-a9b3-695813644acb">
+      <File Id="libsctp32.a" Name="libsctp.a" KeyPath="yes"
         Source="..\sp\dll\obj$(env.DDKBUILDENV)_win7_x86\i386\sctpsp.lib" />
     </Component>
   </DirectoryRef>
@@ -99,13 +117,34 @@
       <File Id="sctpsp64.pdb" Name="sctpsp.pdb" KeyPath="yes"
         Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\sctpsp.pdb"/>
     </Component>
+
+    <Component Id="SctpDrv.SctpSocket64.dll" Win64="$(var.Win64)" Guid="14ec619e-dcfa-4804-b325-e8001e760eaf">
+      <File Id="SctpDrv.SctpSocket64.dll" Name="SctpDrv.SctpSocket.dll" KeyPath="yes"
+      Source="bin\$(env.BUILD_ALT_DIR)\SctpDrv.SctpSocket.dll"/>
+    </Component>
+
+    <Component Id="SctpDrv.SctpSocket64.dll_VS" Win64="no" Guid="533ddba7-ec94-40b2-9d5f-a80093da058b">
+      <RegistryValue Id="SctpDrv.SctpSocket64.dll_VS" Root="HKLM" Key="SOFTWARE\Microsoft\.NETFramework\v4.0.30319\AssemblyFoldersEx\[ProductName] x64" Value="[$SctpDrv.SctpSocket64.dll]" Type="string"/>
+    </Component>
+
+	<Component Id="SctpDrv.SctpSocket64.pdb" Win64="$(var.Win64)" Guid="7986c20a-06fd-482c-a259-7f3a354d0442">
+		<File Id="SctpDrv.SctpSocket64.pdb" Name="SctpDrv.SctpSocket.pdb" KeyPath="yes"
+		Source="symbol\$(env.BUILD_ALT_DIR)\private\dll\SctpDrv.SctpSocket.pdb"/>
+	</Component>
+  
   </DirectoryRef>
+ 
 
   <DirectoryRef Id="lib">
     <Component Id="sctpsp64.lib" Win64="$(var.Win64)" Guid="21765fed-6174-4a7e-b8f1-44829c2de3f0">
       <File Id="sctpsp64.lib" Name="sctpsp.lib" KeyPath="yes"
         Source="..\sp\dll\obj$(env.BUILD_ALT_DIR)\$(var.ARCHDIR)\sctpsp.lib" />
     </Component>
+    <Component Id="libsctp64.a" Win64="$(var.Win64)" Guid="23302ddc-0f8c-4b26-9a33-e2887510398a">
+      <File Id="libsctp64.a" Name="libsctp.a" KeyPath="yes"
+        Source="..\sp\dll\obj$(env.BUILD_ALT_DIR)\$(var.ARCHDIR)\sctpsp.lib" />
+    </Component>
   </DirectoryRef>
+	
 </Module>
 </Wix>
