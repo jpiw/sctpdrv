@@ -2,13 +2,22 @@
 ; Copyright (c) 2010 Bruce Cran
 [Version]
 Signature      = "$WINDOWS NT$"
-Class          = System
-ClassGUID      = {4d36e97d-e325-11ce-bfc1-08002be10318}
+Class          = NetTrans
+ClassGUID      = {4D36E975-E325-11CE-BFC1-08002BE10318}
 Provider       = %BruceCran%
-DriverVer      = 09/17/2010,1.1.6
+DriverVer      = 11/04/2010,1.1.6
 DriverPackageType        = KernelService
 DriverPackageDisplayName = %SctpDesc%
 CatalogFile    = sctp.cat
+
+[Manufacturer]
+%BruceCran%      = SctpDrv,NTx86,NTamd64
+
+[SctpDrv.NTx86]
+%SctpDesc%     = DefaultInstall, BruceCran_SctpDrv
+
+[SctpDrv.NTamd64]
+%SctpDesc%     = DefaultInstall, BruceCran_SctpDrv
 
 [DestinationDirs]
 DefaultDestDir = 11
@@ -51,4 +60,5 @@ DelService     = Sctp,0x200
 [Strings]
 BruceCran      = "Bruce Cran"
 SctpDesc       = "SCTP Driver"
+SctpDrv        = "SctpDrv"
 Disk1          = "SctpDrv Source Media"

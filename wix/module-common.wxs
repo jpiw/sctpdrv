@@ -154,7 +154,7 @@
 						Value='%SystemRoot%\System32\drivers\sctp.sys'/>
 					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
 				</RegistryKey>
-				<difx:Driver Legacy="yes" AddRemovePrograms="no" DeleteFiles="yes"/>
+				<difx:Driver AddRemovePrograms="no" DeleteFiles="yes"/>
 			</Component>
 			
 			<Component Id="sctp.pdb" Win64="$(var.Win64)" Guid="16c69324-efaf-41df-bd2f-70aa21b56af6">

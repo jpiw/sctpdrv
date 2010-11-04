@@ -174,12 +174,12 @@ NTSTATUS IcmpNotify(IN FWPS_CALLOUT_NOTIFY_TYPE, IN const GUID *, IN const FWPS_
 extern void (*aio_swake)(struct socket *, struct sockbuf *);
 void aio_swake_cb(struct socket *, struct sockbuf *);
 
-__drv_dispatchType(IRP_MJ_CREATE)					DRIVER_DISPATCH SCTPCreate;
-__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)			DRIVER_DISPATCH SCTPDispatchDeviceControl;
+__drv_dispatchType(IRP_MJ_CREATE)			DRIVER_DISPATCH SCTPCreate;
+__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)		DRIVER_DISPATCH SCTPDispatchDeviceControl;
 __drv_dispatchType(IRP_MJ_INTERNAL_DEVICE_CONTROL)	DRIVER_DISPATCH SCTPDispatchInternalDeviceControl;
-__drv_dispatchType(IRP_MJ_CLEANUP)					DRIVER_DISPATCH SCTPCleanup;
-__drv_dispatchType(IRP_MJ_CLOSE)					DRIVER_DISPATCH SCTPClose;
-__drv_dispatchType_other							DRIVER_DISPATCH SCTPDispatch;
+__drv_dispatchType(IRP_MJ_CLEANUP)			DRIVER_DISPATCH SCTPCleanup;
+__drv_dispatchType(IRP_MJ_CLOSE)			DRIVER_DISPATCH SCTPClose;
+__drv_dispatchType_other				DRIVER_DISPATCH SCTPDispatch;
 
 static KSTART_ROUTINE ReloadThread;
 
@@ -569,8 +569,6 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SCTPClose;
 	DriverObject->DriverUnload = Unload;
 
-	WriteEventLog(MSG_INFO, NULL, L"SctpDrv started.");
-	DebugPrint(DEBUG_GENERIC_INFO, "[sctp] SctpDrv started.\n");
 
 	return STATUS_SUCCESS;
 error:
@@ -688,8 +686,6 @@ Unload(
 	}
 
 
-	WriteEventLog(MSG_INFO, NULL, L"SctpDrv stopped.");
-	DebugPrint(DEBUG_GENERIC_INFO, "[sctp] SctpDrv stopped.\n");
 	SctpDriverObject = NULL;
 	WPP_CLEANUP(NULL);
 }
@@ -716,7 +712,6 @@ ReloadThread(
 #ifdef SCTP
 		if (SctpUdpHandle != NULL) {
 			CloseSctp(&SctpUdpHandle, &SctpUdpObject);
-			WriteEventLog(MSG_INFO, NULL, L"UDP closed.");
 			DebugPrint(DEBUG_GENERIC_INFO, "[sctp] UDP closed.\n");
 		}
 
@@ -740,8 +735,7 @@ ReloadThread(
 			SCTP_BASE_SYSCTL(sctp_udp_tunneling_port) = 0;
 			continue;
 		}
-		WriteEventLog(MSG_INFO, NULL, L"UDP opened, port=%hu.",
-		    (uint16_t)SCTP_BASE_SYSCTL(sctp_udp_tunneling_port));
+
 		DebugPrint(DEBUG_GENERIC_INFO, "[sctp] UDP opened, port=%hu.\n",
 		    (uint16_t)SCTP_BASE_SYSCTL(sctp_udp_tunneling_port));
 #endif
@@ -749,7 +743,6 @@ ReloadThread(
 #ifdef SCTP
 	if (SctpUdpHandle != NULL) {
 		CloseSctp(&SctpUdpHandle, &SctpUdpObject);
-		WriteEventLog(MSG_INFO, NULL, L"UDP closed.");
 		DebugPrint(DEBUG_GENERIC_INFO, "[sctp] UDP closed.\n");
 	}
 #endif
@@ -809,7 +802,6 @@ StartReloadThread(VOID)
 	}
 	status = STATUS_SUCCESS;
 
-	WriteEventLog(MSG_INFO, NULL, L"UDP managing thread started.");
 	DebugPrint(DEBUG_GENERIC_INFO, "[sctp] UDP managing thread started.\n");
 
 	return status;
@@ -823,7 +815,6 @@ StopReloadThread(VOID)
 		KeWaitForSingleObject(ReloadThreadObject, Executive, KernelMode, FALSE, NULL);
 		ObDereferenceObject(ReloadThreadObject);
 		ReloadThreadObject = NULL;
-		WriteEventLog(MSG_INFO, NULL, L"UDP managing thread stopped.");
 		DebugPrint(DEBUG_GENERIC_INFO, "[sctp] UDP managing thread stopped.\n");
 	}
 }
