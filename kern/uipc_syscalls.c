@@ -1377,7 +1377,7 @@ SCTPDispatchSctpSendRequest(
 	so = socketContext->socket;
 	len = uio.uio_resid;
 
-	error = sctp_lower_sosend(so, to, &uio, NULL, NULL, flags, 1, u_sinfo, NULL);
+	error = sctp_lower_sosend(so, to, &uio, NULL, NULL, flags, u_sinfo, NULL);
 
 	UnlockBuffer(mdl);
 	if (error == 0 && outBufferLen >= sizeof(ULONG)) {

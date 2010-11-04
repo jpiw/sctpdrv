@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 209289 2010-06-18 09:01:44Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_usrreq.c 212714 2010-09-15 23:56:25Z tuexen $");
 #endif
 #include <netinet/sctp_os.h>
 #ifdef __FreeBSD__
@@ -160,10 +160,6 @@ sctp_pathmtu_adjustment(struct sctp_inpcb *inp,
 	/* Adjust that too */
 	stcb->asoc.smallest_mtu = nxtsz;
 	/* now off to subtract IP_DF flag if needed */
-#ifdef SCTP_PRINT_FOR_B_AND_M
-	SCTP_PRINTF("sctp_pathmtu_adjust called inp:%p stcb:%p net:%p nxtsz:%d\n",
-		    inp, stcb, net, nxtsz);
-#endif
 	overhead = IP_HDR_SIZE;
 	if (sctp_auth_is_required_chunk(SCTP_DATA, stcb->asoc.peer_auth_chunks)) {
 		overhead += sctp_get_auth_chunk_len(stcb->asoc.peer_hmac_id);
@@ -269,10 +265,6 @@ sctp_notify_mbuf(struct sctp_inpcb *inp,
 	}
 	/* now what about the ep? */
 	if (stcb->asoc.smallest_mtu > nxtsz) {
-#ifdef SCTP_PRINT_FOR_B_AND_M
-		SCTP_PRINTF("notify_mbuf (ICMP) calls sctp_pathmtu_adjust mtu:%d\n",
-			    nxtsz);
-#endif
 		sctp_pathmtu_adjustment(inp, stcb, net, nxtsz);
 	}
 	if (tmr_stopped)
@@ -355,7 +347,8 @@ sctp_notify(struct sctp_inpcb *inp,
 			 */
 			/* Add debug message here if destination is not in PF state. */
 			/* Stop any running T3 timers here? */
-			if (SCTP_BASE_SYSCTL(sctp_cmt_on_off) && SCTP_BASE_SYSCTL(sctp_cmt_pf)) {
+			if ((stcb->asoc.sctp_cmt_on_off == 1) &&
+			    (stcb->asoc.sctp_cmt_pf > 0)) {
 				net->dest_state &= ~SCTP_ADDR_PF;
 				SCTPDBG(SCTP_DEBUG_TIMER4, "Destination %p moved from PF to unreachable.\n",
 					net);
@@ -2010,6 +2003,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 	case SCTP_REUSE_PORT:
 	{
 		uint32_t *value;
+
 		if ((inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE)) {
 			/* Can't do this for a 1-m socket */
 			error = EINVAL;
@@ -2032,6 +2026,7 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 	case SCTP_FRAGMENT_INTERLEAVE:
 	{
 		uint32_t *value;
+
 		SCTP_CHECK_AND_CAST(value, optval, uint32_t, *optsize);
 		if (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_FRAG_INTERLEAVE)) {
 			if (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_INTERLEAVE_STRMS)) {
@@ -2050,46 +2045,18 @@ sctp_getopt(struct socket *so, int optname, void *optval, size_t *optsize,
 		struct sctp_assoc_value *av;
 
 		SCTP_CHECK_AND_CAST(av, optval, struct sctp_assoc_value, *optsize);
-		if (SCTP_BASE_SYSCTL(sctp_cmt_on_off)) {
-			SCTP_FIND_STCB(inp, stcb, av->assoc_id);
-			if (stcb) {
-				av->assoc_value = stcb->asoc.sctp_cmt_on_off;
-				SCTP_TCB_UNLOCK(stcb);
-
-			} else {
-				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOTCONN);
-				error = ENOTCONN;
-			}
+		SCTP_FIND_STCB(inp, stcb, av->assoc_id);
+		if (stcb) {
+			av->assoc_value = stcb->asoc.sctp_cmt_on_off;
+			SCTP_TCB_UNLOCK(stcb);
 		} else {
-			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOPROTOOPT);
-			error = ENOPROTOOPT;
+			SCTP_INP_RLOCK(inp);
+			av->assoc_value = inp->sctp_cmt_on_off;
+			SCTP_INP_RUNLOCK(inp);
 		}
 		*optsize = sizeof(*av);
 	}
 	break;
-	/* EY - set socket option for nr_sacks  */		
-	case SCTP_NR_SACK_ON_OFF:
-		{
-			struct sctp_assoc_value *av;
-
-			SCTP_CHECK_AND_CAST(av, optval, struct sctp_assoc_value, *optsize);
-			if (SCTP_BASE_SYSCTL(sctp_nr_sack_on_off)) {
-				SCTP_FIND_STCB(inp, stcb, av->assoc_id);
-				if (stcb) {
-					av->assoc_value = stcb->asoc.sctp_nr_sack_on_off;
-					SCTP_TCB_UNLOCK(stcb);
-
-				} else {
-					SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOTCONN);
-					error = ENOTCONN;
-				}
-			} else {
-				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOPROTOOPT);
-				error = ENOPROTOOPT;
-			}
-			*optsize = sizeof(*av);
-		}
-		break;
 	/* JRS - Get socket option for pluggable congestion control */
 	case SCTP_PLUGGABLE_CC:
 	{
@@ -3149,24 +3116,24 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 		SCTP_INP_WUNLOCK(inp);
 		break;
 	case SCTP_REUSE_PORT:
-	  {
-	    SCTP_CHECK_AND_CAST(mopt, optval, uint32_t, optsize);
-	    if ((inp->sctp_flags & SCTP_PCB_FLAGS_UNBOUND)  == 0) {
-	      /* Can't set it after we are bound */
-	      error = EINVAL;
-	      break;
-	    }
-	    if ((inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE)) {
-	      /* Can't do this for a 1-m socket */
-	      error = EINVAL;
-	      break;
-	    }
-	    if (optval)
-	      sctp_feature_on(inp, SCTP_PCB_FLAGS_PORTREUSE);
-	    else
-	      sctp_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE);
-	  }
-	  break;
+	{
+		SCTP_CHECK_AND_CAST(mopt, optval, uint32_t, optsize);
+		if ((inp->sctp_flags & SCTP_PCB_FLAGS_UNBOUND)  == 0) {
+			/* Can't set it after we are bound */
+			error = EINVAL;
+			break;
+		}
+		if ((inp->sctp_flags & SCTP_PCB_FLAGS_UDPTYPE)) {
+			/* Can't do this for a 1-m socket */
+			error = EINVAL;
+			break;
+		}
+		if (optval)
+			sctp_feature_on(inp, SCTP_PCB_FLAGS_PORTREUSE);
+		else
+			sctp_feature_off(inp, SCTP_PCB_FLAGS_PORTREUSE);
+	}
+	break;
 	case SCTP_PARTIAL_DELIVERY_POINT:
 	{
 		uint32_t *value;
@@ -3203,44 +3170,28 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 	}
 	break;
 	case SCTP_CMT_ON_OFF:
-	{
-		struct sctp_assoc_value *av;
-
-		SCTP_CHECK_AND_CAST(av, optval, struct sctp_assoc_value, optsize);
 		if (SCTP_BASE_SYSCTL(sctp_cmt_on_off)) {
+			struct sctp_assoc_value *av;
+
+			SCTP_CHECK_AND_CAST(av, optval, struct sctp_assoc_value, optsize);
 			SCTP_FIND_STCB(inp, stcb, av->assoc_id);
 			if (stcb) {
-				stcb->asoc.sctp_cmt_on_off = (uint8_t) av->assoc_value;
+				if (av->assoc_value != 0)
+					stcb->asoc.sctp_cmt_on_off = 1;
+				else
+					stcb->asoc.sctp_cmt_on_off = 0;
 				SCTP_TCB_UNLOCK(stcb);
 			} else {
-				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOTCONN);
-				error = ENOTCONN;
+				SCTP_INP_WLOCK(inp);
+				if (av->assoc_value != 0)
+					inp->sctp_cmt_on_off = 1;
+				else
+					inp->sctp_cmt_on_off = 0;
+				SCTP_INP_WUNLOCK(inp);
 			}
 		} else {
 			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOPROTOOPT);
 			error = ENOPROTOOPT;
-		}
-	}
-	break;
-	/* EY nr_sack_on_off socket option */
-	case SCTP_NR_SACK_ON_OFF:
-		{
-			struct sctp_assoc_value *av;
-
-			SCTP_CHECK_AND_CAST(av, optval, struct sctp_assoc_value, optsize);
-			if (SCTP_BASE_SYSCTL(sctp_nr_sack_on_off)) {
-				SCTP_FIND_STCB(inp, stcb, av->assoc_id);
-				if (stcb) {
-					stcb->asoc.sctp_nr_sack_on_off = (uint8_t) av->assoc_value;
-					SCTP_TCB_UNLOCK(stcb);
-				} else {
-					SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOTCONN);
-					error = ENOTCONN;
-				}
-			} else {
-				SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOPROTOOPT);
-				error = ENOPROTOOPT;
-			}
 		}
 		break;
 	/* JRS - Set socket option for pluggable congestion control */
@@ -4292,10 +4243,6 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 					if (paddrp->spp_pathmtu > SCTP_DEFAULT_MINSEGMENT) {
 						net->mtu = paddrp->spp_pathmtu + ovh;
 						if (net->mtu < stcb->asoc.smallest_mtu) {
-#ifdef SCTP_PRINT_FOR_B_AND_M
-							SCTP_PRINTF("SCTP_PMTU_DISABLE calls sctp_pathmtu_adjustment:%d\n",
-								    net->mtu);
-#endif
 							sctp_pathmtu_adjustment(inp, stcb, net, net->mtu);
 						}
 					}
@@ -4340,10 +4287,6 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 						if (paddrp->spp_pathmtu > SCTP_DEFAULT_MINSEGMENT) {
 							net->mtu = paddrp->spp_pathmtu + ovh;
 							if (net->mtu < stcb->asoc.smallest_mtu) {
-#ifdef SCTP_PRINT_FOR_B_AND_M
-								SCTP_PRINTF("SCTP_PMTU_DISABLE calls sctp_pathmtu_adjustment:%d\n",
-									    net->mtu);
-#endif
 								sctp_pathmtu_adjustment(inp, stcb, net, net->mtu);
 							}
 						}

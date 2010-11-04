@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 208879 2010-06-06 20:34:17Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 212799 2010-09-17 16:20:29Z tuexen $");
 #endif
 
 #ifndef __sctp_constants_h__
@@ -990,6 +990,9 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 208879 2010-06-06 20:34:17
  * Number of seconds of time wait for a vtag.
  */
 #define SCTP_TIME_WAIT 60
+
+#define SCTP_SEND_BUFFER_SPLITTING 0x00000001
+#define SCTP_RECV_BUFFER_SPLITTING 0x00000002
 
 /* The system retains a cache of free chunks such to
  * cut down on calls the memory allocation system. There

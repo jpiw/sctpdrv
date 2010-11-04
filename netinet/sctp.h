@@ -31,7 +31,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 209289 2010-06-18 09:01:44Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 211944 2010-08-28 17:59:51Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_H_
@@ -42,8 +42,8 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp.h 209289 2010-06-18 09:01:44Z tuexen $
 
 #include <sys/types.h>
 
-#define SCTP_PACKED __attribute__((packed))
 
+#define SCTP_PACKED __attribute__((packed))
 
 /*
  * SCTP protocol - RFC2960.
@@ -160,10 +160,8 @@ struct sctp_paramhdr {
 /* CMT ON/OFF socket option */
 #define SCTP_CMT_ON_OFF                 0x00001200
 #define SCTP_CMT_USE_DAC                0x00001201
-/* EY - NR_SACK on/off socket option */
-#define SCTP_NR_SACK_ON_OFF                 0x00001300
 /* JRS - Pluggable Congestion Control Socket option */
-#define SCTP_PLUGGABLE_CC				0x00001202
+#define SCTP_PLUGGABLE_CC               0x00001202
 
 /* read only */
 #define SCTP_GET_SNDBUF_USE		0x00001101

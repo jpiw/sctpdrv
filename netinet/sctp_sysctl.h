@@ -30,7 +30,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 195919 2009-07-28 15:07:41Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 212851 2010-09-19 11:57:21Z tuexen $");
 #endif
 
 #ifndef __sctp_sysctl_h__
@@ -47,7 +47,9 @@ struct sctp_sysctl {
 	uint32_t sctp_ecn_enable;
 	uint32_t sctp_ecn_nonce;
 	uint32_t sctp_strict_sacks;
+#if !defined(SCTP_WITH_NO_CSUM)
 	uint32_t sctp_no_csum_on_loopback;
+#endif
 	uint32_t sctp_strict_init;
 	uint32_t sctp_peer_chunk_oh;
 	uint32_t sctp_max_burst_default;
@@ -111,6 +113,8 @@ struct sctp_sysctl {
 	uint32_t sctp_udp_tunneling_port;
 	uint32_t sctp_enable_sack_immediately;
 	uint32_t sctp_vtag_time_wait;
+	uint32_t sctp_buffer_splitting;
+	uint32_t sctp_initial_cwnd;
 #if defined(SCTP_DEBUG)
 	uint32_t sctp_debug_on;
 #endif
@@ -494,13 +498,23 @@ struct sctp_sysctl {
 #define SCTPCTL_NAT_FRIENDLY_INITS_MAX	1
 #define SCTPCTL_NAT_FRIENDLY_INITS_DEFAULT	SCTPCTL_NAT_FRIENDLY_INITS_MIN
 
-
-/* Vtag tiem wait bits */
-#define SCTPCTL_TIME_WAIT_DESC	L"Vtag time wait time 0 disables."
+/* Vtag time wait in seconds */
+#define SCTPCTL_TIME_WAIT_DESC	L"Vtag time wait time in seconds, 0 disables it."
 #define SCTPCTL_TIME_WAIT_MIN	0
 #define SCTPCTL_TIME_WAIT_MAX	0xffffffff
 #define SCTPCTL_TIME_WAIT_DEFAULT	SCTP_TIME_WAIT
 
+/* Enable Send/Receive buffer splitting */
+#define SCTPCTL_BUFFER_SPLITTING_DESC		L"Enable send/receive buffer splitting."
+#define SCTPCTL_BUFFER_SPLITTING_MIN		0
+#define SCTPCTL_BUFFER_SPLITTING_MAX		0x3
+#define SCTPCTL_BUFFER_SPLITTING_DEFAULT	SCTPCTL_BUFFER_SPLITTING_MIN
+
+/* Initial congestion window in MTU */
+#define SCTPCTL_INITIAL_CWND_DESC	L"Initial congestion window in MTUs"
+#define SCTPCTL_INITIAL_CWND_MIN	1
+#define SCTPCTL_INITIAL_CWND_MAX	0xffffffff
+#define SCTPCTL_INITIAL_CWND_DEFAULT	3
 
 #if defined(SCTP_DEBUG)
 /* debug: Configure debug output */

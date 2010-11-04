@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 206137 2010-04-03 15:40:14Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 212712 2010-09-15 23:10:45Z tuexen $");
 #endif
 
 #ifndef __sctp_output_h__
@@ -130,6 +130,8 @@ void sctp_toss_old_cookies(struct sctp_tcb *, struct sctp_association *);
 void sctp_toss_old_asconf(struct sctp_tcb *);
 
 void sctp_fix_ecn_echo(struct sctp_association *);
+
+void sctp_move_chunks_from_net(struct sctp_tcb *stcb, struct sctp_nets *net);
 
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
 int

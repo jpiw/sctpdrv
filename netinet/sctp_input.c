@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 208878 2010-06-06 19:24:32Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 212712 2010-09-15 23:10:45Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -236,7 +236,10 @@ sctp_is_there_unsent_data(struct sctp_tcb *stcb)
 				}
 				atomic_subtract_int(&stcb->asoc.stream_queue_cnt, 1);
 				TAILQ_REMOVE(&strq->outqueue, sp, next);
-				sctp_free_remote_addr(sp->net);
+				if (sp->net) {
+					sctp_free_remote_addr(sp->net);
+					sp->net = NULL;
+				}
 				if (sp->data) {
 					sctp_m_freem(sp->data);
 					sp->data = NULL;
@@ -267,7 +270,7 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb,
 	/* save off parameters */
 	asoc->peer_vtag = ntohl(init->initiate_tag);
 	asoc->peers_rwnd = ntohl(init->a_rwnd);
-	if (TAILQ_FIRST(&asoc->nets)) {
+	if (!TAILQ_EMPTY(&asoc->nets)) {
 		/* update any ssthresh's that may have a default */
 		TAILQ_FOREACH(lnet, &asoc->nets, sctp_next) {
 			lnet->ssthresh = asoc->peers_rwnd;
@@ -323,8 +326,10 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb,
 						sctp_m_freem(sp->data);
 						sp->data = NULL;
 					}
-					sctp_free_remote_addr(sp->net);
-					sp->net = NULL;
+					if (sp->net) {
+						sctp_free_remote_addr(sp->net);
+						sp->net = NULL;
+					}
 					/* Free the chunk */
 					sctp_free_a_strmoq(stcb, sp);
 					/*sa_ignore FREED_MEMORY*/
@@ -540,7 +545,7 @@ sctp_handle_heartbeat_ack(struct sctp_heartbeat_chunk *cp,
 	struct sockaddr_storage store;
 	struct sockaddr_in *sin;
 	struct sockaddr_in6 *sin6;
-	struct sctp_nets *r_net;
+	struct sctp_nets *r_net, *f_net;
 	struct timeval tv;
 	int req_prim = 0;
 
@@ -590,15 +595,15 @@ sctp_handle_heartbeat_ack(struct sctp_heartbeat_chunk *cp,
 			stcb->asoc.primary_destination = r_net;
 			r_net->dest_state &= ~SCTP_ADDR_WAS_PRIMARY;
 			r_net->dest_state &= ~SCTP_ADDR_REQ_PRIMARY;
-			r_net = TAILQ_FIRST(&stcb->asoc.nets);
-			if (r_net != stcb->asoc.primary_destination) {
+			f_net = TAILQ_FIRST(&stcb->asoc.nets);
+			if (f_net != r_net) {
 				/* first one on the list is NOT the primary
 				 * sctp_cmpaddr() is much more efficent if
 				 * the primary is the first on the list, make it
 				 * so.
 				 */
-				TAILQ_REMOVE(&stcb->asoc.nets, stcb->asoc.primary_destination, sctp_next);
-				TAILQ_INSERT_HEAD(&stcb->asoc.nets, stcb->asoc.primary_destination, sctp_next);
+				TAILQ_REMOVE(&stcb->asoc.nets, r_net, sctp_next);
+				TAILQ_INSERT_HEAD(&stcb->asoc.nets, r_net, sctp_next);
 			}
 			req_prim = 1;
 		}
@@ -625,16 +630,16 @@ sctp_handle_heartbeat_ack(struct sctp_heartbeat_chunk *cp,
 	 *  MTU's based on whether PF1 or PF2 is being used. If a T3 timer is running,
 	 *  for the destination, stop the timer because a PF-heartbeat was received.
 	 */
-	if (SCTP_BASE_SYSCTL(sctp_cmt_on_off) &&
-	    SCTP_BASE_SYSCTL(sctp_cmt_pf) &&
-	    (net->dest_state & SCTP_ADDR_PF) == SCTP_ADDR_PF) {
+	if ((stcb->asoc.sctp_cmt_on_off == 1) &&
+	    (stcb->asoc.sctp_cmt_pf > 0) &&
+	    ((net->dest_state & SCTP_ADDR_PF) == SCTP_ADDR_PF)) {
 		if (SCTP_OS_TIMER_PENDING(&net->rxt_timer.timer)) {
 			sctp_timer_stop(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep,
 				stcb, net,
 				SCTP_FROM_SCTP_INPUT+SCTP_LOC_5);
 		}
 		net->dest_state &= ~SCTP_ADDR_PF;
-		net->cwnd = net->mtu * SCTP_BASE_SYSCTL(sctp_cmt_pf);
+		net->cwnd = net->mtu * stcb->asoc.sctp_cmt_pf;
 		SCTPDBG(SCTP_DEBUG_INPUT1, "Destination %p moved from PF to reachable with cwnd %d.\n",
 			net, net->cwnd);
 	}
@@ -657,8 +662,8 @@ sctp_handle_heartbeat_ack(struct sctp_heartbeat_chunk *cp,
 			}
 			if (sctp_is_mobility_feature_on(stcb->sctp_ep,
 					SCTP_MOBILITY_BASE)) {
-				sctp_move_chunks_from_deleted_prim(stcb,
-					stcb->asoc.primary_destination);
+				sctp_move_chunks_from_net(stcb,
+					stcb->asoc.deleted_primary);
 			}
 			sctp_delete_prim_timer(stcb->sctp_ep, stcb,
 					stcb->asoc.deleted_primary);
@@ -2742,6 +2747,7 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 			inp->sctp_mobility_features = (*inp_p)->sctp_mobility_features;
 			inp->sctp_socket = so;
 			inp->sctp_frag_point = (*inp_p)->sctp_frag_point;
+			inp->sctp_cmt_on_off = (*inp_p)->sctp_cmt_on_off;
 			inp->partial_delivery_point = (*inp_p)->partial_delivery_point;
 			inp->sctp_context = (*inp_p)->sctp_context;
 			inp->inp_starting_point_for_iterator = NULL;
@@ -4590,8 +4596,6 @@ sctp_process_control(struct mbuf *m, int iphlen, int *offset, int length,
 			return (NULL);
 			break;
 		case SCTP_SELECTIVE_ACK:
-			SCTPDBG(SCTP_DEBUG_INPUT3, "SCTP_SACK\n");
-			SCTP_STAT_INCR(sctps_recvsacks);
 			{
 				struct sctp_sack_chunk *sack;
 				int abort_now = 0;
@@ -4601,6 +4605,8 @@ sctp_process_control(struct mbuf *m, int iphlen, int *offset, int length,
 				int offset_seg, offset_dup;
 				int nonce_sum_flag;
 
+				SCTPDBG(SCTP_DEBUG_INPUT3, "SCTP_SACK\n");
+				SCTP_STAT_INCR(sctps_recvsacks);
 				if (stcb == NULL) {
 					SCTPDBG(SCTP_DEBUG_INDATA1, "No stcb when processing SACK chunk\n");
 					break;
@@ -4670,8 +4676,6 @@ sctp_process_control(struct mbuf *m, int iphlen, int *offset, int length,
 			break;
 		/* EY - nr_sack:  If the received chunk is an nr_sack chunk */
 		case SCTP_NR_SELECTIVE_ACK:
-			SCTPDBG(SCTP_DEBUG_INPUT3, "SCTP_NR_SACK\n");
-			SCTP_STAT_INCR(sctps_recvsacks);
 			{
 				struct sctp_nr_sack_chunk *nr_sack;
 				int abort_now = 0;
@@ -4681,14 +4685,15 @@ sctp_process_control(struct mbuf *m, int iphlen, int *offset, int length,
 				int offset_seg, offset_dup;
 				int nonce_sum_flag;
 
-				/* EY nr_sacks have not been negotiated but the peer end sent an nr_sack, silently discard the chunk */
-				if (!(SCTP_BASE_SYSCTL(sctp_nr_sack_on_off) &&
-				      stcb->asoc.peer_supports_nr_sack)) {
-					goto unknown_chunk;
-				}
+				SCTPDBG(SCTP_DEBUG_INPUT3, "SCTP_NR_SACK\n");
+				SCTP_STAT_INCR(sctps_recvsacks);
 				if (stcb == NULL) {
 					SCTPDBG(SCTP_DEBUG_INDATA1, "No stcb when processing NR-SACK chunk\n");
 					break;
+				}
+				if ((stcb->asoc.sctp_nr_sack_on_off == 0) ||
+				    (stcb->asoc.peer_supports_nr_sack == 0)) {
+					goto unknown_chunk;
 				}
 				if (chk_length < sizeof(struct sctp_nr_sack_chunk)) {
 					SCTPDBG(SCTP_DEBUG_INDATA1, "Bad size on NR-SACK chunk, too small\n");
@@ -5736,13 +5741,14 @@ sctp_input(i_pak, va_alist)
 	struct ip *ip;
 	struct sctphdr *sh;
 	struct sctp_inpcb *inp = NULL;
-
-	uint32_t check, calc_check;
 	struct sctp_nets *net;
 	struct sctp_tcb *stcb = NULL;
 	struct sctp_chunkhdr *ch;
 	int refcount_up = 0;
 	int length, mlen, offset;
+#if !defined(SCTP_WITH_NO_CSUM)
+	uint32_t check, calc_check;
+#endif
 #if !(defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined (__Userspace__))
 	uint16_t port = 0;
 #endif
@@ -5866,6 +5872,9 @@ sctp_input(i_pak, va_alist)
 		m->m_pkthdr.rcvif->if_unit,
 		m->m_pkthdr.csum_flags);
 #endif
+#if defined(SCTP_WITH_NO_CSUM)
+	SCTP_STAT_INCR(sctps_recvnocrc);
+#else
 #if defined(__FreeBSD__) && __FreeBSD_version >= 800000
 	if (m->m_pkthdr.csum_flags & CSUM_SCTP_VALID) {
 		SCTP_STAT_INCR(sctps_recvhwcrc);
@@ -5873,6 +5882,7 @@ sctp_input(i_pak, va_alist)
 	}
 #endif
 	check = sh->checksum;	/* save incoming checksum */
+#if !(defined(__FreeBSD__) && __FreeBSD_version >= 800000)
 	if ((check == 0) && (SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback)) &&
 	    ((ip->ip_src.s_addr == ip->ip_dst.s_addr) ||
 	     (SCTP_IS_IT_LOOPBACK(m)))
@@ -5880,6 +5890,7 @@ sctp_input(i_pak, va_alist)
 		SCTP_STAT_INCR(sctps_recvnocrc);
 		goto sctp_skip_csum_4;
 	}
+#endif
 	sh->checksum = 0;	/* prepare for calc */
 	calc_check = sctp_calculate_cksum(m, iphlen);
 	sh->checksum = check;
@@ -5909,6 +5920,7 @@ sctp_input(i_pak, va_alist)
 		goto bad;
 	}
  sctp_skip_csum_4:
+#endif
 	/* destination port of 0 is illegal, based on RFC2960. */
 	if (sh->dest_port == 0) {
 		SCTP_STAT_INCR(sctps_hdrops);

@@ -1,3 +1,8 @@
+Version 1.1.6 - 4th November 2010
+Bug fixes and new features since 1.1.5
+    * Added .NET wrapper
+    * Fixed use-after-free crash
+
 Version 1.1.5 - 10th June 2010
 Bug fixes and new features since 1.1.4
     * Fixed select() function when called via WOW64

@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 185694 2008-12-06 13:19:54Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.h 212712 2010-09-15 23:10:45Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_ASCONF_H_
@@ -79,8 +79,6 @@ extern void
 sctp_check_address_list(struct sctp_tcb *, struct mbuf *, int, int,
     struct sockaddr *, uint16_t, uint16_t, uint16_t, uint16_t);
 
-extern void
-sctp_move_chunks_from_deleted_prim(struct sctp_tcb *, struct sctp_nets *);
 extern void
 sctp_assoc_immediate_retrans(struct sctp_tcb *, struct sctp_nets *);
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Userspace__)

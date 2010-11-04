@@ -31,7 +31,7 @@
 /* $KAME: sctp_uio.h,v 1.11 2005/03/06 16:04:18 itojun Exp $	 */
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 205629 2010-03-24 20:02:40Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 212242 2010-09-05 20:13:07Z tuexen $");
 #endif
 
 #ifndef __sctp_uio_h__
@@ -989,6 +989,8 @@ union sctp_sockstore {
 
 /***********************************/
 /* And something for us old timers */
+/***********************************/
+
 #ifndef __APPLE__
 #ifndef ntohll
 #if defined(__Userspace_os_Linux)
@@ -1141,9 +1143,8 @@ sctp_lower_sosend(struct socket *so,
     struct mbuf *control,
 #endif
     int flags,
-    int use_rcvinfo,
     struct sctp_sndrcvinfo *srcv
-#if !(defined(__Panda__) || defined (__Userspace__))
+#if !(defined(__Panda__) || defined (__Userspace__)) 
 #if defined(__FreeBSD__) && __FreeBSD_version >= 500000
     ,struct thread *p
 #elif defined(__Windows__)

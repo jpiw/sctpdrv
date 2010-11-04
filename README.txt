@@ -38,7 +38,7 @@ The WiX (Windows Installer XML) toolset is also needed. Please install WiX 3.5
 from http://wix.sourceforge.net
 
 To build the installer package launch a Command Prompt, change to the directory
-containing this README file, and run "makerelease.bat". The installer MSI files
+containing this README file, and run "dobuild.cmd". The installer MSI files
 should be created in "wix\en-us" and "wix\ja-jp" directories.
 --------------------------------------------------------------------------------
 
