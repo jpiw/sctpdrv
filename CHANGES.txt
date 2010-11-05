@@ -1,7 +1,8 @@
-Version 1.1.6 - 4th November 2010
+Version 1.1.6 - 5th November 2010
 Bug fixes and new features since 1.1.5
     * Added .NET wrapper
     * Fixed use-after-free crash
+    * Integrated fixes from sctpCVS.
 
 Version 1.1.5 - 10th June 2010
 Bug fixes and new features since 1.1.4
