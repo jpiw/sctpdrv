@@ -1,7 +1,7 @@
 C_DEFINES=$(C_DEFINES) -D__Windows__ -Dsnprintf=sprintf_s -Dclose=closesocket
 USE_MSVCRT=1
 
-MSC_WARNING_LEVEL=/W1
+MSC_WARNING_LEVEL=/W0
 
 TARGETNAME=api_tests
 TARGETTYPE=PROGRAM
@@ -26,5 +26,6 @@ SOURCES= \
     test_sctp_recvmsg.c \
     test_sctp_sendmsg.c \
     test_sctp_sockopts.c \
-    test_shutdown.c
+    test_shutdown.c \
+    test_socket.c
 

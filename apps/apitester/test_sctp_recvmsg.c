@@ -29,29 +29,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <WS2tcpip.h>
-#endif
 #include <string.h>
 #include <stdio.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if !defined(__Windows__)
-#include <netinet/sctp.h>
-#else
 #include <ws2sctp.h>
-#endif
 #include "sctp_utilities.h"
 #include "api_tests.h"
 
@@ -65,25 +51,15 @@ DEFINE_APITEST(sctp_recvmsg, rd_compl)
 		return strerror(errno);
 
 	if (send(fd[0], "Hello", 5, 0) != 5) {
-#if !defined(__Windows__)
-		close(fd[0]);
-		close(fd[1]);
-#else
 		closesocket(fd[0]);
 		closesocket(fd[1]);
-#endif
 		return "sending failed";
 	}
 	flags = 0;
 	n = sctp_recvmsg(fd[1], buffer, 10, NULL, 0, NULL, &flags);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -106,25 +82,15 @@ DEFINE_APITEST(sctp_recvmsg, rd_incompl)
 		return strerror(errno);
 
 	if (send(fd[0], "Hello", 5, 0) != 5) {
-#if !defined(__Windows__)
-		close(fd[0]);
-		close(fd[1]);
-#else
 		closesocket(fd[0]);
 		closesocket(fd[1]);
-#endif
 		return "sending failed";
 	}
 	flags = 0;
 	n = sctp_recvmsg(fd[1], buffer, 1, NULL, 0, NULL, &flags);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -147,25 +113,15 @@ DEFINE_APITEST(sctp_recvmsg, msg_peek_in)
 		return strerror(errno);
 
 	if (send(fd[0], "Hello", 5, 0) != 5) {
-#if !defined(__Windows__)
-		close(fd[0]);
-		close(fd[1]);
-#else
 		closesocket(fd[0]);
 		closesocket(fd[1]);
-#endif
 		return "sending failed";
 	}
 	flags = MSG_PEEK;
 	n = sctp_recvmsg(fd[1], buffer, 1, NULL, 0, NULL, &flags);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -189,25 +145,15 @@ DEFINE_APITEST(sctp_recvmsg, msg_eor_in)
 		return strerror(errno);
 
 	if (send(fd[0], "Hello", 5, 0) != 5) {
-#if !defined(__Windows__)
-		close(fd[0]);
-		close(fd[1]);
-#else
 		closesocket(fd[0]);
 		closesocket(fd[1]);
-#endif
 		return "sending failed";
 	}
 	flags = MSG_EOR;
 	n = sctp_recvmsg(fd[1], buffer, 1, NULL, 0, NULL, &flags);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -231,25 +177,15 @@ DEFINE_APITEST(sctp_recvmsg, msg_notification_in)
 		return strerror(errno);
 
 	if (send(fd[0], "Hello", 5, 0) != 5) {
-#if !defined(__Windows__)
-		close(fd[0]);
-		close(fd[1]);
-#else
 		closesocket(fd[0]);
 		closesocket(fd[1]);
-#endif
 		return "sending failed";
 	}
 	flags = MSG_NOTIFICATION;
 	n = sctp_recvmsg(fd[1], buffer, 1, NULL, 0, NULL, &flags);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -262,3 +198,4 @@ DEFINE_APITEST(sctp_recvmsg, msg_notification_in)
 		return NULL;
 	}
 }
+

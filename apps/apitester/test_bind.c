@@ -29,29 +29,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <WS2tcpip.h>
-#endif
 #include <string.h>
 #include <stdio.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if !defined(__Windows__)
-#include <netinet/sctp.h>
-#else
 #include <ws2sctp.h>
-#endif
 #include "sctp_utilities.h"
 #include "api_tests.h"
 
@@ -71,20 +57,12 @@ DEFINE_APITEST(bind, port_s_a_s_p)
 		return strerror(errno);
 
 	if (sctp_bind(fd, INADDR_LOOPBACK, 12345) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	port = sctp_get_local_port(fd);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (port != 12345)
 		RETURN_FAILED("Wrong port: %d instead of %d.", port, 12345);
@@ -108,20 +86,12 @@ DEFINE_APITEST(bind, v4tov6_s_a_s_p)
 		return strerror(errno);
 
 	if (sctp_bind(fd, INADDR_LOOPBACK, 12345) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	port = sctp_get_local_port(fd);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (port != 12345)
 		return "Wrong port";
@@ -145,20 +115,12 @@ DEFINE_APITEST(bind, v4tov6_w_a_s_p)
 		return strerror(errno);
 
 	if (sctp_bind(fd, INADDR_ANY, 12345) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	port = sctp_get_local_port(fd);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (port != 12345)
 		return "Wrong port";
@@ -181,20 +143,12 @@ DEFINE_APITEST(bind, v4tov6only_w_a)
 		return strerror(errno);
 
 	if (sctp_enable_v6_only(fd)	< 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	result = sctp_bind(fd, INADDR_ANY, 12345);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (result)
 		return NULL;
@@ -217,20 +171,12 @@ DEFINE_APITEST(bind, v4tov6only_s_a)
 		return strerror(errno);
 
 	if (sctp_enable_v6_only(fd)	< 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	result = sctp_bind(fd, INADDR_LOOPBACK, 12345);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (result)
 		return NULL;
@@ -254,11 +200,7 @@ DEFINE_APITEST(bind, same_port_s_a_s_p)
 		return strerror(errno);
 
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 12345) < 0) {
-#if !defined(__Windows__)
-		close(fd1);
-#else
 		closesocket(fd1);
-#endif
 		return strerror(errno);
 	}
 
@@ -267,13 +209,8 @@ DEFINE_APITEST(bind, same_port_s_a_s_p)
 
 	result = sctp_bind(fd2, INADDR_LOOPBACK, 12345);
 
-#if !defined(__Windows__)
-	close(fd1);
-	close(fd2);
-#else
 	closesocket(fd1);
 	closesocket(fd2);
-#endif
 
 	if (result < 0)
 		return NULL;
@@ -297,21 +234,13 @@ DEFINE_APITEST(bind, duplicate_s_a_s_p)
 		return strerror(errno);
 
 	if (sctp_bind(fd, INADDR_LOOPBACK, 1234) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	result = sctp_bind(fd, INADDR_LOOPBACK, 1234);
 
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (result < 0)
 		return NULL;
@@ -334,20 +263,12 @@ DEFINE_APITEST(bind, refinement)
 		return strerror(errno);
 
 	if (sctp_bind(fd, INADDR_ANY, 1234) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	result = sctp_bind(fd, INADDR_LOOPBACK, 1234);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	if (result == 0)
 		return "bind was successful";

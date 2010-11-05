@@ -309,6 +309,21 @@ DECLARE_APITEST(read, status);
 DECLARE_APITEST(read, paddrinfo);
 DECLARE_APITEST(read, auth_p_chklist);
 DECLARE_APITEST(read, auth_l_chklist);
+DECLARE_APITEST(reuseport, set_1_to_M);
+DECLARE_APITEST(reuseport, get_1_to_M);
+DECLARE_APITEST(reuseport, set_before_bind);
+DECLARE_APITEST(reuseport, get_default);
+DECLARE_APITEST(reuseport, get_after_set);
+DECLARE_APITEST(reuseport, set_after_bind);
+DECLARE_APITEST(reuseport, set_after_bindx);
+DECLARE_APITEST(reuseport, bind_twice);
+DECLARE_APITEST(reuseport, bind_twice_illegal_1);
+DECLARE_APITEST(reuseport, bind_twice_illegal_2);
+DECLARE_APITEST(reuseport, bind_twice_listen);
+DECLARE_APITEST(reuseport, bind_subset);
+DECLARE_APITEST(reuseport, listen_twice);
+DECLARE_APITEST(reuseport, accept_inheritage);
+DECLARE_APITEST(reuseport, connect);
 DECLARE_APITEST(connect, non_listen);
 DECLARE_APITEST(connect, listen);
 DECLARE_APITEST(connect, self_non_listen);
@@ -335,6 +350,14 @@ DECLARE_APITEST(bindx, rem_null_addresses);
 DECLARE_APITEST(bindx, dup_add_s_a_s_p);
 DECLARE_APITEST(bindx, rem_last_s_a_s_p);
 DECLARE_APITEST(bindx, rem_s_a_s_p);
+DECLARE_APITEST(shutdown, 1toM_RD);
+DECLARE_APITEST(shutdown, 1toM_WR);
+DECLARE_APITEST(shutdown, 1toM_RDWR);
+DECLARE_APITEST(shutdown, 1to1_not_connected);
+DECLARE_APITEST(socket, ipv4_1to1);
+DECLARE_APITEST(socket, ipv4_1toM);
+DECLARE_APITEST(socket, ipv6_1to1);
+DECLARE_APITEST(socket, ipv6_1toM);
 
 struct test all_tests[] = {
     REGISTER_APITEST(sctp_recvmsg, rd_compl),
@@ -550,8 +573,8 @@ struct test all_tests[] = {
     REGISTER_APITEST(hmacid, sso_1_M),
     REGISTER_APITEST(hmacid, sso_bad_1_1),
     REGISTER_APITEST(hmacid, sso_bad_1_M),
-    /* REGISTER_APITEST(hmacid, sso_nosha1_1_1),
-    REGISTER_APITEST(hmacid, sso_nosha1_1_M), */
+    REGISTER_APITEST(hmacid, sso_nosha1_1_1),
+    REGISTER_APITEST(hmacid, sso_nosha1_1_M),
     REGISTER_APITEST(authkey, gso_def_1_1),
     REGISTER_APITEST(authkey, gso_def_1_M),
     REGISTER_APITEST(authkey, gso_new_1_1),
@@ -644,6 +667,21 @@ struct test all_tests[] = {
     REGISTER_APITEST(read, paddrinfo),
     REGISTER_APITEST(read, auth_p_chklist),
     REGISTER_APITEST(read, auth_l_chklist),
+    REGISTER_APITEST(reuseport, set_1_to_M),
+    REGISTER_APITEST(reuseport, get_1_to_M),
+    REGISTER_APITEST(reuseport, set_before_bind),
+    REGISTER_APITEST(reuseport, get_default),
+    REGISTER_APITEST(reuseport, get_after_set),
+    REGISTER_APITEST(reuseport, set_after_bind),
+    REGISTER_APITEST(reuseport, set_after_bindx),
+    REGISTER_APITEST(reuseport, bind_twice),
+    REGISTER_APITEST(reuseport, bind_twice_illegal_1),
+    REGISTER_APITEST(reuseport, bind_twice_illegal_2),
+    REGISTER_APITEST(reuseport, bind_twice_listen),
+    REGISTER_APITEST(reuseport, bind_subset),
+    REGISTER_APITEST(reuseport, listen_twice),
+    REGISTER_APITEST(reuseport, accept_inheritage),
+    REGISTER_APITEST(reuseport, connect),
     REGISTER_APITEST(connect, non_listen),
     REGISTER_APITEST(connect, listen),
     REGISTER_APITEST(connect, self_non_listen),
@@ -670,6 +708,14 @@ struct test all_tests[] = {
     REGISTER_APITEST(bindx, dup_add_s_a_s_p),
     REGISTER_APITEST(bindx, rem_last_s_a_s_p),
     REGISTER_APITEST(bindx, rem_s_a_s_p),
+    REGISTER_APITEST(shutdown, 1toM_RD),
+    REGISTER_APITEST(shutdown, 1toM_WR),
+    REGISTER_APITEST(shutdown, 1toM_RDWR),
+    REGISTER_APITEST(shutdown, 1to1_not_connected),
+    REGISTER_APITEST(socket, ipv4_1to1),
+    REGISTER_APITEST(socket, ipv4_1toM),
+    REGISTER_APITEST(socket, ipv6_1to1),
+    REGISTER_APITEST(socket, ipv6_1toM),
 };
 
 unsigned int number_of_tests = sizeof(all_tests) / sizeof(all_tests[0]);

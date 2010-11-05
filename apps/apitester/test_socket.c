@@ -1,6 +1,6 @@
 /*-
- * Copyright (c) 2001-2007 by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2001-2007, by Michael Tuexen, tuexen@fh-muenster.de. All rights reserved.
+ * Copyright (c) 2001-2009 by Cisco Systems, Inc. All rights reserved.
+ * Copyright (c) 2001-2009, by Michael Tuexen, tuexen@fh-muenster.de. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,26 +29,56 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define REGISTER_APITEST(suite, case) {0, #suite"_"#case, #suite, suite##case}
-#define DECLARE_APITEST(suite, case) extern char *suite##case(void)
-#define DEFINE_APITEST(suite, case) char *suite##case(void)
-#define RETURN_FAILED(format, ...) \
-		do { \
-			snprintf(description, 41, format, ##__VA_ARGS__); \
-			return (description); \
-		} while (0)
-#define RETURN_PASSED return (NULL)
+#include <sys/types.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ws2sctp.h>
+#include "sctp_utilities.h"
+#include "api_tests.h"
 
-struct test {
-	int enabled;
-	char *case_name;
-	char *suite_name;
-	char *(*func)(void);
-};
+DEFINE_APITEST(socket, ipv4_1to1)
+{
+	int fd;
 
-char description[41];
+	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
+		return strerror(errno);
 
-#define I_AM_HERE \
-		do { \
-			printf("%s:%d at %s\n", __FILE__, __LINE__ , __FUNCTION__); \
-		} while (0)
+	closesocket(fd);
+	RETURN_PASSED;
+}
+
+DEFINE_APITEST(socket, ipv4_1toM)
+{
+	int fd;
+
+	if ((fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0)
+		return strerror(errno);
+
+	closesocket(fd);
+	RETURN_PASSED;
+}
+
+DEFINE_APITEST(socket, ipv6_1to1)
+{
+	int fd;
+
+	if ((fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_SCTP)) < 0)
+		return strerror(errno);
+
+	closesocket(fd);
+	RETURN_PASSED;
+}
+
+DEFINE_APITEST(socket, ipv6_1toM)
+{
+	int fd;
+
+	if ((fd = socket(AF_INET6, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0)
+		return strerror(errno);
+
+	closesocket(fd);
+	RETURN_PASSED;
+}

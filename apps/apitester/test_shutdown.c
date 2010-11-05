@@ -29,66 +29,98 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <assert.h>
-#include <fcntl.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <ws2sctp.h>
 #include <string.h>
 #include <stdio.h>
-#endif
 #include <errno.h>
 #include <fcntl.h>
-//#include <netinet/sctp.h>
 #include "sctp_utilities.h"
 #include "api_tests.h"
 
-DEFINE_APITEST(shutdown, 1to1_not_connected)
+DEFINE_APITEST(shutdown, 1toM_RD)
 {
 	int fd, n;
-#if defined(__Windows__)
-	int error;
-#endif
 
-	fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+	fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
 	if (fd < 0) {
 		return strerror(errno);
 	}
-#if !defined(__Windows__)
-	n = shutdown(fd, SHUT_WR);
-#else
-	n = shutdown(fd, SD_SEND);
-#endif
-	close(fd);
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
+	n = shutdown(fd, SD_RECEIVE);
+	closesocket(fd);
 	if (n < 0) {
-#if !defined(__Windows__)
-		if (errno == ENOTCONN)
-#else
-		if (error == WSAENOTCONN)
-#endif
-		{
+		if (WSAGetLastError() == WSAEOPNOTSUPP) {
 			RETURN_PASSED;
 		} else {
-#if !defined(__Windows__)
-			RETURN_FAILED("errno is %d instead of %d", errno, ENOTCONN);
-#else
-			RETURN_FAILED("error is %d instead of %d", error, WSAENOTCONN);
-#endif
+			RETURN_FAILED("errno is %d instead of %d", errno, WSAEOPNOTSUPP);
 		}
 	} else {
 		RETURN_FAILED("shutdown() was successful");
 	}
 }
+
+DEFINE_APITEST(shutdown, 1toM_WR)
+{
+	int fd, n;
+
+	fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+	if (fd < 0) {
+		return strerror(errno);
+	}
+	n = shutdown(fd, SD_SEND);
+	closesocket(fd);
+	if (n < 0) {
+		if (WSAGetLastError() == WSAEOPNOTSUPP) {
+			RETURN_PASSED;
+		} else {
+			RETURN_FAILED("errno is %d instead of %d", errno, WSAEOPNOTSUPP);
+		}
+	} else {
+		RETURN_FAILED("shutdown() was successful");
+	}
+}
+
+DEFINE_APITEST(shutdown, 1toM_RDWR)
+{
+	int fd, n;
+
+	fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+	if (fd < 0) {
+		return strerror(errno);
+	}
+	n = shutdown(fd, SD_BOTH);
+	closesocket(fd);
+	if (n < 0) {
+		if (WSAGetLastError() == WSAEOPNOTSUPP) {
+			RETURN_PASSED;
+		} else {
+			RETURN_FAILED("errno is %d instead of %d", errno, WSAEOPNOTSUPP);
+		}
+	} else {
+		RETURN_FAILED("shutdown() was successful");
+	}
+}
+
+DEFINE_APITEST(shutdown, 1to1_not_connected)
+{
+	int fd, n;
+
+	fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+	if (fd < 0) {
+		return strerror(errno);
+	}
+	n = shutdown(fd, SD_SEND);
+	closesocket(fd);
+	if (n < 0) {
+		if (WSAGetLastError() == WSAENOTCONN) {
+			RETURN_PASSED;
+		} else {
+			RETURN_FAILED("errno is %d instead of %d", errno, WSAENOTCONN);
+		}
+	} else {
+		RETURN_FAILED("shutdown() was successful");
+	}
+}
+

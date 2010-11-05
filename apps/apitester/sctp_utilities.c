@@ -29,45 +29,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <WS2tcpip.h>
-#endif
 #include <string.h>
 #include <stdio.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#else
 #include <malloc.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if !defined(__Windows__)
-#include <netinet/sctp.h>
-#else
+#include <time.h>
 #include <ws2sctp.h>
-#endif
 
 #include "sctp_utilities.h"
 
 void
 sctp_delay(int ms)
 {
-#if !defined(__Windows__)
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = (ms * 1000 * 1000);
-    (void)nanosleep(&ts, NULL);
-#else
     Sleep(ms);
-#endif
 }
 
 unsigned short
@@ -121,20 +100,12 @@ sctp_one2one(unsigned short port, int should_listen, int bindall)
 		return -1;
 
 	if (sctp_bind(fd, bindall?INADDR_ANY:INADDR_LOOPBACK, 0) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	if (should_listen) {
 		if (listen(fd, 1) < 0) {
-#if !defined(__Windows__)
-			close(fd);
-#else
 			closesocket(fd);
-#endif
 			return -1;
 		}
 	}
@@ -159,54 +130,31 @@ int sctp_socketpair(int *fds, int bindall)
 	/* Get any old port, but no listen */
 	fds[0] = sctp_one2one(0, 0, bindall);
 	if (fds[0] < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
-	if (getsockname(fd, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
+	if (getsockname (fd, (struct sockaddr *) &addr, &addr_len) < 0) {
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 	if (bindall) {
 		addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	}
-	if (connect(fds[0], (struct sockaddr *)&addr, addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
+	if (connect(fds[0], (struct sockaddr *) &addr, addr_len) < 0) {
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 
 	if ((fds[1] = accept(fd, NULL, 0)) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 	return 0;
 }
 
@@ -219,46 +167,27 @@ int sctp_socketpair_reuse(int fd, int *fds, int bindall)
 	/* Get any old port, but no listen */
 	fds[0] = sctp_one2one(0, 0, bindall);
 	if (fds[0] < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (fd, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 	if (bindall) {
 		addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	}
 	if (connect(fds[0], (struct sockaddr *) &addr, addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 
 	if ((fds[1] = accept(fd, NULL, 0)) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-		close(fds[0]);
-#else
 		closesocket(fd);
 		closesocket(fds[0]);
-#endif
 		return -1;
 	}
 	return 0;
@@ -283,61 +212,33 @@ int sctp_socketstar(int *fd, int *fds, unsigned int n)
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if (bind(*fd, (struct sockaddr *)&addr, (socklen_t)sizeof(struct sockaddr_in)) < 0) {
-#if !defined(__Windows__)
-		close(*fd);
-#else
 		closesocket(*fd);
-#endif
 		return -1;
 	}
 
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (*fd, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(*fd);
-#else
 		closesocket(*fd);
-#endif
 		return -1;
 	}
 
 	if (listen(*fd, 1) < 0) {
-#if !defined(__Windows__)
-		close(*fd);
-#else
 		closesocket(*fd);
-#endif
 		return -1;
 	}
 
 	for (i = 0; i < n; i++){
 		if ((fds[i] = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0) {
-#if !defined(__Windows__)
-			close(*fd);
-#else
 			closesocket(*fd);
-#endif
 			for (j = 0; j < i; j++ )
-#if !defined(__Windows__)
-				close(fds[j]);
-#else
 				closesocket(fds[j]);
-#endif
 			return -1;
 		}
 
 		if (connect(fds[i], (struct sockaddr *) &addr, addr_len) < 0) {
-#if !defined(__Windows__)
-			close(*fd);
-#else
 			closesocket(*fd);
-#endif
 			for (j = 0; j <= i; j++ )
-#if !defined(__Windows__)
-				close(fds[j]);
-#else
 				closesocket(fds[j]);
-#endif
 			return -1;
 		}
 	}
@@ -346,11 +247,7 @@ int sctp_socketstar(int *fd, int *fds, unsigned int n)
 }
 
 int sctp_shutdown(int fd) {
-#if !defined(__Windows__)
-	return shutdown(fd, SHUT_WR);
-#else
 	return shutdown(fd, SD_SEND);
-#endif
 }
 
 int sctp_abort(int fd) {
@@ -358,13 +255,9 @@ int sctp_abort(int fd) {
 
     l.l_onoff  = 1;
     l.l_linger = 0;
-    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (void *)&l, sizeof (struct linger)) < 0)
+    if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &l, sizeof (struct linger)) < 0)
     	return -1;
-#if !defined(__Windows__)
-    return close(fd);
-#else
     return closesocket(fd);
-#endif
  }
 
 int sctp_enable_reuse_port(int fd)
@@ -385,26 +278,16 @@ int sctp_enable_non_blocking(int fd)
 {
 	int flags;
 
-#if !defined(__Windows__)
-	flags = fcntl(fd, F_GETFL, 0);
-	return fcntl(fd, F_SETFL, flags  | O_NONBLOCK);
-#else
 	flags = 1;
 	return ioctlsocket(fd, FIONBIO, &flags);
-#endif
 }
 
 int sctp_disable_non_blocking_blocking(int fd)
 {
 	int flags;
 
-#if !defined(__Windows__)
-	flags = fcntl(fd, F_GETFL, 0);
-	return fcntl(fd, F_SETFL, flags  & ~O_NONBLOCK);
-#else
 	flags = 0;
 	return ioctlsocket(fd, FIONBIO, &flags);
-#endif
 }
 
 int sctp_set_rto_info(int fd, sctp_assoc_t assoc_id, uint32_t init, uint32_t max, uint32_t min)
@@ -500,7 +383,7 @@ __get_assoc_id (int fd, struct sockaddr *addr)
 	}
 	memcpy((caddr_t)&sp.spinfo_address, addr, sa_len);
 	if(getsockopt(fd, IPPROTO_SCTP, SCTP_GET_PEER_ADDR_INFO,
-		      (void *)&sp, &siz) != 0) {
+		      &sp, &siz) != 0) {
 		if (cnt < 1) {
 			cnt++;
 			sctp_delay(SCTP_SLEEP_MS);
@@ -536,20 +419,12 @@ sctp_one2many(unsigned short port, int bindall)
 	}
 
 	if (bind(fd, (struct sockaddr *)&addr, (socklen_t)sizeof(struct sockaddr_in)) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return -1;
 	}
 
 	if (listen(fd, 1) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	return(fd);
@@ -578,11 +453,7 @@ sctp_socketpair_1tom(int *fds, sctp_assoc_t *ids, int bindall)
 	if(fds[0] == -1) {
 		fds[0] = sctp_one2many(0, bindall);
 		if (fds[0]  < 0) {
-#if !defined(__Windows__)
-			close(fd);
-#else
 			closesocket(fd);
-#endif
 			return -1;
 		}
 	}
@@ -590,32 +461,19 @@ sctp_socketpair_1tom(int *fds, sctp_assoc_t *ids, int bindall)
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (fd, (struct sockaddr *) &addr, &addr_len) < 0) {
 		if(set)
-#if !defined(__Windows__)
-			close(fds[0]);
-		close(fd);
-#else
 			closesocket(fds[0]);
+
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	if (bindall) {
 		addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	}
 	if (sctp_connectx(fds[0], (struct sockaddr *) &addr, 1, &aid) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		if(set)
-#if !defined(__Windows__)
-			close(fds[0]);
-		close(fd);
-#else
 			closesocket(fds[0]);
 		closesocket(fd);
-#endif
 		return -1;
 	}
 	fds[1] = fd;
@@ -626,18 +484,10 @@ sctp_socketpair_1tom(int *fds, sctp_assoc_t *ids, int bindall)
 	ids[0] = aid;
 
 	if (getsockname (fds[0], (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		printf("Can't get socket name2\n");
 		if (set)
-#if !defined(__Windows__)
-			close(fds[0]);
-#else
 			closesocket(fds[0]);
-#endif
 		return -1;
 	}
 	if (bindall) {
@@ -877,7 +727,7 @@ int sctp_get_ndelay(int fd, uint32_t *val)
 	socklen_t len;
 	len = sizeof(*val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_NODELAY,
-			    (void *)val, &len);
+			    val, &len);
 	return (result);
 }
 
@@ -888,7 +738,7 @@ int sctp_set_ndelay(int fd, uint32_t val)
 	len = sizeof(val);
 
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_NODELAY,
-			    (void *)&val, len);
+			    &val, len);
 	return(result);
 }
 
@@ -899,7 +749,7 @@ int sctp_set_autoclose(int fd, uint32_t val)
 	len = sizeof(val);
 
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE,
-			    (void *)&val, len);
+			    &val, len);
 	return(result);
 
 }
@@ -910,7 +760,7 @@ int sctp_get_autoclose(int fd, uint32_t *val)
 	socklen_t len;
 	len = sizeof(*val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE,
-			    (void *)val, &len);
+			    val, &len);
 	return (result);
 }
 
@@ -935,7 +785,7 @@ int sctp_set_peer_prim(int fd, sctp_assoc_t id,  struct sockaddr *sa)
 	prim.sspp_assoc_id = id;
 	len = sizeof(prim);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_SET_PEER_PRIMARY_ADDR,
-			    (void *)&prim, len);
+			    &prim, len);
 	return (result);
 }
 
@@ -958,7 +808,7 @@ sctp_set_primary(int fd, sctp_assoc_t id, struct sockaddr *sa)
 		return -1;
 	}
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_PRIMARY_ADDR,
-			    (void *)&prim, len);
+			    &prim, len);
 	return(result);
 }
 
@@ -974,7 +824,7 @@ sctp_get_primary(int fd, sctp_assoc_t id, struct sockaddr *sa, socklen_t *alen)
 	memset(&prim, 0, sizeof(prim));
 	prim.ssp_assoc_id = id;
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_PRIMARY_ADDR,
-			    (void *)&prim, &len);
+			    &prim, &len);
 	lsa = (struct sockaddr *)&prim.ssp_addr;
 	if(lsa->sa_family == AF_INET)
 		clen = sizeof(struct sockaddr_in);
@@ -1007,7 +857,7 @@ sctp_set_adaptation( int fd, uint32_t val)
 	adapt.ssb_adaptation_ind = val;
 
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_ADAPTATION_LAYER,
-			    (void *)&adapt, len);
+			    &adapt, len);
 	return(result);
 
 }
@@ -1023,7 +873,7 @@ sctp_get_adaptation( int fd, uint32_t *val)
 	memset(&adapt, 0, sizeof(adapt));
 
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_ADAPTATION_LAYER,
-			    (void *)&adapt, &len);
+			    &adapt, &len);
 	*val = adapt.ssb_adaptation_ind;
 	return(result);
 }
@@ -1035,7 +885,7 @@ int sctp_set_disfrag( int fd, int val)
 
 	len = sizeof(val);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_DISABLE_FRAGMENTS,
-			    (void *)&val, len);
+			    &val, len);
 	return(result);
 
 }
@@ -1048,7 +898,7 @@ int sctp_get_disfrag( int fd, int *val)
 	len = sizeof(*val);
 
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_DISABLE_FRAGMENTS,
-			    (void *)val, &len);
+			    val, &len);
 	return(result);
 }
 
@@ -1082,7 +932,7 @@ int sctp_get_paddr_param(int fd, sctp_assoc_t id,
 	}
 	len = sizeof(param);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS,
-			    (void *)&param, &len);
+			    &param, &len);
 	if (result < 0) {
 		return (result);
 	}
@@ -1145,7 +995,7 @@ int sctp_set_paddr_param(int fd, sctp_assoc_t id,
 	param.spp_ipv4_tos = ipv4_tos;
 	len = sizeof(param);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS,
-			    (void *)&param, len);
+			    &param, len);
 	return(result);
 
 }
@@ -1328,7 +1178,7 @@ int sctp_get_maxseg(int fd, sctp_assoc_t id, int *val)
 
 	len = sizeof(av);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAXSEG,
-			    (void *)&av, &len);
+			    &av, &len);
 	*val = av.assoc_value;
 	return(result);
 
@@ -1344,7 +1194,7 @@ int sctp_set_maxseg(int fd, sctp_assoc_t id, int val)
 	av.assoc_value = val;
 
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_MAXSEG,
-			    (void *)&av, len);
+			    &av, len);
 	return(result);
 }
 
@@ -1356,7 +1206,7 @@ int sctp_get_defsend(int fd, sctp_assoc_t id, struct sctp_sndrcvinfo *s)
 
 	len = sizeof(*s);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_DEFAULT_SEND_PARAM,
-			    (void *)s, &len);
+			    s, &len);
 	return (result);
 
 }
@@ -1369,7 +1219,7 @@ int sctp_set_defsend(int fd, sctp_assoc_t id, struct sctp_sndrcvinfo *s)
 
 	len = sizeof(*s);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_DEFAULT_SEND_PARAM,
-			    (void *)s, len);
+			    s, len);
 	return (result);
 }
 
@@ -1380,7 +1230,7 @@ int sctp_set_events(int fd, struct sctp_event_subscribe *ev)
 	int result;
 	len = sizeof(*ev);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
-			    (void *)ev, len);
+			    ev, len);
 	return (result);
 }
 
@@ -1390,7 +1240,7 @@ int sctp_get_events(int fd, struct sctp_event_subscribe *ev)
 	int result;
 	len = sizeof(*ev);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
-			    (void *)ev, &len);
+			    ev, &len);
 	return (result);
 }
 
@@ -1401,7 +1251,7 @@ sctp_enable_v4_address_mapping(int fd)
 	socklen_t length;
 
 	length = (socklen_t)sizeof(int);
-	return (setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, (void *)&on, length));
+	return (setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, &on, length));
 }
 
 int
@@ -1411,7 +1261,7 @@ sctp_disable_v4_address_mapping(int fd)
 	socklen_t length;
 
 	length = (socklen_t)sizeof(int);
-	return (setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, (void *)&off, length));
+	return (setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, &off, length));
 }
 
 int
@@ -1421,7 +1271,7 @@ sctp_v4_address_mapping_enabled(int fd)
 	socklen_t length;
 
 	length = (socklen_t)sizeof(int);
-	(void)getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, (void *)&onoff, &length);
+	(void)getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR, &onoff, &length);
 	return (onoff);
 }
 
@@ -1432,11 +1282,7 @@ sctp_enable_v6_only(int fd)
 	socklen_t length;
 
 	length = (socklen_t)sizeof(int);
-#if !defined(__Windows__)
-	return (setsockopt(fd, IPPROTO_IPV6, IPV6_BINDV6ONLY, (void *)&on, length));
-#else
-	return (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&on, length));
-#endif
+	return (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &on, length));
 }
 
 int
@@ -1446,11 +1292,7 @@ sctp_v6_only_enabled(int fd)
 	socklen_t length;
 
 	length = (socklen_t)sizeof(int);
-#if !defined(__Windows__)
-	(void)getsockopt(fd, IPPROTO_IPV6, IPV6_BINDV6ONLY, (void *)&onoff, &length);
-#else
-	(void)getsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&onoff, &length);
-#endif
+	(void)getsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &onoff, &length);
 	return (onoff);
 }
 
@@ -1462,7 +1304,7 @@ int sctp_get_auth_chunk_id(int fd, uint8_t *fill)
 
 	len = sizeof(ch);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_CHUNK,
-			    (void *)&ch, &len);
+			    &ch, &len);
 	if(result >= 0) {
 		/* We really expect this to ALWAYS fail */
 		*fill = ch.sauth_chunk;
@@ -1479,7 +1321,7 @@ int sctp_set_auth_chunk_id(int fd, uint8_t chk)
 	len = sizeof(ch);
 	ch.sauth_chunk = chk;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_CHUNK,
-			    (void *)&ch, len);
+			    &ch, len);
 	return(result);
 
 }
@@ -1505,7 +1347,7 @@ int sctp_get_auth_key(int fd, sctp_assoc_t assoc_id, uint16_t *keyid,
 	akey->sca_assoc_id = assoc_id;
 	akey->sca_keynumber = *keyid;
 	memcpy(akey->sca_key, keytext, *keylen);
-	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_KEY, (void *)akey, &len);
+	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_KEY, akey, &len);
 	if (result >= 0) {
 	    /* This should always fail */
 	    *keyid = akey->sca_keynumber;
@@ -1530,7 +1372,7 @@ int sctp_set_auth_key(int fd, sctp_assoc_t assoc_id, uint16_t keyid,
 	akey->sca_assoc_id = assoc_id;
 	akey->sca_keynumber = keyid;
 	memcpy(akey->sca_key, keytext, keylen);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_KEY, (void *)akey, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_KEY, akey, len);
 	return (result);
 }
 
@@ -1543,7 +1385,7 @@ int sctp_get_active_key(int fd, sctp_assoc_t assoc_id, uint16_t *keyid) {
 	akey.scact_assoc_id = assoc_id;
 	akey.scact_keynumber = *keyid;
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
-			    (void *)&akey, &len);
+			    &akey, &len);
 	if (result >= 0) {
 		*keyid = akey.scact_keynumber;
 	}
@@ -1560,7 +1402,7 @@ int sctp_set_active_key(int fd, sctp_assoc_t assoc_id, uint16_t keyid) {
 	akey.scact_assoc_id = assoc_id;
 	akey.scact_keynumber = keyid;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
-			    (void *)&akey, len);
+			    &akey, len);
 	return (result);
 }
 
@@ -1572,7 +1414,7 @@ int sctp_get_delete_key(int fd, sctp_assoc_t assoc_id, uint16_t *keyid) {
 
 	len = sizeof(akey);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_DELETE_KEY,
-			    (void *)&akey, &len);
+			    &akey, &len);
 	if (result >= 0) {
 	    /* This should always fail */
 	    *keyid = akey.scact_keynumber;
@@ -1589,7 +1431,7 @@ int sctp_set_delete_key(int fd, sctp_assoc_t assoc_id, uint16_t keyid) {
 	akey.scact_assoc_id = assoc_id;
 	akey.scact_keynumber = keyid;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTH_DELETE_KEY,
-			    (void *)&akey, len);
+			    &akey, len);
 	return (result);
 }
 
@@ -1620,7 +1462,7 @@ int sctp_set_dsack(int fd, sctp_assoc_t id, uint32_t delay, uint32_t freq)
 	sack.sack_delay = delay;
 	sack.sack_freq = freq;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_DELAYED_SACK,
-			    (void *)&sack, len);
+			    &sack, len);
 	return(result);
 
 }
@@ -1644,7 +1486,7 @@ int sctp_get_dsack(int fd, sctp_assoc_t id,uint32_t *delay, uint32_t *freq)
 	sack.sack_assoc_id = id;
 	len = sizeof(sack);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_DELAYED_SACK,
-			    (void *)&sack, &len);
+			    &sack, &len);
 	if (delay) {
 		*delay = sack.sack_delay;
 	}
@@ -1662,7 +1504,7 @@ int sctp_get_interleave(int fd, int *inter)
 
 	len = sizeof(*inter);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_FRAGMENT_INTERLEAVE,
-			    (void *)inter, &len);
+			    inter, &len);
 	return(result);
 
 }
@@ -1674,7 +1516,7 @@ int sctp_set_interleave(int fd, int inter)
 
 	len = sizeof(inter);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_FRAGMENT_INTERLEAVE,
-			    (void *)&inter, len);
+			    &inter, len);
 	return(result);
 }
 
@@ -1685,7 +1527,7 @@ int sctp_get_pdapi_point(int fd, int *point)
 
 	len = sizeof(*point);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_PARTIAL_DELIVERY_POINT,
-			    (void *)point, &len);
+			    point, &len);
 	return(result);
 
 }
@@ -1698,7 +1540,7 @@ int sctp_set_pdapi_point(int fd, int point)
 
 	len = sizeof(point);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_PARTIAL_DELIVERY_POINT,
-			    (void *)&point, len);
+			    &point, len);
 	return(result);
 
 }
@@ -1714,7 +1556,7 @@ int sctp_set_context(int fd, sctp_assoc_t id, uint32_t context)
 	av.assoc_value = context;
 
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_CONTEXT,
-			    (void *)&av, len);
+			    &av, len);
 	return(result);
 
 }
@@ -1730,7 +1572,7 @@ int sctp_get_context(int fd, sctp_assoc_t id, uint32_t *context)
 	av.assoc_value = 0;
 
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_CONTEXT,
-			    (void *)&av, &len);
+			    &av, &len);
 	*context = av.assoc_value;
 	return(result);
 }

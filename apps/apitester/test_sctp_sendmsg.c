@@ -29,29 +29,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <WS2tcpip.h>
-#endif
 #include <string.h>
 #include <stdio.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if !defined(__Windows__)
-#include <netinet/sctp.h>
-#else
 #include <ws2sctp.h>
-#endif
 #include "sctp_utilities.h"
 #include "api_tests.h"
 
@@ -78,13 +64,8 @@ DEFINE_APITEST(sctp_sendmsg, c_p_c_a)
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -116,13 +97,8 @@ DEFINE_APITEST(sctp_sendmsg, c_p_c_a_over)
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
 
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -156,13 +132,8 @@ DEFINE_APITEST(sctp_sendmsg, w_p_c_a)
 	addr.sin_port        = htons(0);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -196,13 +167,8 @@ DEFINE_APITEST(sctp_sendmsg, w_p_c_a_over)
 	addr.sin_port        = htons(0);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -234,13 +200,8 @@ DEFINE_APITEST(sctp_sendmsg, c_p_w_a)
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -274,18 +235,13 @@ DEFINE_APITEST(sctp_sendmsg, c_p_w_a_over)
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return strerror(errno);
-	} else {
 		return NULL;
+	} else {
+		return "sctp_sendmsg() was successful";
 	}
 }
 
@@ -314,13 +270,8 @@ DEFINE_APITEST(sctp_sendmsg, w_p_w_a)
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -354,18 +305,13 @@ DEFINE_APITEST(sctp_sendmsg, w_p_w_a_over)
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return strerror(errno);
-	} else {
 		return NULL;
+	} else {
+		return "sctp_sendmsg() was successful";
 	}
 }
 
@@ -393,18 +339,13 @@ DEFINE_APITEST(sctp_sendmsg, b_p_c_a)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return NULL;
+		return strerror(errno);
 	} else {
-		return "sctp_sendmsg was successful";
+		return NULL;
 	}
 }
 
@@ -432,13 +373,8 @@ DEFINE_APITEST(sctp_sendmsg, b_p_c_a_over)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -471,18 +407,13 @@ DEFINE_APITEST(sctp_sendmsg, c_p_b_a)
 	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return NULL;
+		return strerror(errno);
 	} else {
-		return "sctp_sendmsg was successful";
+		return NULL;
 	}
 }
 
@@ -510,13 +441,8 @@ DEFINE_APITEST(sctp_sendmsg, c_p_b_a_over)
 	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -550,18 +476,13 @@ DEFINE_APITEST(sctp_sendmsg, b_p_b_a)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return NULL;
+		return strerror(errno);
 	} else {
-		return "sctp_sendmsg was successful";
+		return NULL;
 	}
 }
 
@@ -590,13 +511,8 @@ DEFINE_APITEST(sctp_sendmsg, b_p_b_a_over)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -630,18 +546,13 @@ DEFINE_APITEST(sctp_sendmsg, w_p_b_a)
 	addr.sin_port        = htons(0);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return NULL;
+		return strerror(errno);
 	} else {
-		return "sctp_sendmsg was successful";
+		return NULL;
 	}
 }
 
@@ -670,13 +581,8 @@ DEFINE_APITEST(sctp_sendmsg, w_p_b_a_over)
 	addr.sin_port        = htons(0);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -706,22 +612,17 @@ DEFINE_APITEST(sctp_sendmsg, b_p_w_a)
 	memset((void *)&addr, 0, size);
 	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
 
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(0);
+	addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return NULL;
+		return strerror(errno);
 	} else {
-		return "sctp_sendmsg was successful";
+		return NULL;
 	}
 }
 /*
@@ -745,17 +646,12 @@ DEFINE_APITEST(sctp_sendmsg, b_p_w_a_over)
 	memset((void *)&addr, 0, size);
 	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
 
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(0);
+	addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 	if (n < 0) {
 		return NULL;
 	} else {
@@ -787,13 +683,8 @@ DEFINE_APITEST(sctp_sendmsg, non_null_zero)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, 0, 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -807,7 +698,7 @@ DEFINE_APITEST(sctp_sendmsg, non_null_zero)
  * TEST-DESCR: On a 1-1 socket, create an
  * TEST-DESCR: association. Send to a bad port/bad address
  * TEST-DESCR: with override.
- * TEST-DESCR: Validate it succeeds.
+ * TEST-DESCR: Validate it fails.
  */
 DEFINE_APITEST(sctp_sendmsg, non_null_zero_over)
 {
@@ -826,18 +717,16 @@ DEFINE_APITEST(sctp_sendmsg, non_null_zero_over)
 	addr.sin_port        = htons(1);
 
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)&addr, 0, 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return strerror(errno);
+		if (errno == EINVAL)
+			return NULL;
+		else
+			return strerror(errno);
 	} else {
-		return NULL;
+		return "sctp_sendmsg was successful";
 	}
 }
 
@@ -851,27 +740,13 @@ DEFINE_APITEST(sctp_sendmsg, non_null_zero_over)
 DEFINE_APITEST(sctp_sendmsg, null_zero)
 {
 	int fd[2], n;
-	struct sockaddr_in addr;
-	socklen_t size;
 
 	if (sctp_socketpair(fd, 0) < 0)
 		return strerror(errno);
 
-	size = (socklen_t)sizeof(struct sockaddr_in);
-	memset((void *)&addr, 0, size);
-	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
-
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(1);
-
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)NULL, 0, 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return strerror(errno);
@@ -885,37 +760,26 @@ DEFINE_APITEST(sctp_sendmsg, null_zero)
  * TEST-DESCR: On a 1-1 socket, create an
  * TEST-DESCR: association. Send to a null address with 0 length
  * TEST-DESCR: with override.
- * TEST-DESCR: Validate it succeeds.
+ * TEST-DESCR: Validate it fails.
  */
 DEFINE_APITEST(sctp_sendmsg, null_zero_over)
 {
 	int fd[2], n;
-	struct sockaddr_in addr;
-	socklen_t size;
 
 	if (sctp_socketpair(fd, 0) < 0)
 		return strerror(errno);
 
-	size = (socklen_t)sizeof(struct sockaddr_in);
-	memset((void *)&addr, 0, size);
-	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
-
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(1);
-
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)NULL, 0, 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
-		return strerror(errno);
+		if (errno == EINVAL)
+			return NULL;
+		else
+			return strerror(errno);
 	} else {
-		return NULL;
+		return "sctp_sendmsg was successful";
 	}
 }
 
@@ -929,27 +793,13 @@ DEFINE_APITEST(sctp_sendmsg, null_zero_over)
 DEFINE_APITEST(sctp_sendmsg, null_non_zero)
 {
 	int fd[2], n;
-	struct sockaddr_in addr;
-	socklen_t size;
 
 	if (sctp_socketpair(fd, 0) < 0)
 		return strerror(errno);
 
-	size = (socklen_t)sizeof(struct sockaddr_in);
-	memset((void *)&addr, 0, size);
-	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
-
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(1);
-
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)NULL, sizeof(struct sockaddr_in), 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -968,27 +818,13 @@ DEFINE_APITEST(sctp_sendmsg, null_non_zero)
 DEFINE_APITEST(sctp_sendmsg, null_non_zero_over)
 {
 	int fd[2], n;
-	struct sockaddr_in addr;
-	socklen_t size;
 
 	if (sctp_socketpair(fd, 0) < 0)
 		return strerror(errno);
 
-	size = (socklen_t)sizeof(struct sockaddr_in);
-	memset((void *)&addr, 0, size);
-	(void)getsockname(fd[1], (struct sockaddr *)&addr, &size);
-
-	addr.sin_addr.s_addr = inet_addr("1.1.1.1");
-	addr.sin_port        = htons(1);
-
 	n = sctp_sendmsg(fd[0], "Hello", 5, (struct sockaddr *)NULL, sizeof(struct sockaddr_in), 0, SCTP_ADDR_OVER, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fd[0]);
-	close(fd[1]);
-#else
 	closesocket(fd[0]);
 	closesocket(fd[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -1028,13 +864,8 @@ DEFINE_APITEST(sctp_sendmsg, large_addrlen)
 	size = (socklen_t)sizeof(addrstore);
 	n = sctp_sendmsg(fds[0], "Hello", 5, (struct sockaddr *)addr,
 			 size, 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fds[0]);
-	close(fds[1]);
-#else
 	closesocket(fds[0]);
 	closesocket(fds[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;
@@ -1069,13 +900,8 @@ DEFINE_APITEST(sctp_sendmsg, short_addrlen)
 
 	n = sctp_sendmsg(fds[0], "Hello", 5, (struct sockaddr *)&addr,
 			 size - 1, 0, 0, 0, 0, 0);
-#if !defined(__Windows__)
-	close(fds[0]);
-	close(fds[1]);
-#else
 	closesocket(fds[0]);
 	closesocket(fds[1]);
-#endif
 
 	if (n < 0) {
 		return NULL;

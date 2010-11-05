@@ -35,7 +35,6 @@
 #endif
 #endif
 
-#if defined(__Windows__)
 typedef char                    int8_t;
 typedef short                   int16_t;
 typedef long                    int32_t;
@@ -50,7 +49,7 @@ typedef unsigned short		in_port_t;
 
 typedef char                    *caddr_t;
 typedef unsigned char           *c_caddr_t;
-#endif
+
 #define SCTP_SLEEP_MS	100
 void sctp_delay(int ms);
 

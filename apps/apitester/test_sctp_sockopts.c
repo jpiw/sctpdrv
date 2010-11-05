@@ -29,26 +29,14 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/sctp.h>
-#include <unistd.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <ws2sctp.h>
-#endif
 #include <string.h>
-#if !defined(__Windows__)
-#include <strings.h>
-#else
 #if !defined(IN6_ARE_ADDR_EQUAL)
 #define IN6_ARE_ADDR_EQUAL(a, b) \
     (memcmp(&(a)->s6_addr[0], &(b)->s6_addr[0], sizeof(struct in6_addr)) == 0)
-#endif
 #endif
 #include <errno.h>
 #include <stdio.h>
@@ -73,7 +61,7 @@ DEFINE_APITEST(rtoinfo, gso_1_1_defaults)
 
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -101,7 +89,7 @@ DEFINE_APITEST(rtoinfo, gso_1_M_defaults)
 
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -128,7 +116,7 @@ DEFINE_APITEST(rtoinfo, gso_1_1_bad_id)
 
 	result = sctp_get_rto_info(fd, 1, NULL, NULL, NULL);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -146,28 +134,18 @@ DEFINE_APITEST(rtoinfo, gso_1_1_bad_id)
 DEFINE_APITEST(rtoinfo, gso_1_M_bad_id)
 {
 	int fd, result;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
 
 	result = sctp_get_rto_info(fd, 1, NULL, NULL, NULL);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "getsockopt was successful";
 
-#if !defined(__Windows__)
-	if (errno != ENOENT)
-#else
-	if (error != WSANO_DATA)
-#endif
+	if (WSAGetLastError() != WSANO_DATA)
 		return strerror(errno);
 
 	return NULL;
@@ -191,7 +169,7 @@ DEFINE_APITEST(rtoinfo, sso_1_1_good)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -202,13 +180,13 @@ DEFINE_APITEST(rtoinfo, sso_1_1_good)
 	result = sctp_set_rto_info(fd, 0, init, max, min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -237,7 +215,7 @@ DEFINE_APITEST(rtoinfo, sso_1_M_good)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -248,13 +226,13 @@ DEFINE_APITEST(rtoinfo, sso_1_M_good)
 	result = sctp_set_rto_info(fd, 0, init, max, min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -282,12 +260,12 @@ DEFINE_APITEST(rtoinfo, sso_1_1_bad_id)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_rto_info(fd, 1, init, max, min);
-	close(fd);
+	closesocket(fd);
 
 	if (result) {
 		return strerror(errno);
@@ -306,9 +284,6 @@ DEFINE_APITEST(rtoinfo, sso_1_M_bad_id)
 {
 	int fd, result;
 	uint32_t init, max, min;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
@@ -316,25 +291,18 @@ DEFINE_APITEST(rtoinfo, sso_1_M_bad_id)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_rto_info(fd, 1, init, max, min);
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result) {
 		return "setsockopt was successful";
 	}
 
-#if !defined(__Windows__)
-	if (errno != ENOENT)
-#else
-	if (error != WSANO_DATA)
-#endif
+	if (WSAGetLastError() != WSANO_DATA)
 		return strerror(errno);
 
 	return NULL;
@@ -360,7 +328,7 @@ DEFINE_APITEST(rtoinfo, sso_1_1_init)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -369,13 +337,13 @@ DEFINE_APITEST(rtoinfo, sso_1_1_init)
 	result = sctp_set_initial_rto(fd, 0, init);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -409,7 +377,7 @@ DEFINE_APITEST(rtoinfo, sso_1_M_init)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -418,13 +386,13 @@ DEFINE_APITEST(rtoinfo, sso_1_M_init)
 	result = sctp_set_initial_rto(fd, 0, init);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -455,7 +423,7 @@ DEFINE_APITEST(rtoinfo, sso_1_1_max)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -464,13 +432,13 @@ DEFINE_APITEST(rtoinfo, sso_1_1_max)
 	result = sctp_set_maximum_rto(fd, 0, max);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -501,7 +469,7 @@ DEFINE_APITEST(rtoinfo, sso_1_M_max)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -510,13 +478,13 @@ DEFINE_APITEST(rtoinfo, sso_1_M_max)
 	result = sctp_set_maximum_rto(fd, 0, max);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -547,7 +515,7 @@ DEFINE_APITEST(rtoinfo, sso_1_1_min)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -556,13 +524,13 @@ DEFINE_APITEST(rtoinfo, sso_1_1_min)
 	result = sctp_set_minimum_rto(fd, 0, min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -593,7 +561,7 @@ DEFINE_APITEST(rtoinfo, sso_1_M_min)
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -602,13 +570,13 @@ DEFINE_APITEST(rtoinfo, sso_1_M_min)
 	result = sctp_set_minimum_rto(fd, 0, min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &new_init, &new_max, &new_min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -639,13 +607,13 @@ DEFINE_APITEST(rtoinfo, sso_1_1_same)
 	result = sctp_set_rto_info(fd, 0, 100, 100, 100);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -674,13 +642,13 @@ DEFINE_APITEST(rtoinfo, sso_1_M_same)
 	result = sctp_set_rto_info(fd, 0, 100, 100, 100);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(fd, 0, &init, &max, &min);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result)
 		return strerror(errno);
@@ -702,9 +670,6 @@ DEFINE_APITEST(rtoinfo, sso_ill_1)
 {
 	int fd, result;
 	uint32_t min;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
@@ -712,25 +677,18 @@ DEFINE_APITEST(rtoinfo, sso_ill_1)
 	result = sctp_get_minimum_rto(fd, 0, &min);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_initial_rto(fd, 0, min - 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-	close(fd);
-#endif
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.init smaller than RTO.min";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -746,9 +704,6 @@ DEFINE_APITEST(rtoinfo, sso_ill_2)
 {
 	int fd, result;
 	uint32_t max;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
@@ -756,25 +711,18 @@ DEFINE_APITEST(rtoinfo, sso_ill_2)
 	result = sctp_get_maximum_rto(fd, 0, &max);
 
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_initial_rto(fd, 0, max + 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.init greater than RTO.max";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -790,34 +738,24 @@ DEFINE_APITEST(rtoinfo, sso_ill_3)
 {
 	int fd, result;
 	uint32_t init;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
 
 	result = sctp_get_initial_rto(fd, 0, &init);
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_minimum_rto(fd, 0, init + 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.min greater than RTO.init";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -833,34 +771,24 @@ DEFINE_APITEST(rtoinfo, sso_ill_4)
 {
 	int fd, result;
 	uint32_t max;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
 
 	result = sctp_get_maximum_rto(fd, 0, &max);
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_minimum_rto(fd, 0, max + 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.min greater than RTO.max";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -876,34 +804,24 @@ DEFINE_APITEST(rtoinfo, sso_ill_5)
 {
 	int fd, result;
 	uint32_t init;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
 
 	result = sctp_get_initial_rto(fd, 0, &init);
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_maximum_rto(fd, 0, init - 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.max smaller than RTO.init";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -919,34 +837,24 @@ DEFINE_APITEST(rtoinfo, sso_ill_6)
 {
 	int fd, result;
 	uint32_t min;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
 		return strerror(errno);
 
 	result = sctp_get_minimum_rto(fd, 0, &min);
 	if (result) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_set_maximum_rto(fd, 0, min - 10);
 
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "Can set RTO.max smaller than RTO.min";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
-	if (error != WSAEINVAL)
-#endif
+	if (WSAGetLastError() != WSAEINVAL)
 		return strerror(errno);
 
 	return NULL;
@@ -970,8 +878,8 @@ DEFINE_APITEST(rtoinfo, gso_1_1_c_bad_id)
 
 	result = sctp_get_rto_info(fd[0], 1, NULL, NULL, NULL);
 
-	close(fd[0]);
-	close(fd[1]);
+	closesocket(fd[0]);
+	closesocket(fd[1]);
 
 	if (result)
 		return strerror(errno);
@@ -999,14 +907,14 @@ DEFINE_APITEST(rtoinfo, sso_1_1_c_bad_id)
 	result = sctp_get_rto_info(fd[0], 0, &init, &max, &min);
 
 	if (result) {
-		close(fd[0]);
-		close(fd[1]);
+		closesocket(fd[0]);
+		closesocket(fd[1]);
 		return strerror(errno);
 	}
 
 	result = sctp_set_rto_info(fd[0], 1, init, max, min);
-	close(fd[0]);
-	close(fd[1]);
+	closesocket(fd[0]);
+	closesocket(fd[1]);
 
 	if (result) {
 		return strerror(errno);
@@ -1044,19 +952,19 @@ DEFINE_APITEST(rtoinfo, sso_1_1_inherit)
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if (bind(lfd, (struct sockaddr *)&addr, (socklen_t)sizeof(struct sockaddr_in)) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 
 	if (listen(lfd, 1) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 
 	result = sctp_get_rto_info(lfd, 0, &init, &max, &min);
 
 	if (result) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 
@@ -1067,12 +975,12 @@ DEFINE_APITEST(rtoinfo, sso_1_1_inherit)
 	result = sctp_set_rto_info(lfd, 0, init, max, min);
 
 	if (result) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 
 	if ((cfd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 
@@ -1085,35 +993,35 @@ DEFINE_APITEST(rtoinfo, sso_1_1_inherit)
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if (bind(cfd, (struct sockaddr *)&addr, (socklen_t)sizeof(struct sockaddr_in)) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (lfd, (struct sockaddr *) &addr, &addr_len) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 
 	if (connect(cfd, (struct sockaddr *) &addr, addr_len) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 
 	if ((afd = accept(lfd, NULL, 0)) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
-	close(lfd);
+	closesocket(lfd);
 
 	result = sctp_get_rto_info(afd, 0, &new_init, &new_max, &new_min);
 
-	close(cfd);
-	close(afd);
+	closesocket(cfd);
+	closesocket(afd);
 
 	if (result)
 		return strerror(errno);
@@ -1143,23 +1051,23 @@ DEFINE_APITEST(rtoinfo, sso_1_M_inherit)
 	sctp_assoc_t assoc_id;
 
 	if ((lfd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0)
-	   	return strerror(errno);
+		return strerror(errno);
 	if (sctp_bind(lfd, INADDR_LOOPBACK, 0) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 	if (listen(lfd, 1) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 	if ((cfd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 	result = sctp_get_rto_info(cfd, 0, &init, &max, &min);
 	if (result) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 
@@ -1168,48 +1076,43 @@ DEFINE_APITEST(rtoinfo, sso_1_M_inherit)
 	max  *= 2;
 	result = sctp_set_rto_info(cfd, 0, init, max, min);
 	if (result) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 	if (sctp_bind(cfd, INADDR_LOOPBACK, 0) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (lfd, (struct sockaddr *) &addr, &addr_len) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 	if (sctp_connectx(cfd, (struct sockaddr *) &addr, 1, &assoc_id) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
 	sctp_delay(SCTP_SLEEP_MS);
 	if ((afd = accept(lfd, NULL, 0)) < 0) {
-		close(lfd);
-		close(cfd);
+		closesocket(lfd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
-	close(lfd);
-
-#if !defined(__Windows__)
-	if ((pfd = sctp_peeloff(cfd, assoc_id)) < 0) {
-#else
+	closesocket(lfd);
 	if ((pfd = sctp_peeloff(cfd, assoc_id)) == INVALID_SOCKET) {
-#endif
-		close(afd);
-		close(cfd);
+		closesocket(afd);
+		closesocket(cfd);
 		return strerror(errno);
 	}
-	close(cfd);
+	closesocket(cfd);
 
 	result = sctp_get_rto_info(pfd, 0, &new_init, &new_max, &new_min);
-	close(afd);
-	close(pfd);
+	closesocket(afd);
+	closesocket(pfd);
 
 	if (result)
 		return strerror(errno);
@@ -1239,7 +1142,7 @@ DEFINE_APITEST(assoclist, gso_numbers_zero)
 
 	result = sctp_get_number_of_associations(fd);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result == 0)
 		return NULL;
@@ -1267,9 +1170,9 @@ DEFINE_APITEST(assoclist, gso_numbers_pos)
 	sctp_delay(SCTP_SLEEP_MS);
 	result = sctp_get_number_of_associations(fd);
 
-	close(fd);
+	closesocket(fd);
 	for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-		close(fds[i]);
+		closesocket(fds[i]);
 
 	if (result == NUMBER_OF_ASSOCS)
 		return NULL;
@@ -1292,12 +1195,12 @@ DEFINE_APITEST(assoclist, gso_ids_no_assoc)
 		return strerror(errno);
 
 	if (sctp_get_number_of_associations(fd) != 0) {
-		close(fd);
+		closesocket(fd);
 		return "Wrong number of identifiers";
 	}
 
 	result = sctp_get_association_identifiers(fd, &id, 1);
-	close(fd);
+	closesocket(fd);
 	if (result == 0)
 		return NULL;
 	else
@@ -1323,17 +1226,17 @@ DEFINE_APITEST(assoclist, gso_ids_buf_fit)
 	sctp_delay(SCTP_SLEEP_MS);
 
 	if (sctp_get_number_of_associations(fd) != NUMBER_OF_ASSOCS) {
-		close(fd);
+		closesocket(fd);
 		for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-			close(fds[i]);
+			closesocket(fds[i]);
 		return "Wrong number of associations";
 	}
 
 	result = sctp_get_association_identifiers(fd, ids, NUMBER_OF_ASSOCS);
 
-	close(fd);
+	closesocket(fd);
 	for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-		close(fds[i]);
+		closesocket(fds[i]);
 
 	if (result == NUMBER_OF_ASSOCS) {
 		for (i = 0; i < NUMBER_OF_ASSOCS; i++)
@@ -1364,17 +1267,17 @@ DEFINE_APITEST(assoclist, gso_ids_buf_large)
 	sctp_delay(SCTP_SLEEP_MS);
 
 	if (sctp_get_number_of_associations(fd) != NUMBER_OF_ASSOCS) {
-		close(fd);
+		closesocket(fd);
 		for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-			close(fds[i]);
+			closesocket(fds[i]);
 		return "Wrong number of associations";
 	}
 
 	result = sctp_get_association_identifiers(fd, ids, NUMBER_OF_ASSOCS + 1);
 
-	close(fd);
+	closesocket(fd);
 	for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-		close(fds[i]);
+		closesocket(fds[i]);
 
 	if (result == NUMBER_OF_ASSOCS) {
 		for (i = 0; i < NUMBER_OF_ASSOCS; i++)
@@ -1406,17 +1309,17 @@ DEFINE_APITEST(assoclist, gso_ids_buf_small)
 	sctp_delay(SCTP_SLEEP_MS);
 
 	if (sctp_get_number_of_associations(fd) != NUMBER_OF_ASSOCS) {
-		close(fd);
+		closesocket(fd);
 		for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-			close(fds[i]);
+			closesocket(fds[i]);
 		return strerror(errno);
 	}
 
 	result = sctp_get_association_identifiers(fd, ids, NUMBER_OF_ASSOCS - 1);
 
-	close(fd);
+	closesocket(fd);
 	for (i = 0; i < NUMBER_OF_ASSOCS; i++)
-		close(fds[i]);
+		closesocket(fds[i]);
 
 	if (result > 0)
 		return "getsockopt successful";
@@ -1454,7 +1357,7 @@ DEFINE_APITEST(associnfo, gso_1_1_defaults)
 				     &peer_rwnd,
 				     &local_rwnd,
 				     &cookie_life);
-	close(fd);
+	closesocket(fd);
 	if (result)
 		return strerror(errno);
 
@@ -1502,7 +1405,7 @@ DEFINE_APITEST(associnfo, gso_1_M_defaults)
 				     &peer_rwnd,
 				     &local_rwnd,
 				     &cookie_life);
-	close(fd);
+	closesocket(fd);
 	if (result)
 		return strerror(errno);
 
@@ -1594,7 +1497,7 @@ DEFINE_APITEST(associnfo, sso_rxt_1_1)
 		goto out;
 	}
  out:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -1666,7 +1569,7 @@ DEFINE_APITEST(associnfo, sso_rxt_1_M)
 		goto out;
 	}
  out:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -1705,7 +1608,7 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_1)
 	}
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -1766,10 +1669,10 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_1)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -1809,7 +1712,7 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_M)
 	}
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 
@@ -1868,9 +1771,9 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_M)
 		goto out;
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 
 }
@@ -1945,7 +1848,7 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_1_inherit)
 
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -1972,10 +1875,10 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_1_inherit)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -2052,7 +1955,7 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_M_inherit)
 
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -2078,9 +1981,9 @@ DEFINE_APITEST(associnfo, sso_rxt_asoc_1_M_inherit)
 		goto out;
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 
 
@@ -2152,7 +2055,7 @@ DEFINE_APITEST(associnfo, sso_clife_1_1)
 		goto out;
 	}
  out:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -2224,7 +2127,7 @@ DEFINE_APITEST(associnfo, sso_clife_1_M)
 		goto out;
 	}
  out:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -2263,7 +2166,7 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_1)
 	}
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -2324,10 +2227,10 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_1)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -2367,7 +2270,7 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_M)
 	}
 	if (sctp_socketpair_1tom(fds, ids,0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 
@@ -2426,9 +2329,9 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_M)
 		goto out;
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 
 }
@@ -2503,7 +2406,7 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_1_inherit)
 
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -2530,10 +2433,10 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_1_inherit)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 
@@ -2610,7 +2513,7 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_M_inherit)
 
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -2636,9 +2539,9 @@ DEFINE_APITEST(associnfo, sso_clife_asoc_1_M_inherit)
 		goto out;
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 
 
@@ -3212,7 +3115,7 @@ DEFINE_APITEST(initmsg, gso_1_1_defaults)
 
 	result = sctp_get_initmsg(fd, &ostreams, &istreams,
 				  &max, &timeo);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3244,7 +3147,7 @@ DEFINE_APITEST(initmsg, gso_1_M_defaults)
 
 	result = sctp_get_initmsg(fd, &ostreams, &istreams,
 				  &max, &timeo);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3278,18 +3181,18 @@ DEFINE_APITEST(initmsg, gso_1_1_set_ostrm)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * ostreams[0];
 	result = sctp_set_im_ostream(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3330,18 +3233,18 @@ DEFINE_APITEST(initmsg, gso_1_1_set_istrm)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * istreams[0];
 	result = sctp_set_im_istream(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3381,18 +3284,18 @@ DEFINE_APITEST(initmsg, gso_1_1_set_max)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * max[0];
 	result = sctp_set_im_maxattempt(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3432,18 +3335,18 @@ DEFINE_APITEST(initmsg, gso_1_1_set_timeo)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * max[0];
 	result = sctp_set_im_maxtimeo(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3484,18 +3387,18 @@ DEFINE_APITEST(initmsg, gso_1_M_set_ostrm)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * ostreams[0];
 	result = sctp_set_im_ostream(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3536,18 +3439,18 @@ DEFINE_APITEST(initmsg, gso_1_M_set_istrm)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * istreams[0];
 	result = sctp_set_im_istream(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3587,18 +3490,18 @@ DEFINE_APITEST(initmsg, gso_1_M_set_max)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * max[0];
 	result = sctp_set_im_maxattempt(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3638,18 +3541,18 @@ DEFINE_APITEST(initmsg, gso_1_M_set_timeo)
 	result = sctp_get_initmsg(fd, &ostreams[0], &istreams[0],
 				  &max[0], &timeo[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 2 * max[0];
 	result = sctp_set_im_maxtimeo(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_initmsg(fd, &ostreams[1], &istreams[1],
 				  &max[1], &timeo[1]);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -3689,7 +3592,7 @@ DEFINE_APITEST(nodelay, gso_1_1_def_ndelay)
 		return(strerror(errno));
 	}
 	result = sctp_get_ndelay(fd, &val);
-	close(fd);
+	closesocket(fd);
 	if(result) {
 		return(strerror(errno));
 	}
@@ -3715,7 +3618,7 @@ DEFINE_APITEST(nodelay, gso_1_M_def_ndelay)
 		return(strerror(errno));
 	}
 	result = sctp_get_ndelay(fd, &val);
-	close(fd);
+	closesocket(fd);
 	if(result) {
 		return(strerror(errno));
 	}
@@ -3741,18 +3644,18 @@ DEFINE_APITEST(nodelay, gso_1_1_set_ndelay)
 	}
 	result = sctp_get_ndelay(fd, &val[0]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	val[1] = !val[0];
 	result = sctp_set_ndelay(fd, val[1]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_ndelay(fd, &val[2]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -3778,18 +3681,18 @@ DEFINE_APITEST(nodelay, gso_1_M_set_ndelay)
 	}
 	result = sctp_get_ndelay(fd, &val[0]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	val[1] = !val[0];
 	result = sctp_set_ndelay(fd, val[1]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_ndelay(fd, &val[2]);
 	if(result) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -3820,7 +3723,7 @@ DEFINE_APITEST(autoclose, gso_1_1_def_autoclose)
 		return(strerror(errno));
 	}
 	result = sctp_get_autoclose(fd, &aclose);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return NULL;
 	}
@@ -3846,7 +3749,7 @@ DEFINE_APITEST(autoclose, gso_1_M_def_autoclose)
 		return(strerror(errno));
 	}
 	result = sctp_get_autoclose(fd, &aclose);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -3874,17 +3777,17 @@ DEFINE_APITEST(autoclose, gso_1_1_set_autoclose)
 	}
 	result = sctp_get_autoclose(fd, &aclose[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return NULL;
 	}
 	aclose[1] = 40;
 	result = sctp_set_autoclose(fd, aclose[1]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return NULL;
 	}
 	result = sctp_get_autoclose(fd, &aclose[2]);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return NULL;
 	}
@@ -3912,17 +3815,17 @@ DEFINE_APITEST(autoclose, gso_1_M_set_autoclose)
 	}
 	result = sctp_get_autoclose(fd, &aclose[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	aclose[1] = 40;
 	result = sctp_set_autoclose(fd, aclose[1]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_autoclose(fd, &aclose[2]);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -3974,8 +3877,8 @@ DEFINE_APITEST(setpeerprim, sso_1_1_good_peerprim)
 	}
 	sctp_freeladdrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4020,8 +3923,8 @@ DEFINE_APITEST(setpeerprim, sso_1_1_bad_peerprim)
 	}
 
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4071,8 +3974,8 @@ DEFINE_APITEST(setpeerprim, sso_1_M_good_peerprim)
 	}
 	sctp_freeladdrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 
 }
@@ -4126,8 +4029,8 @@ DEFINE_APITEST(setpeerprim, sso_1_M_bad_peerprim)
 		retstring = "set peer primary for bad address allowed";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4224,8 +4127,8 @@ DEFINE_APITEST(setprim, gso_1_1_get_prim)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4318,8 +4221,8 @@ DEFINE_APITEST(setprim, gso_1_M_get_prim)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4469,8 +4372,8 @@ DEFINE_APITEST(setprim, sso_1_1_set_prim)
 
 	sctp_freepaddrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4621,8 +4524,8 @@ DEFINE_APITEST(setprim, sso_1_M_set_prim)
 	}
 	sctp_freepaddrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 /*
@@ -4753,8 +4656,8 @@ DEFINE_APITEST(setprim, sso_1_1_bad_prim)
 
 	sctp_freepaddrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4893,8 +4796,8 @@ DEFINE_APITEST(setprim, sso_1_M_bad_prim)
 	}
 	sctp_freepaddrs(sa);
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (retstring);
 }
 
@@ -4920,7 +4823,7 @@ DEFINE_APITEST(adaptation, gso_1_1)
 		return(strerror(errno));
 	}
 	result = sctp_get_adaptation(fd, &val);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -4942,7 +4845,7 @@ DEFINE_APITEST(adaptation, gso_1_M)
 		return(strerror(errno));
 	}
 	result = sctp_get_adaptation(fd, &val);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -4967,18 +4870,18 @@ DEFINE_APITEST(adaptation, sso_1_1)
 	}
 	result = sctp_get_adaptation(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	val1 =  val + 1;
 	result = sctp_set_adaptation(fd, val1);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_adaptation(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -5007,18 +4910,18 @@ DEFINE_APITEST(adaptation, sso_1_M)
 	}
 	result = sctp_get_adaptation(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	val1 =  val + 1;
 	result = sctp_set_adaptation(fd, val1);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_adaptation(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -5053,10 +4956,10 @@ DEFINE_APITEST(disfrag, gso_def_1_1)
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(val) {
 		return "Incorrect default, SCTP fragmentation is disabled";
 	}
@@ -5080,10 +4983,10 @@ DEFINE_APITEST(disfrag, gso_def_1_M)
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(val) {
 		return "Incorrect default, SCTP fragmentation is disabled";
 	}
@@ -5109,18 +5012,18 @@ DEFINE_APITEST(disfrag, sso_1_1)
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	nval = !val;
 	result = sctp_set_disfrag(fd, nval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -5148,18 +5051,18 @@ DEFINE_APITEST(disfrag, sso_1_M)
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	nval = !val;
 	result = sctp_set_disfrag(fd, nval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_disfrag(fd, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	close (fd);
@@ -5203,7 +5106,7 @@ DEFINE_APITEST(paddrpara, gso_def_1_1)
 				      &flags,
 				      &ipv6_flowlabel,
 				      &ipv4_tos);
-	close(fd);
+	closesocket(fd);
 	if (result< 0) {
 		return(strerror(errno));
 	}
@@ -5256,7 +5159,7 @@ DEFINE_APITEST(paddrpara, gso_def_1_M)
 				      &flags,
 				      &ipv6_flowlabel,
 				      &ipv4_tos);
-	close(fd);
+	closesocket(fd);
 	if (result< 0) {
 		return(strerror(errno));
 	}
@@ -5313,14 +5216,14 @@ DEFINE_APITEST(paddrpara, sso_hb_int_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = (hbinterval[0] * 2);
 
 	result = sctp_set_hbint(fd, 0, NULL, newval);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5331,10 +5234,10 @@ DEFINE_APITEST(paddrpara, sso_hb_int_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
 	}
@@ -5382,14 +5285,14 @@ DEFINE_APITEST(paddrpara, sso_hb_int_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = (hbinterval[0] * 2);
 
 	result = sctp_set_hbint(fd, 0, NULL, newval);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5400,10 +5303,10 @@ DEFINE_APITEST(paddrpara, sso_hb_int_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
 	}
@@ -5451,14 +5354,14 @@ DEFINE_APITEST(paddrpara, sso_hb_zero_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 0;
 
 	result = sctp_set_hbzero(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fd, 0, sa, &hbinterval[1],
@@ -5468,10 +5371,10 @@ DEFINE_APITEST(paddrpara, sso_hb_zero_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
 	}
@@ -5520,14 +5423,14 @@ DEFINE_APITEST(paddrpara, sso_hb_zero_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 0;
 
 	result = sctp_set_hbzero(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5538,10 +5441,10 @@ DEFINE_APITEST(paddrpara, sso_hb_zero_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
 	}
@@ -5591,12 +5494,12 @@ DEFINE_APITEST(paddrpara, sso_hb_off_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_set_hbdisable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fd, 0, sa, &hbinterval[1],
@@ -5606,10 +5509,10 @@ DEFINE_APITEST(paddrpara, sso_hb_off_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -5664,13 +5567,13 @@ DEFINE_APITEST(paddrpara, sso_hb_off_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
 	result = sctp_set_hbdisable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5681,10 +5584,10 @@ DEFINE_APITEST(paddrpara, sso_hb_off_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -5739,13 +5642,13 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
 	result = sctp_set_hbdisable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5756,7 +5659,7 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(hbinterval[1] != hbinterval[0]) {
@@ -5780,12 +5683,12 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_1)
 	if (flags[1] & SPP_HB_ENABLE) {
 		retstring = "HB can't be disabled";
 	out_quick:
-		close(fd);
+		closesocket(fd);
 		return(retstring);
 	}
 	result = sctp_set_hbenable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5807,7 +5710,7 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_1)
 	if(flags[0] != flags[2]) {
 		retstring = "HB did not re-enable";
         }
-        close(fd);
+        closesocket(fd);
 	return retstring;
 
 }
@@ -5845,13 +5748,13 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
 	result = sctp_set_hbdisable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -5862,7 +5765,7 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(hbinterval[1] != hbinterval[0]) {
@@ -5886,14 +5789,14 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_M)
         if (flags[1] & SPP_HB_ENABLE) {
 		retstring = "HB could not disable";
 	outquick:
-                close(fd);
+                closesocket(fd);
 		return retstring;
 	}
 
 
 	result = sctp_set_hbenable(fd, 0, NULL);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fd, 0, sa, &hbinterval[2],
@@ -5914,7 +5817,7 @@ DEFINE_APITEST(paddrpara, sso_hb_on_1_M)
 	if(flags[0] != flags[2]) {
 		retstring = "HB did not re-enable";
 	}
-	close(fd);
+	closesocket(fd);
 	return retstring;
 
 }
@@ -5952,13 +5855,13 @@ DEFINE_APITEST(paddrpara, sso_pmrxt_int_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	new_maxrxt = 2 * maxrxt[0];
 	result = sctp_set_maxrxt(fd, 0, NULL, new_maxrxt);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fd, 0, sa, &hbinterval[1],
@@ -5968,10 +5871,10 @@ DEFINE_APITEST(paddrpara, sso_pmrxt_int_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -6020,13 +5923,13 @@ DEFINE_APITEST(paddrpara, sso_pmrxt_int_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	new_maxrxt = 2 * maxrxt[0];
 	result = sctp_set_maxrxt(fd, 0, NULL, new_maxrxt);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fd, 0, sa, &hbinterval[1],
@@ -6036,10 +5939,10 @@ DEFINE_APITEST(paddrpara, sso_pmrxt_int_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -6078,7 +5981,7 @@ DEFINE_APITEST(paddrpara, sso_bad_hb_en_1_1)
 				       flags,
 				       0,
 				       0);
-	close(fd);
+	closesocket(fd);
 	if (result != -1) {
 		return "Able to enable and disable HB";
 	}
@@ -6108,7 +6011,7 @@ DEFINE_APITEST(paddrpara, sso_bad_hb_en_1_M)
 				       flags,
 				       0,
 				       0);
-	close(fd);
+	closesocket(fd);
 	if (result != -1) {
 		return "Able to enable and disable HB";
 	}
@@ -6139,7 +6042,7 @@ DEFINE_APITEST(paddrpara, sso_bad_pmtud_en_1_1)
 				       flags,
 				       0,
 				       0);
-	close(fd);
+	closesocket(fd);
 	if (result != -1) {
 		return "Able to enable and disable HB";
 	}
@@ -6169,7 +6072,7 @@ DEFINE_APITEST(paddrpara, sso_bad_pmtud_en_1_M)
 				       flags,
 				       0,
 				       0);
-	close(fd);
+	closesocket(fd);
 	if (result != -1) {
 		return "Able to enable and disable HB";
 	}
@@ -6207,16 +6110,16 @@ DEFINE_APITEST(paddrpara, sso_ahb_int_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = (hbinterval[0] * 2) + 10;
 
 	result = sctp_set_hbint(fds[0], 0, NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6227,12 +6130,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_int_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
@@ -6281,16 +6184,16 @@ DEFINE_APITEST(paddrpara, sso_ahb_int_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = (hbinterval[0] * 2) + 10;
 
 	result = sctp_set_hbint(fds[0], ids[0], NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6301,8 +6204,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_int_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[2],
@@ -6312,12 +6215,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_int_1_M)
 				      &ipv6_flowlabel[2],
 				      &ipv4_tos[2]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[2] != hbinterval[0]) {
 		retstring = "EP hb changed too";
 	}
@@ -6371,16 +6274,16 @@ DEFINE_APITEST(paddrpara, sso_ahb_zero_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 0;
 
 	result = sctp_set_hbzero(fds[0], 0, NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -6390,12 +6293,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_zero_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[1] != newval) {
 		retstring = "HB interval set on ep failed";
 	}
@@ -6445,16 +6348,16 @@ DEFINE_APITEST(paddrpara, sso_ahb_zero_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 0;
 
 	result = sctp_set_hbzero(fds[0], ids[0], NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -6464,8 +6367,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_zero_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[2],
@@ -6475,12 +6378,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_zero_1_M)
 				      &ipv6_flowlabel[2],
 				      &ipv4_tos[2]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[2] != hbinterval[0]) {
 		retstring = "EP hb changed too";
 	}
@@ -6533,14 +6436,14 @@ DEFINE_APITEST(paddrpara, sso_ahb_off_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_set_hbdisable(fds[0], 0, NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -6550,12 +6453,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_off_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -6609,14 +6512,14 @@ DEFINE_APITEST(paddrpara, sso_ahb_off_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_set_hbdisable(fds[0], ids[0], NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -6626,8 +6529,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_off_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[2],
@@ -6637,13 +6540,13 @@ DEFINE_APITEST(paddrpara, sso_ahb_off_1_M)
 				      &ipv6_flowlabel[2],
 				      &ipv4_tos[2]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[2] != hbinterval[0]) {
 		retstring = "EP hb changed too";
 	}
@@ -6702,15 +6605,15 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
 	result = sctp_set_hbdisable(fds[0], 0, NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6721,8 +6624,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	if(hbinterval[1] != hbinterval[0]) {
@@ -6746,14 +6649,14 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_1)
 	if (flags[1] & SPP_HB_ENABLE) {
 		retstring = "HB can't be disabled";
 	out_quick:
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(retstring);
 	}
 	result = sctp_set_hbenable(fds[0], 0, NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6775,8 +6678,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_1)
 	if(flags[0] != flags[2]) {
 		retstring = "HB did not re-enable";
         }
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return retstring;
 
 }
@@ -6814,15 +6717,15 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
 	result = sctp_set_hbdisable(fds[0], ids[0], NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6833,8 +6736,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	if(hbinterval[1] != hbinterval[0]) {
@@ -6858,14 +6761,14 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_M)
 	if (flags[1] & SPP_HB_ENABLE) {
 		retstring = "HB can't be disabled";
 	out_quick:
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(retstring);
 	}
 	result = sctp_set_hbenable(fds[0], ids[0], NULL);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6876,8 +6779,8 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_M)
 				      &ipv6_flowlabel[2],
 				      &ipv4_tos[2]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
@@ -6888,12 +6791,12 @@ DEFINE_APITEST(paddrpara, sso_ahb_on_1_M)
 				      &ipv6_flowlabel[3],
 				      &ipv4_tos[3]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 
 	if(hbinterval[3] != hbinterval[0]) {
 		retstring = "EP hb changed too";
@@ -6950,15 +6853,15 @@ DEFINE_APITEST(paddrpara, sso_apmrxt_int_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	new_maxrxt = 2 * maxrxt[0];
 	result = sctp_set_maxrxt(fds[0], 0, NULL, new_maxrxt);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -6968,12 +6871,12 @@ DEFINE_APITEST(paddrpara, sso_apmrxt_int_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[1] != hbinterval[0]) {
 		retstring = "HB interval changed";
 	}
@@ -7022,15 +6925,15 @@ DEFINE_APITEST(paddrpara, sso_apmrxt_int_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	new_maxrxt = 2 * maxrxt[0];
 	result = sctp_set_maxrxt(fds[0], ids[0], NULL, new_maxrxt);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -7040,8 +6943,8 @@ DEFINE_APITEST(paddrpara, sso_apmrxt_int_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[2],
@@ -7051,13 +6954,13 @@ DEFINE_APITEST(paddrpara, sso_apmrxt_int_1_M)
 				      &ipv6_flowlabel[2],
 				      &ipv4_tos[2]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(hbinterval[2] != hbinterval[0]) {
 		retstring = "EP hb changed too";
 	}
@@ -7111,8 +7014,8 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = pathmtu[0] / 2;
@@ -7121,8 +7024,8 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_1)
 
 	result = sctp_set_pmtu(fds[0], 0, NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -7132,12 +7035,12 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] & SPP_PMTUD_ENABLE) {
 		return "failed, pmtu still enabled";
 	}
@@ -7199,8 +7102,8 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = pathmtu[0] / 2;
@@ -7209,8 +7112,8 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_M)
 
 	result = sctp_set_pmtu(fds[0], ids[0], NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -7220,12 +7123,12 @@ DEFINE_APITEST(paddrpara, sso_apmtu_dis_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] & SPP_PMTUD_ENABLE) {
 		return "failed, pmtu still enabled";
 	}
@@ -7286,15 +7189,15 @@ DEFINE_APITEST(paddrpara, sso_av6_flo_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 1;
 	result = sctp_set_flow(fds[0], 0, NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -7304,12 +7207,12 @@ DEFINE_APITEST(paddrpara, sso_av6_flo_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] != flags[0]) {
 		return "failed, flags changed";
 	}
@@ -7362,15 +7265,15 @@ DEFINE_APITEST(paddrpara, sso_av6_flo_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 1;
 	result = sctp_set_flow(fds[0], ids[0], NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -7380,12 +7283,12 @@ DEFINE_APITEST(paddrpara, sso_av6_flo_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] != flags[0]) {
 		return "failed, flags changed";
 	}
@@ -7436,15 +7339,15 @@ DEFINE_APITEST(paddrpara, sso_av4_tos_1_1)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 4;
 	result = sctp_set_tos(fds[0], 0, NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], 0, sa, &hbinterval[1],
@@ -7454,12 +7357,12 @@ DEFINE_APITEST(paddrpara, sso_av4_tos_1_1)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] != flags[0]) {
 		return "failed, flags changed";
 	}
@@ -7511,15 +7414,15 @@ DEFINE_APITEST(paddrpara, sso_av4_tos_1_M)
 				      &ipv6_flowlabel[0],
 				      &ipv4_tos[0]);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	newval = 4;
 	result = sctp_set_tos(fds[0], ids[0], NULL, newval);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	result = sctp_get_paddr_param(fds[0], ids[0], sa, &hbinterval[1],
@@ -7529,12 +7432,12 @@ DEFINE_APITEST(paddrpara, sso_av4_tos_1_M)
 				      &ipv6_flowlabel[1],
 				      &ipv4_tos[1]);
 	if (result< 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if(flags[1] != flags[0]) {
 		return "failed, flags changed";
 	}
@@ -7623,7 +7526,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_int_1_1)
 
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -7649,10 +7552,10 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_int_1_1)
 		retstring = "HB interval did not inherit";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 }
 
@@ -7726,7 +7629,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_int_1_M)
 
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -7753,9 +7656,9 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_int_1_M)
 		retstring = "HB interval did not inherit";
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 
 }
@@ -7829,7 +7732,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_zero_1_1)
 
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -7856,10 +7759,10 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_zero_1_1)
 		retstring = "HB interval did not inherit";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 }
 
@@ -7933,7 +7836,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_zero_1_M)
 
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -7960,9 +7863,9 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_zero_1_M)
 		retstring = "HB interval did not inherit";
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 }
 
@@ -8038,7 +7941,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_off_1_1)
 
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -8068,10 +7971,10 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_off_1_1)
 		retstring = "HB did not stay disabled";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 }
 
@@ -8145,7 +8048,7 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_off_1_M)
 	}
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -8177,9 +8080,9 @@ DEFINE_APITEST(paddrpara, sso_ainhhb_off_1_M)
 	}
 
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 }
 
@@ -8251,7 +8154,7 @@ DEFINE_APITEST(paddrpara, sso_ainhpmrxt_int_1_1)
 	}
 	if (sctp_socketpair_reuse(fd, fds, 0) < 0) {
 		retstring = strerror(errno);
-		close(fd);
+		closesocket(fd);
 		goto out_nopair;
 	}
 
@@ -8278,10 +8181,10 @@ DEFINE_APITEST(paddrpara, sso_ainhpmrxt_int_1_1)
 		retstring = "HB interval changed";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fd);
+	closesocket(fd);
 	return (retstring);
 
 }
@@ -8355,7 +8258,7 @@ DEFINE_APITEST(paddrpara, sso_ainhpmrxt_int_1_M)
 	}
 	if (sctp_socketpair_1tom(fds, ids, 0) < 0) {
 		retstring = strerror(errno);
-		close(fds[0]);
+		closesocket(fds[0]);
 		goto out_nopair;
 	}
 	/* Now what about on ep? */
@@ -8383,9 +8286,9 @@ DEFINE_APITEST(paddrpara, sso_ainhpmrxt_int_1_M)
 		retstring = "HB interval changecd";
 	}
  out:
-	close(fds[1]);
+	closesocket(fds[1]);
  out_nopair:
-	close(fds[0]);
+	closesocket(fds[0]);
 	return (retstring);
 }
 
@@ -8480,8 +8383,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_int_1_1)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -8585,8 +8488,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_int_1_M)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -8682,8 +8585,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_zero_1_1)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -8788,8 +8691,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_zero_1_M)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -8889,8 +8792,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_off_1_1)
 		retstring = "HB not disabled";
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 
@@ -8999,8 +8902,8 @@ DEFINE_APITEST(paddrpara, sso_dhb_off_1_M)
 	}
 
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 
@@ -9096,8 +8999,8 @@ DEFINE_APITEST(paddrpara, sso_dpmrxt_int_1_1)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -9200,8 +9103,8 @@ DEFINE_APITEST(paddrpara, sso_dpmrxt_int_1_M)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -9295,8 +9198,8 @@ DEFINE_APITEST(paddrpara, sso_dav4_tos_1_1)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 
@@ -9400,8 +9303,8 @@ DEFINE_APITEST(paddrpara, sso_dav4_tos_1_M)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 
@@ -9500,8 +9403,8 @@ DEFINE_APITEST(paddrpara, sso_hb_demand_1_1)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -9608,8 +9511,8 @@ DEFINE_APITEST(paddrpara, sso_hb_demand_1_M)
 
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
  out_nopair:
 	return (retstring);
 }
@@ -9635,7 +9538,7 @@ DEFINE_APITEST(defsend, gso_def_1_1)
 		return(strerror(errno));
 	}
 	result = sctp_get_defsend(fd, 0, &sinfo);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -9670,7 +9573,7 @@ DEFINE_APITEST(defsend, gso_def_1_M)
 		return(strerror(errno));
 	}
 	result = sctp_get_defsend(fd, 0, &sinfo);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -10363,7 +10266,7 @@ DEFINE_APITEST(events, gso_def_1_1)
 	}
 	memset(&ev, 0, sizeof(ev));
 	result = sctp_get_events(fd, &ev);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -10407,7 +10310,7 @@ DEFINE_APITEST(events, gso_def_1_M)
 	}
 	memset(&ev, 0, sizeof(ev));
 	result = sctp_get_events(fd, &ev);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -10455,7 +10358,7 @@ DEFINE_APITEST(events, sso_1_1)
 	memset(&ev, 0, sizeof(ev));
 	result = sctp_get_events(fd, &ev[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(ev[0].sctp_data_io_event == 0) {
@@ -10470,15 +10373,15 @@ DEFINE_APITEST(events, sso_1_1)
 	}
 	result = sctp_set_events(fd, &ev[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_events(fd, &ev[1]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(ev[0].sctp_data_io_event != ev[1].sctp_data_io_event)
 		return "data_io_event set failed";
 
@@ -10526,7 +10429,7 @@ DEFINE_APITEST(events, sso_1_M)
 	memset(&ev, 0, sizeof(ev));
 	result = sctp_get_events(fd, &ev[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(ev[0].sctp_data_io_event == 0) {
@@ -10541,15 +10444,15 @@ DEFINE_APITEST(events, sso_1_M)
 	}
 	result = sctp_set_events(fd, &ev[0]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_events(fd, &ev[1]);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(ev[0].sctp_data_io_event != ev[1].sctp_data_io_event)
 		return "data_io_event set failed";
 
@@ -10596,7 +10499,7 @@ DEFINE_APITEST(mapped, gso_1_1_def)
 		return(strerror(errno));
 	}
 	onoff = sctp_v4_address_mapping_enabled(fd);
-	close(fd);
+	closesocket(fd);
 
 	if (onoff) {
 		return "Option enabled by default";
@@ -10619,7 +10522,7 @@ DEFINE_APITEST(mapped, gso_1_M_def)
 		return(strerror(errno));
 	}
 	onoff = sctp_v4_address_mapping_enabled(fd);
-	close(fd);
+	closesocket(fd);
 
 	if (onoff) {
 		return "Option enabled by default";
@@ -10647,9 +10550,9 @@ DEFINE_APITEST(mapped, sso_1_1)
 
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, &len);
+			    &val, &len);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if (val == 0) {
@@ -10659,15 +10562,15 @@ DEFINE_APITEST(mapped, sso_1_1)
 	}
 	len = sizeof(val);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, len);
+			    &val, len);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(val2);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val2, &len);
-	close(fd);
+			    &val2, &len);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -10696,9 +10599,9 @@ DEFINE_APITEST(mapped, sso_1_M)
 
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, &len);
+			    &val, &len);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if (val == 0) {
@@ -10708,15 +10611,15 @@ DEFINE_APITEST(mapped, sso_1_M)
 	}
 	len = sizeof(val);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, len);
+			    &val, len);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(val2);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val2, &len);
-	close(fd);
+			    &val2, &len);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -10747,8 +10650,8 @@ DEFINE_APITEST(mapped, sso_bad_1_1)
 	len = sizeof(val);
 	val = 1;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, len);
-	close(fd);
+			    &val, len);
+	closesocket(fd);
 	if(result >= 0) {
 		return "mapped v4 setting allowed on non v6 socket";
 	}
@@ -10776,8 +10679,8 @@ DEFINE_APITEST(mapped, sso_bad_1_M)
 	len = sizeof(val);
 	val = 1;
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_I_WANT_MAPPED_V4_ADDR,
-			    (void *)&val, len);
-	close(fd);
+			    &val, len);
+	closesocket(fd);
 	if(result >= 0) {
 		return "mapped v4 setting allowed on non v6 socket";
 	}
@@ -10806,10 +10709,10 @@ DEFINE_APITEST(maxseg, gso_def_1_1)
 	}
 	result = sctp_get_maxseg(fd, 0, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if (val != 0) {
 		return "maxseg not unlimited (i.e. 0)";
 	}
@@ -10833,7 +10736,7 @@ DEFINE_APITEST(maxseg, sso_set_1_1)
 	}
 	result = sctp_get_maxseg(fd, 0, &val[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -10844,15 +10747,15 @@ DEFINE_APITEST(maxseg, sso_set_1_1)
 	}
 	result = sctp_set_maxseg(fd, 0, val[1]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_maxseg(fd, 0, &val[2]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(val[1] < val[2]) {
 		return "Set did not work";
 	}
@@ -10876,10 +10779,10 @@ DEFINE_APITEST(maxseg, gso_def_1_M)
 	}
 	result = sctp_get_maxseg(fd, 0, &val);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if (val != 0) {
 		return "maxseg not unlimited (i.e. 0)";
 	}
@@ -10903,7 +10806,7 @@ DEFINE_APITEST(maxseg, sso_set_1_M)
 	}
 	result = sctp_get_maxseg(fd, 0, &val[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 
@@ -10914,15 +10817,15 @@ DEFINE_APITEST(maxseg, sso_set_1_M)
 	}
 	result = sctp_set_maxseg(fd, 0, val[1]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_maxseg(fd, 0, &val[2]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(val[1] < val[2]) {
 		return "Set did not work";
 	}
@@ -11529,13 +11432,13 @@ DEFINE_APITEST(hmacid, sso_1_1)
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
 
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	if (result < 0) {
 		/* no sha256, retry with just sha1 */
 		algo->shmac_number_of_idents = 1;
 		algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA1;
 		len = sizeof(struct sctp_hmacalgo) + 1 * sizeof(uint16_t);
-		result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+		result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 		if (result < 0) {
 			close (fd);
 			return strerror(errno);
@@ -11544,7 +11447,7 @@ DEFINE_APITEST(hmacid, sso_1_1)
 	}
 	memset(buffer, 0, sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t));
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = getsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, &len);
+	result = getsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, &len);
 	if (result < 0) {
 		close (fd);
 		return strerror(errno);
@@ -11593,13 +11496,13 @@ DEFINE_APITEST(hmacid, sso_1_M)
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
 
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	if (result < 0) {
 		/* no sha256, retry with just sha1 */
 		algo->shmac_number_of_idents = 1;
 		algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA1;
 		len = sizeof(struct sctp_hmacalgo) + 1 * sizeof(uint16_t);
-		result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+		result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 		if (result < 0) {
 			close (fd);
 			return strerror(errno);
@@ -11608,7 +11511,7 @@ DEFINE_APITEST(hmacid, sso_1_M)
 	}
 	memset(buffer, 0, sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t));
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = getsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, &len);
+	result = getsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, &len);
 	if (result < 0) {
 		close (fd);
 		return strerror(errno);
@@ -11651,8 +11554,8 @@ DEFINE_APITEST(hmacid, sso_bad_1_1)
 	algo->shmac_idents[0] = 1960;
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
-	close(fd);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
+	closesocket(fd);
 
 	if (result >= 0) {
 		return "was able to set bogus hmac id 2960";
@@ -11682,8 +11585,8 @@ DEFINE_APITEST(hmacid, sso_bad_1_M)
 	algo->shmac_idents[0] = 1960;
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
-	close(fd);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
+	closesocket(fd);
 
 	if (result >= 0) {
 		return "was able to set bogus hmac id 2960";
@@ -11713,7 +11616,7 @@ DEFINE_APITEST(hmacid, sso_nosha1_1_1)
 	algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA256;
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	if (result < 0) {
 		/* no sha256, retry with just sha1 */
 		close (fd);
@@ -11722,7 +11625,7 @@ DEFINE_APITEST(hmacid, sso_nosha1_1_1)
 	algo->shmac_number_of_idents = 1;
 	algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA256;
 	len = sizeof(struct sctp_hmacalgo) + 1 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	close (fd);
 	if (result >= 0) {
 		return "Was allowed to set only SHA256";
@@ -11752,7 +11655,7 @@ DEFINE_APITEST(hmacid, sso_nosha1_1_M)
 	algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA256;
 	algo->shmac_idents[1] = SCTP_AUTH_HMAC_ID_SHA1;
 	len = sizeof(struct sctp_hmacalgo) + 2 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	if (result < 0) {
 		/* no sha256, retry with just sha1 */
 		close (fd);
@@ -11761,7 +11664,7 @@ DEFINE_APITEST(hmacid, sso_nosha1_1_M)
 	algo->shmac_number_of_idents = 1;
 	algo->shmac_idents[0] = SCTP_AUTH_HMAC_ID_SHA256;
 	len = sizeof(struct sctp_hmacalgo) + 1 * sizeof(uint16_t);
-	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, (void *)algo, len);
+	result = setsockopt(fd, IPPROTO_SCTP, SCTP_HMAC_IDENT, algo, len);
 	close (fd);
 	if (result >= 0) {
 		return "Was allowed to set only SHA256";
@@ -11795,10 +11698,10 @@ DEFINE_APITEST(authkey, gso_def_1_1)
 	keyid = 0;
 	result = sctp_get_auth_key(fd, 0, &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to get auth key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11822,10 +11725,10 @@ DEFINE_APITEST(authkey, gso_def_1_M)
 	keyid = 0;
 	result = sctp_get_auth_key(fd, 0, &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to get auth key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11848,10 +11751,10 @@ DEFINE_APITEST(authkey, gso_new_1_1)
 	keyid = 0x1234;
 	result = sctp_get_auth_key(fd, 0, &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to get auth key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11874,10 +11777,10 @@ DEFINE_APITEST(authkey, gso_new_1_M)
 	keyid = 0x1234;
 	result = sctp_get_auth_key(fd, 0, &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to get auth key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11902,11 +11805,11 @@ DEFINE_APITEST(authkey, sso_def_1_1)
 	keyid = 0;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11931,11 +11834,11 @@ DEFINE_APITEST(authkey, sso_def_1_M)
 	keyid = 0;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11959,11 +11862,11 @@ DEFINE_APITEST(authkey, sso_new_1_1)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -11987,11 +11890,11 @@ DEFINE_APITEST(authkey, sso_new_1_M)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -12015,11 +11918,11 @@ DEFINE_APITEST(authkey, sso_newnul_1_1)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, &keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -12043,11 +11946,11 @@ DEFINE_APITEST(authkey, sso_newnul_1_M)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, &keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -12070,21 +11973,21 @@ DEFINE_APITEST(authkey, gso_a_def_1_1)
 	}
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	keylen = sizeof(keytext);
 	keyid = 0;
 	result = sctp_get_auth_key(fds[1], 0, &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fd);
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fd);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "was able to get auth key";
 	}
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12107,19 +12010,19 @@ DEFINE_APITEST(authkey, gso_a_def_1_M)
 	}
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	keylen = sizeof(keytext);
 	keyid = 0;
 	result = sctp_get_auth_key(fds[0], ids[0], &keyid, &keylen, keytext);
 	if (result >= 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "was able to get auth key";
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12143,7 +12046,7 @@ DEFINE_APITEST(authkey, sso_a_def_1_1)
 	}
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	/* overwrite the default key */
@@ -12152,15 +12055,15 @@ DEFINE_APITEST(authkey, sso_a_def_1_1)
 	result = sctp_set_auth_key(fds[1], 0, keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fd);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12184,7 +12087,7 @@ DEFINE_APITEST(authkey, sso_a_def_1_M)
 	}
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	/* overwrite the default key */
@@ -12193,13 +12096,13 @@ DEFINE_APITEST(authkey, sso_a_def_1_M)
 	result = sctp_set_auth_key(fds[0], ids[0], keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12221,7 +12124,7 @@ DEFINE_APITEST(authkey, sso_a_new_1_1)
 	}
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	/* add a new key id */
@@ -12230,15 +12133,15 @@ DEFINE_APITEST(authkey, sso_a_new_1_1)
 	result = sctp_set_auth_key(fds[1], 0, keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fd);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12261,7 +12164,7 @@ DEFINE_APITEST(authkey, sso_a_new_1_M)
 	}
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	/* add a new key id */
@@ -12270,13 +12173,13 @@ DEFINE_APITEST(authkey, sso_a_new_1_M)
 	result = sctp_set_auth_key(fds[0], ids[0], keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12298,7 +12201,7 @@ DEFINE_APITEST(authkey, sso_a_newnul_1_1)
 	}
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	/* add a new NULL key id */
@@ -12306,15 +12209,15 @@ DEFINE_APITEST(authkey, sso_a_newnul_1_1)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fds[1], 0, keyid, keylen, &keytext);
 	if (result < 0) {
-		close(fd);
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fd);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12337,7 +12240,7 @@ DEFINE_APITEST(authkey, sso_a_newnul_1_M)
 	}
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	/* add a new NULL key id */
@@ -12345,13 +12248,13 @@ DEFINE_APITEST(authkey, sso_a_newnul_1_M)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fds[0], ids[0], keyid, keylen, &keytext);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "failed to set auth key";
 	}
 	/* No way to tell if it was really written ok */
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -12377,7 +12280,7 @@ DEFINE_APITEST(actkey, gso_def_1_1)
 	}
 	keyid = 0xff;
 	result = sctp_get_active_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12404,7 +12307,7 @@ DEFINE_APITEST(actkey, gso_def_1_M)
 	}
 	keyid = 0xff;
 	result = sctp_get_active_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12431,11 +12334,11 @@ DEFINE_APITEST(actkey, sso_def_1_1)
 	keyid = 0;
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set key active";
 	}
 	result = sctp_get_active_key(fd, 0, &verify_keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12465,7 +12368,7 @@ DEFINE_APITEST(actkey, sso_def_1_M)
 		return "was unable to set key active";
 	}
 	result = sctp_get_active_key(fd, 0, &verify_keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12491,7 +12394,7 @@ DEFINE_APITEST(actkey, sso_inval_1_1)
 	}
 	keyid = 0x1234;
 	result = sctp_set_active_key(fd, 0, keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to set unknown key active";
 	}
@@ -12514,7 +12417,7 @@ DEFINE_APITEST(actkey, sso_inval_1_M)
 	}
 	keyid = 0x1234;
 	result = sctp_set_active_key(fd, 0, keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to set unknown key active";
 	}
@@ -12541,16 +12444,16 @@ DEFINE_APITEST(actkey, sso_new_1_1)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set new key active";
 	}
 	result = sctp_get_active_key(fd, 0, &verify_keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12580,16 +12483,16 @@ DEFINE_APITEST(actkey, sso_new_1_M)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set new key active";
 	}
 	result = sctp_get_active_key(fd, 0, &verify_keyid);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return "was unable to get active key";
 	}
@@ -12616,18 +12519,18 @@ DEFINE_APITEST(actkey, sso_inhdef_1_1)
 	}
 	result = sctp_get_active_key(fd, 0, &keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to get active key";
 	}
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	result = sctp_get_active_key(fds[1], 0, &a_keyid);
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if (result < 0) {
 		return "was unable to get assoc active key";
 	}
@@ -12657,13 +12560,13 @@ DEFINE_APITEST(actkey, sso_inhdef_1_M)
 	}
 	result = sctp_get_active_key(fds[0], 0, &keyid);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return "was unable to get ep active key";
 	}
 
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	result = sctp_get_active_key(fds[0], ids[0], &a_keyid);
@@ -12676,8 +12579,8 @@ DEFINE_APITEST(actkey, sso_inhdef_1_M)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (ret);
 }
 
@@ -12703,18 +12606,18 @@ DEFINE_APITEST(actkey, sso_inhnew_1_1)
 	keyid = 0xFFFF;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set new key active";
 	}
 	/* create a new assoc */
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	/* verify the assoc inherits the ep active key */
@@ -12728,9 +12631,9 @@ DEFINE_APITEST(actkey, sso_inhnew_1_1)
 		goto out;
 	}
  out:
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (ret);
 }
 
@@ -12759,18 +12662,18 @@ DEFINE_APITEST(actkey, sso_inhnew_1_M)
 	result = sctp_set_auth_key(fds[0], 0, keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return "failed to set auth key";
 	}
 	result = sctp_set_active_key(fds[0], 0, keyid);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return "was unable to set new key active";
 	}
 	/* create a new assoc */
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	/* verify the assoc inherits the ep active key */
@@ -12784,8 +12687,8 @@ DEFINE_APITEST(actkey, sso_inhnew_1_M)
 		goto out;
 	}
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (ret);
 }
 
@@ -12810,7 +12713,7 @@ DEFINE_APITEST(actkey, sso_achg_1_1)
 	/* get the default key */
 	result = sctp_get_active_key(fd, 0, &def_keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to get default active key";
 	}
 	/* add a new key */
@@ -12818,13 +12721,13 @@ DEFINE_APITEST(actkey, sso_achg_1_1)
 	keyid = 1;
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "failed to set auth key";
 	}
 	/* create a new assoc */
 	result = sctp_socketpair_reuse(fd, fds, 1);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return (strerror(errno));
 	}
 	/* get assoc's active key, should be default key */
@@ -12864,9 +12767,9 @@ DEFINE_APITEST(actkey, sso_achg_1_1)
 	}
 
  out:
-	close(fd);
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fd);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (ret);
 }
 
@@ -12893,7 +12796,7 @@ DEFINE_APITEST(actkey, sso_achg_1_M)
 	/* get the default key */
 	result = sctp_get_active_key(fds[0], 0, &def_keyid);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return "was unable to geet default active key";
 	}
 	/* add a new key */
@@ -12902,13 +12805,13 @@ DEFINE_APITEST(actkey, sso_achg_1_M)
 	result = sctp_set_auth_key(fds[0], 0, keyid, keylen,
 				   (uint8_t *)keytext);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return "failed to set auth key";
 	}
 	/* create a new assoc */
 	result = sctp_socketpair_1tom(fds, ids, 1);
 	if (result < 0) {
-		close(fds[0]);
+		closesocket(fds[0]);
 		return (strerror(errno));
 	}
 	/* get assoc's active key, should be default key */
@@ -12948,8 +12851,8 @@ DEFINE_APITEST(actkey, sso_achg_1_M)
 	}
 
  out:
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return (ret);
 }
 
@@ -12980,7 +12883,7 @@ DEFINE_APITEST(delkey, gso_def_1_1)
 	}
 	keyid = 0;
 	result = sctp_get_delete_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to get delete key?";
 	}
@@ -13003,7 +12906,7 @@ DEFINE_APITEST(delkey, gso_def_1_M)
 	}
 	keyid = 0;
 	result = sctp_get_delete_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to get delete key?";
 	}
@@ -13026,7 +12929,7 @@ DEFINE_APITEST(delkey, gso_inval_1_1)
 	}
 	keyid = 0x1234;
 	result = sctp_get_delete_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to get delete key?";
 	}
@@ -13049,7 +12952,7 @@ DEFINE_APITEST(delkey, gso_inval_1_M)
 	}
 	keyid = 0x1234;
 	result = sctp_get_delete_key(fd, 0, &keyid);
-	close(fd);
+	closesocket(fd);
 	if (result >= 0) {
 		return "was able to get delete key?";
 	}
@@ -13075,10 +12978,10 @@ DEFINE_APITEST(delkey, sso_def_1_1)
 	keyid = 0;
 	result = sctp_get_delete_key(fd, 0, &keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete default active key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13101,10 +13004,10 @@ DEFINE_APITEST(delkey, sso_def_1_M)
 	keyid = 0;
 	result = sctp_get_delete_key(fd, 0, &keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete default active key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13127,10 +13030,10 @@ DEFINE_APITEST(delkey, sso_inval_1_1)
 	keyid = 1234;
 	result = sctp_get_delete_key(fd, 0, &keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete non-existant key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13153,10 +13056,10 @@ DEFINE_APITEST(delkey, sso_inval_1_M)
 	keyid = 1234;
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete non-existant key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13182,23 +13085,23 @@ DEFINE_APITEST(delkey, sso_new_1_1)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 
 	/* delete the key */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to delete key";
 	}
 	/* delete again to make sure it's really gone */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to re-delete key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13224,23 +13127,23 @@ DEFINE_APITEST(delkey, sso_new_1_M)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 
 	/* delete the key */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to delete key";
 	}
 	/* delete again to make sure it's really gone */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to re-delete key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13265,22 +13168,22 @@ DEFINE_APITEST(delkey, sso_newact_1_1)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set active key";
 	}
 
 	/* delete the key */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete an active key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13305,22 +13208,22 @@ DEFINE_APITEST(delkey, sso_newact_1_M)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set active key";
 	}
 
 	/* delete the key */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to delete an active key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13347,12 +13250,12 @@ DEFINE_APITEST(delkey, sso_zero_1_1)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set active key";
 	}
 
@@ -13360,17 +13263,17 @@ DEFINE_APITEST(delkey, sso_zero_1_1)
 	keyid = 0;
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to delete key";
 	}
 	/* delete again to make sure it's really gone */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to re-delete key";
 	}
 
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13397,12 +13300,12 @@ DEFINE_APITEST(delkey, sso_zero_1_M)
 	keylen = sizeof(*keytext);
 	result = sctp_set_auth_key(fd, 0, keyid, keylen, (uint8_t *)keytext);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to add key";
 	}
 	result = sctp_set_active_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to set active key";
 	}
 
@@ -13410,16 +13313,16 @@ DEFINE_APITEST(delkey, sso_zero_1_M)
 	keyid = 0;
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return "was unable to delete key";
 	}
 	/* delete again to make sure it's really gone */
 	result = sctp_set_delete_key(fd, 0, keyid);
 	if (result >= 0) {
-		close(fd);
+		closesocket(fd);
 		return "was able to re-delete key";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -13445,7 +13348,7 @@ DEFINE_APITEST(dsack, gso_def_1_1)
 		return(strerror(errno));
 	}
 	result = sctp_get_dsack(fd, 0, &delay, &freq);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -13474,7 +13377,7 @@ DEFINE_APITEST(dsack, gso_def_1_M)
 		return(strerror(errno));
 	}
 	result = sctp_get_dsack(fd, 0, &delay, &freq);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14186,7 +14089,7 @@ DEFINE_APITEST(fraginter, gso_def_1_1)
 		return(strerror(errno));
 	}
 	result = sctp_get_interleave(fd, &inter);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -14212,7 +14115,7 @@ DEFINE_APITEST(fraginter, gso_def_1_M)
 		return(strerror(errno));
 	}
 	result = sctp_get_interleave(fd, &inter);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -14243,23 +14146,23 @@ DEFINE_APITEST(fraginter, sso_1_1)
 			newval = i;
 			result = sctp_set_interleave(fd, newval);
 			if(result < 0) {
-				close(fd);
+				closesocket(fd);
 				return(strerror(errno));
 			}
 
 			result = sctp_get_interleave(fd, &inter[1]);
 			if(result < 0) {
-				close(fd);
+				closesocket(fd);
 				return(strerror(errno));
 			}
 			if(inter[1] != newval) {
-				close(fd);
+				closesocket(fd);
 				return "failed to set fragment interleave";
 			}
 
 		}
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -14280,7 +14183,7 @@ DEFINE_APITEST(fraginter, sso_1_M)
 	}
 	result = sctp_get_interleave(fd, &inter[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	cnt = 0;
@@ -14289,23 +14192,23 @@ DEFINE_APITEST(fraginter, sso_1_M)
 			newval = i;
 			result = sctp_set_interleave(fd, newval);
 			if(result < 0) {
-				close(fd);
+				closesocket(fd);
 				return(strerror(errno));
 			}
 
 			result = sctp_get_interleave(fd, &inter[1]);
 			if(result < 0) {
-				close(fd);
+				closesocket(fd);
 				return(strerror(errno));
 			}
 			if(inter[1] != newval) {
-				close(fd);
+				closesocket(fd);
 				return "failed to set fragment interleave";
 			}
 
 		}
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -14327,25 +14230,25 @@ DEFINE_APITEST(fraginter, sso_bad_1_1)
 	}
 	result = sctp_get_interleave(fd, &inter[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 42;
 	result = sctp_set_interleave(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return NULL;
 	}
 	result = sctp_get_interleave(fd, &inter[1]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(inter[1] != inter[0]) {
-		close(fd);
+		closesocket(fd);
 		return "bogus set changed interleave value";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -14366,25 +14269,25 @@ DEFINE_APITEST(fraginter, sso_bad_1_M)
 	}
 	result = sctp_get_interleave(fd, &inter[0]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	newval = 42;
 	result = sctp_set_interleave(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return NULL;
 	}
 	result = sctp_get_interleave(fd, &inter[1]);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(inter[1] != inter[0]) {
-		close(fd);
+		closesocket(fd);
 		return "bogus set changed interleave value";
 	}
-	close(fd);
+	closesocket(fd);
 	return NULL;
 }
 
@@ -14409,7 +14312,7 @@ DEFINE_APITEST(pdapi, gso_1_1)
 		return(strerror(errno));
 	}
 	result = sctp_get_pdapi_point(fd, &point);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -14432,7 +14335,7 @@ DEFINE_APITEST(pdapi, gso_1_M)
 		return(strerror(errno));
 	}
 	result = sctp_get_pdapi_point(fd, &point);
-	close(fd);
+	closesocket(fd);
 	if(result < 0) {
 		return(strerror(errno));
 	}
@@ -14457,7 +14360,7 @@ DEFINE_APITEST(padapi, sso_1_1)
 	}
 	result = sctp_get_pdapi_point(fd, &point);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if (point > 100 ){
@@ -14467,15 +14370,15 @@ DEFINE_APITEST(padapi, sso_1_1)
 	}
 	result = sctp_set_pdapi_point(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_pdapi_point(fd, &point);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(newval != point) {
 		return "Could not set pdapi point";
 	}
@@ -14500,7 +14403,7 @@ DEFINE_APITEST(pdapi, sso_1_M)
 	}
 	result = sctp_get_pdapi_point(fd, &point);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if (point > 100 ){
@@ -14510,15 +14413,15 @@ DEFINE_APITEST(pdapi, sso_1_M)
 	}
 	result = sctp_set_pdapi_point(fd, newval);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_pdapi_point(fd, &point);
 	if(result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
-	close(fd);
+	closesocket(fd);
 	if(newval != point) {
 		return "Could not set pdapi point";
 	}
@@ -14549,9 +14452,9 @@ DEFINE_APITEST(xrcvinfo, sso_1_1)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -14560,15 +14463,15 @@ DEFINE_APITEST(xrcvinfo, sso_1_1)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14596,9 +14499,9 @@ DEFINE_APITEST(xrcvinfo, sso_1_M)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -14607,15 +14510,15 @@ DEFINE_APITEST(xrcvinfo, sso_1_M)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_USE_EXT_RCVINFO,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14649,9 +14552,9 @@ DEFINE_APITEST(aasconf, sso_1_1)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -14660,15 +14563,15 @@ DEFINE_APITEST(aasconf, sso_1_1)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14697,9 +14600,9 @@ DEFINE_APITEST(aasconf, sso_1_M)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -14708,15 +14611,15 @@ DEFINE_APITEST(aasconf, sso_1_M)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_AUTO_ASCONF,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14750,8 +14653,8 @@ DEFINE_APITEST(maxburst, gso_def_1_1)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&val, &len);
-	close(fd);
+			    &val, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14779,8 +14682,8 @@ DEFINE_APITEST(maxburst, gso_def_1_M)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&val, &len);
-	close(fd);
+			    &val, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14809,9 +14712,9 @@ DEFINE_APITEST(maxburst, sso_1_1)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val >= 2)
@@ -14821,15 +14724,15 @@ DEFINE_APITEST(maxburst, sso_1_1)
 
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14859,9 +14762,9 @@ DEFINE_APITEST(maxburst, sso_1_M)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val >= 2)
@@ -14870,15 +14773,15 @@ DEFINE_APITEST(maxburst, sso_1_M)
 		newval = val +1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_MAX_BURST,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14911,7 +14814,7 @@ DEFINE_APITEST(context, sso_1_1)
 	}
 	result = sctp_get_context(fd, 0, &val);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val == 0)
@@ -14921,11 +14824,11 @@ DEFINE_APITEST(context, sso_1_1)
 
 	result = sctp_set_context(fd, 0, newval);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_context(fd, 0, &finalval);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -14953,7 +14856,7 @@ DEFINE_APITEST(context, sso_1_M)
 	}
 	result = sctp_get_context(fd, 0, &val);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val == 0)
@@ -14963,11 +14866,11 @@ DEFINE_APITEST(context, sso_1_M)
 
 	result = sctp_set_context(fd, 0, newval);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	result = sctp_get_context(fd, 0, &finalval);
-	close(fd);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -15458,9 +15361,9 @@ DEFINE_APITEST(eeor, sso_1_1)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -15469,15 +15372,15 @@ DEFINE_APITEST(eeor, sso_1_1)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -15506,9 +15409,9 @@ DEFINE_APITEST(eeor, sso_1_M)
 	}
 	len = sizeof(val);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&val, &len);
+			    &val, &len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	if(val)
@@ -15517,15 +15420,15 @@ DEFINE_APITEST(eeor, sso_1_M)
 		newval = 1;
 	len = sizeof(newval);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&newval, len);
+			    &newval, len);
 	if (result < 0) {
-		close(fd);
+		closesocket(fd);
 		return(strerror(errno));
 	}
 	len = sizeof(finalval);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_EXPLICIT_EOR,
-			    (void *)&finalval, &len);
-	close(fd);
+			    &finalval, &len);
+	closesocket(fd);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -15562,9 +15465,9 @@ DEFINE_APITEST(read, status)
 	stat.sstat_assoc_id = ids[0];
 	len = sizeof(stat);
 	result = getsockopt(fds[0], IPPROTO_SCTP, SCTP_STATUS,
-			    (void *)&stat, &len);
-	close(fds[0]);
-	close(fds[1]);
+			    &stat, &len);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -15597,19 +15500,19 @@ DEFINE_APITEST(read, paddrinfo)
 	stat.sstat_assoc_id = ids[0];
 	len = sizeof(stat);
 	result = getsockopt(fds[0], IPPROTO_SCTP, SCTP_STATUS,
-			    (void *)&stat, &len);
+			    &stat, &len);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	memcpy(&pa, &stat.sstat_primary, sizeof(pa));
 	pa.spinfo_assoc_id = ids[0];
 	len = sizeof(pa);
 	result = getsockopt(fds[0], IPPROTO_SCTP, SCTP_GET_PEER_ADDR_INFO,
-			    (void *)&pa, &len);
-	close(fds[0]);
-	close(fds[1]);
+			    &pa, &len);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	if (result < 0) {
 		return(strerror(errno));
 	}
@@ -15648,10 +15551,10 @@ DEFINE_APITEST(read, auth_p_chklist)
 	auth->gauth_assoc_id = ids[0];
 	len = sizeof(buffer);
 	result = getsockopt(fds[0], IPPROTO_SCTP, SCTP_PEER_AUTH_CHUNKS,
-			    (void *)auth, &len);
+			    auth, &len);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
 	j = len - sizeof(sctp_assoc_t);
@@ -15672,12 +15575,12 @@ DEFINE_APITEST(read, auth_p_chklist)
 			sctp_delay(SCTP_SLEEP_MS);
 			goto try_again;
 		}
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return "Did not see ASCONF/ASCONF-ACK in list";
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	return NULL;
 }
 
@@ -15706,14 +15609,14 @@ DEFINE_APITEST(read, auth_l_chklist)
 	auth->gauth_assoc_id = ids[0];
 	len = sizeof(buffer);
 	result = getsockopt(fds[0], IPPROTO_SCTP, SCTP_LOCAL_AUTH_CHUNKS,
-			    (void *)auth, &len);
+			    auth, &len);
 	if (result < 0) {
-		close(fds[0]);
-		close(fds[1]);
+		closesocket(fds[0]);
+		closesocket(fds[1]);
 		return(strerror(errno));
 	}
-	close(fds[0]);
-	close(fds[1]);
+	closesocket(fds[0]);
+	closesocket(fds[1]);
 	j = len - sizeof(sctp_assoc_t);
 	if(j > 260)
 		j = 256;
@@ -15744,16 +15647,12 @@ DEFINE_APITEST(reuseport, set_1_to_M)
 	optlen = (socklen_t)sizeof(int);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_REUSE_PORT, (const void *)&on, optlen);
 
-	close(fd);
+	closesocket(fd);
 
 	if (!result)
 		return "setsockopt was successful";
 
-#if !defined(__Windows__)
-	if (errno != EINVAL)
-#else
 	if (errno != WSAEINVAL)
-#endif
 		return strerror(errno);
 
 	return NULL;
@@ -15771,15 +15670,11 @@ DEFINE_APITEST(reuseport, get_1_to_M)
 	optlen = (socklen_t)sizeof(int);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_REUSE_PORT, (void *)&opt, &optlen);
 
-	close(fd);
+	closesocket(fd);
 
 	if (!result) {
 		return "getsockopt was successful";
-#if !defined(__Windows__)
-	} else if (errno != EINVAL) {
-#else
 	} else if (errno != WSAEINVAL) {
-#endif
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -15798,7 +15693,7 @@ DEFINE_APITEST(reuseport, set_before_bind)
 	optlen = (socklen_t)sizeof(int);
 	result = setsockopt(fd, IPPROTO_SCTP, SCTP_REUSE_PORT, (const void *)&on, optlen);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result) {
 		return strerror(errno);
@@ -15820,7 +15715,7 @@ DEFINE_APITEST(reuseport, get_default)
 	optlen = (socklen_t)sizeof(int);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_REUSE_PORT, (void *)&opt, &optlen);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result) {
 		return strerror(errno);
@@ -15841,7 +15736,7 @@ DEFINE_APITEST(reuseport, get_after_set)
 		return strerror(errno);
 
 	if (sctp_enable_reuse_port(fd) < 0) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
@@ -15849,7 +15744,7 @@ DEFINE_APITEST(reuseport, get_after_set)
 	optlen = (socklen_t)sizeof(int);
 	result = getsockopt(fd, IPPROTO_SCTP, SCTP_REUSE_PORT, (void *)&opt, &optlen);
 
-	close(fd);
+	closesocket(fd);
 
 	if (result) {
 		return strerror(errno);
@@ -15868,19 +15763,15 @@ DEFINE_APITEST(reuseport, set_after_bind)
 		return strerror(errno);
 	}
 	if (sctp_bind(fd, INADDR_LOOPBACK, 0) < 0) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 	result = sctp_enable_reuse_port(fd);
-	close(fd);
+	closesocket(fd);
 
 	if (!result) {
 		return "setsockopt() was successful";
-#if !defined(__Windows__)
-	} else if (errno != EINVAL) {
-#else
 	} else if (errno != WSAEINVAL) {
-#endif
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -15905,20 +15796,16 @@ DEFINE_APITEST(reuseport, set_after_bindx)
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if (sctp_bindx(fd, (struct sockaddr *)&addr, 1, SCTP_BINDX_ADD_ADDR) < 0) {
-		close(fd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 
 	result = sctp_enable_reuse_port(fd);
-	close(fd);
+	closesocket(fd);
 
 	if (!result) {
 		return "setsockopt() was successful";
-#if !defined(__Windows__)
-	} else if (errno != EINVAL) {
-#else
 	} else if (errno != WSAEINVAL) {
-#endif
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -15933,27 +15820,27 @@ DEFINE_APITEST(reuseport, bind_twice)
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd1) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd2) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = sctp_bind(fd2, INADDR_LOOPBACK, sctp_get_local_port(fd1));
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	if (result) {
 		return strerror(errno);
@@ -15965,42 +15852,32 @@ DEFINE_APITEST(reuseport, bind_twice)
 DEFINE_APITEST(reuseport, bind_twice_illegal_1)
 {
 	int fd1, fd2, result;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd1 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
 		return strerror(errno);
 	}
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd2) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = sctp_bind(fd2, INADDR_LOOPBACK, sctp_get_local_port(fd1));
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
 
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	if (!result) {
 		return "bind() was successful";
-#if !defined(__Windows__)
-	} else if (errno != EADDRINUSE) {
-#else
-	} else if (error != WSAEADDRINUSE) {
-#endif
+	} else if (WSAGetLastError() != WSAEADDRINUSE) {
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -16010,40 +15887,30 @@ DEFINE_APITEST(reuseport, bind_twice_illegal_1)
 DEFINE_APITEST(reuseport, bind_twice_illegal_2)
 {
 	int fd1, fd2, result;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd1 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd1) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = sctp_bind(fd2, INADDR_LOOPBACK, sctp_get_local_port(fd1));
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	if (!result) {
 		return "bind() was successful";
-#if !defined(__Windows__)
-	} else if (errno != EADDRINUSE) {
-#else
-	} else if (error != WSAEADDRINUSE) {
-#endif
+	} else if (WSAGetLastError() != WSAEADDRINUSE) {
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -16057,31 +15924,31 @@ DEFINE_APITEST(reuseport, bind_twice_listen)
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd1) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd2) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd2, INADDR_LOOPBACK, sctp_get_local_port(fd1)) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = listen(fd1, 1);
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	if (result) {
 		return strerror(errno);
@@ -16098,26 +15965,26 @@ DEFINE_APITEST(reuseport, bind_subset)
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd1) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd2) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = sctp_bind(fd2, INADDR_ANY, sctp_get_local_port(fd1));
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	if (result) {
 		return strerror(errno);
@@ -16129,54 +15996,44 @@ DEFINE_APITEST(reuseport, bind_subset)
 DEFINE_APITEST(reuseport, listen_twice)
 {
 	int fd1, fd2, result;
-#if defined(__Windows__)
-	int error;
-#endif
 
 	if ((fd1 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd1) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if ((fd2 = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(fd1);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_enable_reuse_port(fd2) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd1, INADDR_LOOPBACK, 0) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_bind(fd2, INADDR_LOOPBACK, sctp_get_local_port(fd1)) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (listen(fd1, 1) < 0) {
-		close(fd1);
-		close(fd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	result = listen(fd2, 1);
-#if defined(__Windows__)
-	error = WSAGetLastError();
-#endif
-	close(fd1);
-	close(fd2);
+	closesocket(fd1);
+	closesocket(fd2);
 	if (!result) {
 		return "listen() was successful";
-#if !defined(__Windows__)
-	} else if (errno != EADDRINUSE) {
-#else
-	} else if (error != WSAEADDRINUSE) {
-#endif
+	} else if (WSAGetLastError() != WSAEADDRINUSE) {
 		return strerror(errno);
 	} else {
 		return NULL;
@@ -16192,11 +16049,11 @@ sctp_bound_socket(in_addr_t address, in_port_t port)
 		return -1;
 	}
 	if (sctp_enable_reuse_port(fd) < 0) {
-		close(fd);
+		closesocket(fd);
 		return -1;
 	}
 	if (sctp_bind(fd, address, port) < 0) {
-		close(fd);
+		closesocket(fd);
 		return -1;
 	}
 	return fd;
@@ -16211,7 +16068,7 @@ sctp_listening_socket(in_addr_t address, in_port_t port)
 		return -1;
 	}
 	if (listen(fd, 1) < 0) {
-		close(fd);
+		closesocket(fd);
 		return -1;
 	}
 	return fd;
@@ -16227,26 +16084,26 @@ DEFINE_APITEST(reuseport, accept_inheritage)
 		return strerror(errno);
 	}
 	if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) < 0) {
-		close(lfd);
+		closesocket(lfd);
 		return strerror(errno);
 	}
 	if (sctp_connect(fd, INADDR_LOOPBACK, sctp_get_local_port(lfd)) < 0) {
-		close(lfd);
-		close(fd);
+		closesocket(lfd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 	if ((cfd = accept(lfd, NULL, NULL)) < 0) {
-		close(lfd);
-		close(fd);
+		closesocket(lfd);
+		closesocket(fd);
 		return strerror(errno);
 	}
 	opt = 0;
 	optlen = (socklen_t)sizeof(int);
 	result = getsockopt(cfd, IPPROTO_SCTP, SCTP_REUSE_PORT, (void *)&opt, &optlen);
 
-	close(lfd);
-	close(fd);
-	close(cfd);
+	closesocket(lfd);
+	closesocket(fd);
+	closesocket(cfd);
 
 	if (result) {
 		return strerror(errno);
@@ -16265,38 +16122,38 @@ DEFINE_APITEST(reuseport, connect)
 		return strerror(errno);
 	}
 	if ((lfd2 = sctp_listening_socket(INADDR_LOOPBACK, 0)) < 0) {
-		close(lfd1);
+		closesocket(lfd1);
 		return strerror(errno);
 	}
 	if ((fd1 = sctp_bound_socket(INADDR_LOOPBACK, 0)) < 0) {
-		close(lfd1);
-		close(lfd2);
+		closesocket(lfd1);
+		closesocket(lfd2);
 		return strerror(errno);
 	}
 	if ((fd2 = sctp_bound_socket(INADDR_LOOPBACK, sctp_get_local_port(fd1))) < 0) {
-		close(lfd1);
-		close(lfd2);
-		close(fd1);
+		closesocket(lfd1);
+		closesocket(lfd2);
+		closesocket(fd1);
 		return strerror(errno);
 	}
 	if (sctp_connect(fd1, INADDR_LOOPBACK, sctp_get_local_port(lfd1)) < 0) {
-		close(lfd1);
-		close(lfd2);
-		close(fd1);
-		close(fd2);
+		closesocket(lfd1);
+		closesocket(lfd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
 	if (sctp_connect(fd2, INADDR_LOOPBACK, sctp_get_local_port(lfd2)) < 0) {
-		close(lfd1);
-		close(lfd2);
-		close(fd1);
-		close(fd2);
+		closesocket(lfd1);
+		closesocket(lfd2);
+		closesocket(fd1);
+		closesocket(fd2);
 		return strerror(errno);
 	}
-	close(lfd1);
-	close(lfd2);
-	close(fd1);
-	close(fd2);
+	closesocket(lfd1);
+	closesocket(lfd2);
+	closesocket(fd1);
+	closesocket(fd2);
 
 	return NULL;
 }

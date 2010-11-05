@@ -31,11 +31,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#else
 #include <winsock2.h>
-#endif
 #include <stdlib.h>
 #ifdef LINUX
 #include <getopt.h>
@@ -85,13 +81,7 @@ void
 run_tests_random(int ignore_failed)
 {
 	do {
-		run_test(
-#if !defined(__Windows__)
-		    random() %
-#else
-		    rand() %
-#endif
-		    number_of_tests);
+		run_test(rand() % number_of_tests);
 	} while ((failed == 0) || ignore_failed);
 }
 
@@ -142,9 +132,7 @@ enable_tests(int number_of_suites, char *suite_name[])
 }
 
 int
-#if defined(__Windows__)
 __cdecl
-#endif
 main(int argc, char *argv[])
 {
 	char c;
@@ -152,26 +140,6 @@ main(int argc, char *argv[])
 	int test_randomly = 0;
 	int test_loop = 0;
 
-#if !defined(__Windows__)
-	while ((c = getopt(argc, argv, "fhlr")) != -1)
-		switch(c) {
-			case 'f':
-				ignore_failed = 0;
-				break;
-			case 'h':
-				print_usage();
-				exit(EXIT_SUCCESS);
-			case 'l':
-				test_loop = 1;
-				break;
-			case 'r':
-				test_randomly = 1;
-				break;
-			default:
-				print_usage();
-				exit(EXIT_FAILURE);
-		}
-#else
 	int optind = 1;
 	WSADATA wsaData;
 	int ret = 0;
@@ -203,7 +171,6 @@ main(int argc, char *argv[])
 		}
 		argc -= 1;
 	}
-#endif
 
 	enable_tests(argc - optind, argv + optind);
 	printf("Name                          Verdict  Info\n");

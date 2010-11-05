@@ -29,29 +29,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__Windows__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
 #include <mswsock.h>
 #include <WS2tcpip.h>
-#endif
 #include <string.h>
 #include <stdio.h>
-#if !defined(__Windows__)
-#include <unistd.h>
-#endif
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if !defined(__Windows__)
-#include <netinet/sctp.h>
-#else
 #include <ws2sctp.h>
-#endif
 #include "sctp_utilities.h"
 #include "api_tests.h"
 
@@ -73,32 +59,19 @@ DEFINE_APITEST(connect, non_listen)
 
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (fds, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fds);
-#else
 		closesocket(fds);
-#endif
 		return strerror(errno);
 	}
 
 	fdc = sctp_one2one(0, 0, 0);
 	if (fdc  < 0) {
-#if !defined(__Windows__)
-		close(fds);
-#else
 		closesocket(fds);
-#endif
 		return strerror(errno);
 	}
 	n = connect(fdc, (const struct sockaddr *)&addr, addr_len);
 
-#if !defined(__Windows__)
-	close(fds);
-	close(fdc);
-#else
 	closesocket(fds);
 	closesocket(fdc);
-#endif
 
 	if (n < 0)
 		return NULL;
@@ -124,32 +97,19 @@ DEFINE_APITEST(connect, listen)
 
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (fds, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fds);
-#else
 		closesocket(fds);
-#endif
 		return strerror(errno);
 	}
 
 	fdc = sctp_one2one(0, 0, 0);
-	if (fdc < 0) {
-#if !defined(__Windows__)
-		close(fds);
-#else
+	if (fdc  < 0) {
 		closesocket(fds);
-#endif
 		return strerror(errno);
 	}
 
 	n = connect(fdc, (const struct sockaddr *)&addr, addr_len);
-#if !defined(__Windows__)
-	close(fds);
-	close(fdc);
-#else
 	closesocket(fds);
 	closesocket(fdc);
-#endif
 	if (n < 0)
 		return strerror(errno);
 	else
@@ -174,20 +134,12 @@ DEFINE_APITEST(connect, self_non_listen)
 
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname (fd, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	n = connect(fd, (const struct sockaddr *)&addr, addr_len);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 
 	/*  This really depends on when connect() returns. On the
 	 *  reception of the INIT-ACK or the COOKIE-ACK
@@ -217,20 +169,12 @@ DEFINE_APITEST(connect, self_listen)
 		return strerror(errno);
 	addr_len = (socklen_t)sizeof(struct sockaddr_in);
 	if (getsockname(fd, (struct sockaddr *) &addr, &addr_len) < 0) {
-#if !defined(__Windows__)
-		close(fd);
-#else
 		closesocket(fd);
-#endif
 		return strerror(errno);
 	}
 
 	n = connect(fd, (const struct sockaddr *)&addr, addr_len);
-#if !defined(__Windows__)
-	close(fd);
-#else
 	closesocket(fd);
-#endif
 	if (n < 0)
 		return NULL;
 	else
