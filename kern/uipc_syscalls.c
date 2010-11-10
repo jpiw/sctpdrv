@@ -2641,7 +2641,7 @@ SCTPDispatchSelectRequest(
 		status = ObReferenceObjectByHandle(fds->fd_array[i], \
 		    (FILE_GENERIC_READ | FILE_GENERIC_WRITE), \
 		    NULL, \
-		    KernelMode, \
+		    UserMode, \
 		    (PVOID *)&(objs)[i], \
 		    NULL); \
 		if (!NT_SUCCESS(status)) { \
