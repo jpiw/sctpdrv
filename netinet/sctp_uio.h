@@ -1,5 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
+ * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,7 +33,7 @@
 /* $KAME: sctp_uio.h,v 1.11 2005/03/06 16:04:18 itojun Exp $	 */
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 212242 2010-09-05 20:13:07Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 218037 2011-01-28 20:49:15Z rrs $");
 #endif
 
 #ifndef __sctp_uio_h__
@@ -59,17 +61,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 212242 2010-09-05 20:13:07Z tuex
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#endif
-
-#ifndef IPPROTO_SCTP
-#define IPPROTO_SCTP	132
-#endif
-
-#define MSG_EOR				0x0100	/* data completes record */
-#define	MSG_NOTIFICATION	0x1000	/* SCTP notification */
-
-#ifndef IPV6_V6ONLY
-#define IPV6_V6ONLY			27
 #endif
 
 typedef uint32_t sctp_assoc_t;
@@ -115,7 +106,7 @@ struct sctp_initmsg {
 /* We add 96 bytes to the size of sctp_sndrcvinfo.
  * This makes the current structure 128 bytes long
  * which is nicely 64 bit aligned but also has room
- * for us to add more and keep ABI compatability.
+ * for us to add more and keep ABI compatibility.
  * For example, already we have the sctp_extrcvinfo
  * when enabled which is 48 bytes.
  */
@@ -271,30 +262,9 @@ struct sctp_paddr_change {
 #define SCTP_ADDR_MADE_PRIM	0x0005
 #define SCTP_ADDR_CONFIRMED	0x0006
 
-/*
- * CAUTION: these are user exposed SCTP addr reachability states must be
- * compatible with SCTP_ADDR states in sctp_constants.h
- */
-#ifdef SCTP_ACTIVE
-#undef SCTP_ACTIVE
-#endif
 #define SCTP_ACTIVE		0x0001	/* SCTP_ADDR_REACHABLE */
-
-#ifdef SCTP_INACTIVE
-#undef SCTP_INACTIVE
-#endif
 #define SCTP_INACTIVE		0x0002	/* SCTP_ADDR_NOT_REACHABLE */
-
-#ifdef SCTP_UNCONFIRMED
-#undef SCTP_UNCONFIRMED
-#endif
 #define SCTP_UNCONFIRMED	0x0200	/* SCTP_ADDR_UNCONFIRMED */
-
-#ifdef SCTP_NOHEARTBEAT
-#undef SCTP_NOHEARTBEAT
-#endif
-#define SCTP_NOHEARTBEAT	0x0040	/* SCTP_ADDR_NOHB */
-
 
 /* remote error events */
 struct sctp_remote_error {
@@ -342,7 +312,7 @@ struct sctp_setadaptation {
 	uint32_t ssb_adaptation_ind;
 };
 
-/* compatable old spelling */
+/* compatible old spelling */
 struct sctp_adaption_event {
 	uint16_t sai_type;
 	uint16_t sai_flags;
@@ -434,7 +404,7 @@ union sctp_notification {
 	struct sctp_send_failed sn_send_failed;
 	struct sctp_shutdown_event sn_shutdown_event;
 	struct sctp_adaptation_event sn_adaptation_event;
-	/* compatability same as above */
+	/* compatibility same as above */
 	struct sctp_adaption_event sn_adaption_event;
 	struct sctp_pdapi_event sn_pdapi_event;
 	struct sctp_authkey_event sn_auth_event;
@@ -455,7 +425,7 @@ union sctp_notification {
 #define SCTP_AUTHENTICATION_EVENT		0x0008
 #define SCTP_STREAM_RESET_EVENT			0x0009
 #define SCTP_SENDER_DRY_EVENT			0x000a
-#define SCTP__NOTIFICATIONS_STOPPED_EVENT	0x000b /* we dont send this*/
+#define SCTP_NOTIFICATIONS_STOPPED_EVENT	0x000b /* we don't send this*/
 /*
  * socket option structs
  */
@@ -590,8 +560,14 @@ struct sctp_assoc_value {
 	uint32_t assoc_value;
 };
 
+struct sctp_stream_value {
+	sctp_assoc_t assoc_id;
+	uint16_t stream_id;
+	uint16_t stream_value;
+};
+
 struct sctp_assoc_ids {
-        uint32_t gaids_number_of_ids;
+	uint32_t gaids_number_of_ids;
 	sctp_assoc_t gaids_assoc_id[];
 };
 
@@ -599,6 +575,17 @@ struct sctp_sack_info {
 	sctp_assoc_t sack_assoc_id;
 	uint32_t sack_delay;
 	uint32_t sack_freq;
+};
+
+struct sctp_timeouts {
+	sctp_assoc_t stimo_assoc_id;
+	uint32_t stimo_init;
+	uint32_t stimo_data;
+	uint32_t stimo_sack;
+	uint32_t stimo_shutdown;
+	uint32_t stimo_heartbeat;
+	uint32_t stimo_cookie;
+	uint32_t stimo_shutdownack;
 };
 
 struct sctp_cwnd_args {
@@ -909,7 +896,7 @@ struct sctpstat {
 	uint32_t  sctps_earlyfrstrid;
 	uint32_t  sctps_earlyfrstrout;
 	uint32_t  sctps_earlyfrstrtmr;
-	/* otheres */
+	/* others */
 	uint32_t  sctps_hdrops;	          /* packet shorter than header */
 	uint32_t  sctps_badsum;	          /* checksum error             */
 	uint32_t  sctps_noport;           /* no endpoint for port       */
@@ -919,8 +906,8 @@ struct sctpstat {
 	uint32_t  sctps_fastretransinrtt; /* number of multiple FR in a RTT window */
 	uint32_t  sctps_markedretrans;
 	uint32_t  sctps_naglesent;        /* nagle allowed sending      */
-	uint32_t  sctps_naglequeued;      /* nagle does't allow sending */
-	uint32_t  sctps_maxburstqueued;   /* max burst dosn't allow sending */
+	uint32_t  sctps_naglequeued;      /* nagle doesn't allow sending */
+	uint32_t  sctps_maxburstqueued;   /* max burst doesn't allow sending */
 	uint32_t  sctps_ifnomemqueued;    /* look ahead tells us no memory in
                                          * interface ring buffer OR we had a
 					 * send error and are queuing one send.
@@ -943,7 +930,7 @@ struct sctpstat {
 	uint32_t  sctps_slowpath_sack;    /* Sacks the slow way */
 	uint32_t  sctps_wu_sacks_sent;	/* Window Update only sacks sent */
 	uint32_t  sctps_sends_with_flags; /* number of sends with sinfo_flags !=0 */
-	uint32_t  sctps_sends_with_unord	/* number of undordered sends */;
+	uint32_t  sctps_sends_with_unord; /* number of unordered sends */
 	uint32_t  sctps_sends_with_eof; 	/* number of sends with EOF flag set */
 	uint32_t  sctps_sends_with_abort; /* number of sends with ABORT flag set */
 	uint32_t  sctps_protocol_drain_calls;	/* number of times protocol drain called */
@@ -951,12 +938,12 @@ struct sctpstat {
 	uint32_t  sctps_read_peeks;	/* Number of times recv was called with peek */
 	uint32_t  sctps_cached_chk;       /* Number of cached chunks used */
 	uint32_t  sctps_cached_strmoq;    /* Number of cached stream oq's used */
-	uint32_t  sctps_left_abandon;     /* Number of unread message abandonded by close */
+	uint32_t  sctps_left_abandon;     /* Number of unread messages abandoned by close */
 	uint32_t  sctps_send_burst_avoid; /* Unused */
 	uint32_t  sctps_send_cwnd_avoid;  /* Send cwnd full  avoidance, already max burst inflight to net */
 	uint32_t  sctps_fwdtsn_map_over;  /* number of map array over-runs via fwd-tsn's */
-
-	uint32_t  sctps_reserved[32];     /* Future ABI compat - remove int's from here when adding new */
+	uint32_t  sctps_queue_upd_ecne;  /* Number of times we queued or updated an ECN chunk on send queue */
+	uint32_t  sctps_reserved[31];     /* Future ABI compat - remove int's from here when adding new */
 };
 
 #define SCTP_STAT_INCR(_x) SCTP_STAT_INCR_BY(_x,1)

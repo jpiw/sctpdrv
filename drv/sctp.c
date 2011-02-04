@@ -1949,7 +1949,7 @@ IP6Output(
 	struct mbuf *m;
 	ULONG totalLength = 0;
 	PMDL top = NULL, prevMdl = NULL, nextMdl = NULL, mdl;
-	IP6OutputCtx *ctx;
+	IP6OutputCtx *ctx = NULL;
 	struct ip6_hdr *ip6;
 	struct sockaddr_in6 *dest, dst, src;
 

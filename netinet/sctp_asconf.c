@@ -1,5 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
+ * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 212712 2010-09-15 23:10:45Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_asconf.c 218232 2011-02-03 19:22:21Z rrs $");
 #endif
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_var.h>
@@ -654,8 +656,7 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 	asoc = &stcb->asoc;
 	serial_num = ntohl(cp->serial_number);
 
-	if (compare_with_wrap(asoc->asconf_seq_in, serial_num, MAX_SEQ) ||
-	    serial_num == asoc->asconf_seq_in) {
+	if (SCTP_TSN_GE(asoc->asconf_seq_in, serial_num)) {
 		/* got a duplicate ASCONF */
 		SCTPDBG(SCTP_DEBUG_ASCONF1,
 			"handle_asconf: got duplicate serial number = %xh\n",
@@ -679,19 +680,16 @@ sctp_handle_asconf(struct mbuf *m, unsigned int offset,
 		/* delete old cache */
 		SCTPDBG(SCTP_DEBUG_ASCONF1,"handle_asconf: Now processing firstASCONF. Try to delte old cache\n");
 
-		ack = TAILQ_FIRST(&stcb->asoc.asconf_ack_sent);
-		while (ack != NULL) {
-			ack_next = TAILQ_NEXT(ack, next);
+		TAILQ_FOREACH_SAFE(ack, &asoc->asconf_ack_sent, next, ack_next) {
 			if (ack->serial_number == serial_num)
 				break;
 			SCTPDBG(SCTP_DEBUG_ASCONF1,"handle_asconf: delete old(%u) < first(%u)\n",
 			    ack->serial_number, serial_num);
-			TAILQ_REMOVE(&stcb->asoc.asconf_ack_sent, ack, next);
+			TAILQ_REMOVE(&asoc->asconf_ack_sent, ack, next);
 			if (ack->data != NULL) {
 				sctp_m_freem(ack->data);
 			}
 			SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_asconf_ack), ack);
-			ack = ack_next;
 		}
 	}
 
@@ -1302,9 +1300,7 @@ sctp_asconf_queue_mgmt(struct sctp_tcb *stcb, struct sctp_ifa *ifa,
 	struct sockaddr *sa;
 
 	/* make sure the request isn't already in the queue */
-	for (aa = TAILQ_FIRST(&stcb->asoc.asconf_queue); aa != NULL;
-	     aa = aa_next) {
-		aa_next = TAILQ_NEXT(aa, next);
+	TAILQ_FOREACH_SAFE(aa, &stcb->asoc.asconf_queue, next, aa_next) {
 		/* address match? */
 		if (sctp_asconf_addr_match(aa, &ifa->address.sa) == 0)
 			continue;
@@ -1391,7 +1387,7 @@ sctp_asconf_queue_mgmt(struct sctp_tcb *stcb, struct sctp_ifa *ifa,
 
 	TAILQ_INSERT_TAIL(&stcb->asoc.asconf_queue, aa, next);
 #ifdef SCTP_DEBUG
-	if (SCTP_BASE_SYSCTL(sctp_debug_on) && SCTP_DEBUG_ASCONF2) {
+	if (SCTP_BASE_SYSCTL(sctp_debug_on) & SCTP_DEBUG_ASCONF2) {
 		if (type == SCTP_ADD_IP_ADDRESS) {
 			SCTP_PRINTF("asconf_queue_mgmt: inserted asconf ADD_IP_ADDRESS: ");
 			SCTPDBG_ADDR(SCTP_DEBUG_ASCONF2, sa);
@@ -1519,9 +1515,7 @@ sctp_asconf_queue_sa_delete(struct sctp_tcb *stcb, struct sockaddr *sa)
 		return (-1);
 	}
 	/* make sure the request isn't already in the queue */
-	for (aa = TAILQ_FIRST(&stcb->asoc.asconf_queue); aa != NULL;
-	     aa = aa_next) {
-		aa_next = TAILQ_NEXT(aa, next);
+	TAILQ_FOREACH_SAFE(aa, &stcb->asoc.asconf_queue, next, aa_next) {
 		/* address match? */
 		if (sctp_asconf_addr_match(aa, sa) == 0)
 			continue;
@@ -1877,9 +1871,7 @@ sctp_handle_asconf_ack(struct mbuf *m, int offset,
 	 */
 	if (last_error_id == 0)
 		last_error_id--;	/* set to "max" value */
-	for (aa = TAILQ_FIRST(&stcb->asoc.asconf_queue); aa != NULL;
-	    aa = aa_next) {
-		aa_next = TAILQ_NEXT(aa, next);
+	TAILQ_FOREACH_SAFE(aa, &stcb->asoc.asconf_queue, next, aa_next) {
 		if (aa->sent == 1) {
 			/*
 			 * implicitly successful or failed if correlation_id
@@ -2143,14 +2135,11 @@ sctp_asconf_iterator_ep_end(struct sctp_inpcb *inp, void *ptr, uint32_t val)
 
 			}
 		} else if (l->action == SCTP_DEL_IP_ADDRESS) {
-			laddr = LIST_FIRST(&inp->sctp_addr_list);
-			while (laddr) {
-				nladdr = LIST_NEXT(laddr, sctp_nxt_addr);
+			LIST_FOREACH_SAFE(laddr, &inp->sctp_addr_list, sctp_nxt_addr, nladdr) {
 				/* remove only after all guys are done */
 				if (laddr->ifa == ifa) {
 					sctp_del_local_addr_ep(inp, ifa);
 				}
-				laddr = nladdr;
 			}
 		}
 	}
@@ -2330,12 +2319,10 @@ sctp_asconf_iterator_end(void *ptr, uint32_t val)
 {
 	struct sctp_asconf_iterator *asc;
 	struct sctp_ifa *ifa;
-	struct sctp_laddr *l, *l_next;
+	struct sctp_laddr *l, *nl;
 
 	asc = (struct sctp_asconf_iterator *)ptr;
-	l = LIST_FIRST(&asc->list_of_work);
-	while (l != NULL) {
-		l_next = LIST_NEXT(l, sctp_nxt_addr);
+	LIST_FOREACH_SAFE(l, &asc->list_of_work, sctp_nxt_addr, nl) {
 		ifa = l->ifa;
 		if (l->action == SCTP_ADD_IP_ADDRESS) {
 			/* Clear the defer use flag */
@@ -2344,7 +2331,6 @@ sctp_asconf_iterator_end(void *ptr, uint32_t val)
 		sctp_free_ifa(ifa);
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_laddr), l);
 		SCTP_DECR_LADDR_COUNT();
-		l = l_next;
 	}
 	SCTP_FREE(asc, SCTP_M_ASC_IT);
 }
@@ -2440,11 +2426,7 @@ sctp_is_addr_pending(struct sctp_tcb *stcb, struct sctp_ifa *sctp_ifa)
 
 	add_cnt = del_cnt = 0;
 	last_param_type = 0;
-	for (chk = TAILQ_FIRST(&stcb->asoc.asconf_send_queue); chk != NULL;
-	    chk = nchk) {
-		/* get next chk */
-		nchk = TAILQ_NEXT(chk, sctp_next);
-
+	TAILQ_FOREACH_SAFE(chk, &stcb->asoc.asconf_send_queue, sctp_next, nchk) {
 		if (chk->data == NULL) {
 			SCTPDBG(SCTP_DEBUG_ASCONF1, "is_addr_pending: No mbuf data?\n");
 			continue;

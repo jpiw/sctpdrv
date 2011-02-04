@@ -1,5 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
+ * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 206137 2010-04-03 15:40:14Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 218186 2011-02-02 11:13:23Z rrs $");
 #endif
 
 #ifndef __sctp_indata_h__
@@ -95,14 +97,14 @@ sctp_calc_rwnd(struct sctp_tcb *stcb, struct sctp_association *asoc);
 
 void
 sctp_express_handle_sack(struct sctp_tcb *stcb, uint32_t cumack,
-			 uint32_t rwnd, int nonce_sum_flag, int *abort_now);
+			 uint32_t rwnd, int *abort_now, int ecne_seen);
 
 void
 sctp_handle_sack(struct mbuf *m, int offset_seg, int offset_dup,
                  struct sctp_tcb *stcb, struct sctp_nets *net_from,
                  uint16_t num_seg, uint16_t num_nr_seg, uint16_t num_dup,
                  int *abort_now, uint8_t flags,
-                 uint32_t cum_ack, uint32_t rwnd);
+                 uint32_t cum_ack, uint32_t rwnd, int ecne_seen);
 
 /* draft-ietf-tsvwg-usctp */
 void
