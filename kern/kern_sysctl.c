@@ -24,7 +24,7 @@
  */
 #include <ntifs.h>
 
-#include <Ntstrsafe.h>
+#include <ntstrsafe.h>
 
 #include <sys/types.h>
 #include <sys/errno.h>

@@ -149,8 +149,8 @@ typedef struct _SOCKET_FD_SET {
 } SOCKET_FD_SET, *PSOCKET_FD_SET;
 
 typedef struct fd_set32 {
-        UINT fd_count;               /* how many are SET? */
-        ULONG fd_array[SOCKET_FD_SETSIZE];   /* an array of SOCKETs */
+        UINT fd_count;
+        ULONG fd_array[0];
 } fd_set32;
 
 typedef fd_set32 SOCKET_FD_SET32;

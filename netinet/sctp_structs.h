@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 218241 2011-02-03 20:44:49Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 218400 2011-02-07 15:04:23Z tuexen $");
 #endif
 
 #ifndef __sctp_structs_h__
@@ -379,6 +379,12 @@ struct sctp_nets {
 	uint8_t lan_type;
 	/* JRS - struct used in HTCP algorithm */
 	struct htcp htcp_ca;
+#if defined(__FreeBSD__)
+	uint32_t flowid;
+#ifdef INVARIANTS
+	uint8_t flowidset;
+#endif
+#endif
 };
 
 

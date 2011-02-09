@@ -416,7 +416,8 @@ SCTPDispatchAcceptRequest(
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchAcceptReqest - leave#1\n");
 			goto done;
 		} else {
-			socket = *((HANDLE*)irp->AssociatedIrp.SystemBuffer);
+			ULONG handle32 = *((ULONG*)irp->AssociatedIrp.SystemBuffer);
+			socket = ULongToHandle(handle32);
 		}
 	} else {
 #endif
@@ -565,7 +566,7 @@ SCTPDispatchPeeloffRequest(
 		}
 
 		peeloffReq32 = (PSOCKET_PEELOFF_REQUEST32)irp->AssociatedIrp.SystemBuffer;
-		peeloffReq.socket = LongToHandle(peeloffReq32->socket);
+		peeloffReq.socket = ULongToHandle(peeloffReq32->socket);
 		peeloffReq.assoc_id = peeloffReq32->assoc_id;
 	} else {
 #endif
@@ -2455,6 +2456,152 @@ done:
 }
 #endif
 
+static inline int
+putfds64(PSOCKET_FD_SET uaddr, PSOCKET_FD_SET kaddr, int num)
+{
+	int rc = 0;
+	size_t len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num;
+	rc = copyout(kaddr, uaddr, len);
+
+	return rc;
+}
+
+static inline int
+putfds32(PSOCKET_FD_SET32 uset32, PSOCKET_FD_SET kset, int num)
+{
+	ULONG fd;
+	int i;
+	int error = 0;
+
+	copyout(&kset->fd_count, &uset32->fd_count, sizeof(int));
+	for (i = 0; i < kset->fd_count; i++) {
+		fd = HandleToULong(kset->fd_array[i]);
+		error = copyout(&fd, &uset32->fd_array[i], sizeof(ULONG));
+		if (error != 0)
+			break;
+	}
+
+	return error;
+}
+
+static inline int
+putfds(PIRP irp, PSOCKET_FD_SET32 uaddr32, PSOCKET_FD_SET uaddr64, PSOCKET_FD_SET kaddr)
+{
+	int error = 0;
+
+#if defined(_WIN64)
+	if (IoIs32bitProcess(irp)) {
+		error = putfds32(uaddr32, kaddr, kaddr->fd_count);
+	} else {
+#endif
+	error = putfds64(uaddr64, kaddr, kaddr->fd_count);
+#if defined(_WIN64)
+	}
+#endif
+
+	return error;
+}
+
+#define getfds(uaddr, kaddr, is64bit) \
+	if (uaddr != NULL) { \
+		int i; \
+		HANDLE hFd; \
+		int num; \
+		int itemlen; \
+		size_t len; \
+		error = copyin(&uaddr->fd_count, &num, sizeof(int)); \
+		if (error != 0) { \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
+			goto done2; \
+		} \
+		itemlen = (is64bit)? sizeof(HANDLE) * num : sizeof(ULONG) * num; \
+		len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num; \
+		\
+		kaddr = ExAllocatePoolWithTag(PagedPool, len, 'km51'); \
+		if (kaddr == NULL) { \
+			status = STATUS_INSUFFICIENT_RESOURCES; \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#2\n"); \
+			goto done; \
+		} \
+		RtlZeroMemory(kaddr, len); \
+		error = copyin(&uaddr->fd_count, &kaddr->fd_count, sizeof(int)); \
+		if (error != 0) { \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
+			goto done2; \
+		} \
+		for (i = 0; i < num; i++) { \
+			error = copyin(&uaddr->fd_array[i], &hFd, itemlen); \
+			if (itemlen < sizeof(HANDLE)) \
+				hFd = ULongToHandle((ULONG)hFd); \
+			error = copyin(&hFd, &kaddr->fd_array[i], itemlen); \
+			if (error != 0) { \
+				DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
+				goto done; \
+			} \
+		}\
+	} \
+
+#define getfds32(uaddr, kaddr) do { \
+	getfds(uaddr, kaddr, 0); \
+} while (0)
+
+#define getfds64(uaddr, kaddr) do { \
+	getfds(uaddr, kaddr, 1); \
+} while (0)
+
+#define allocfds(ofds, num) do { \
+	if ((num) > 0) { \
+		(ofds) = ExAllocatePoolWithTag(PagedPool, sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * (num), 'km51'); \
+		if ((ofds) == NULL) { \
+			status = STATUS_INSUFFICIENT_RESOURCES; \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#5\n"); \
+			goto done; \
+		} \
+		RtlZeroMemory((ofds), sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * (num)); \
+	} \
+} while (0)
+
+#define getobjs(fds, objs) do { \
+	for (i = 0; i < fds->fd_count; i++) { \
+		status = ObReferenceObjectByHandle(fds->fd_array[i], \
+		    (FILE_GENERIC_READ | FILE_GENERIC_WRITE), \
+		    NULL, \
+		    UserMode, \
+		    (PVOID *)&(objs)[i], \
+		    NULL); \
+		if (!NT_SUCCESS(status)) { \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#8\n"); \
+			goto done; \
+		} \
+	} \
+} while (0)
+
+#define checkevents(fds, objs, ofds, flag) do { \
+	for (i = 0; i < (fds)->fd_count; i++) { \
+		fileObj = (objs)[i]; \
+		socketContext = (PSOCKET_CONTEXT)fileObj->FsContext; \
+		so = socketContext->socket; \
+		if (sopoll(so, flag, NULL, NULL)) { \
+			(ofds)->fd_array[(ofds)->fd_count] = (fds)->fd_array[i]; \
+			(ofds)->fd_count++; \
+		} \
+	} \
+} while (0)
+
+#define getevents(fds, objs, events, name) do { \
+	for (i = 0; i < (fds)->fd_count; i++) { \
+		fileObj = (objs)[i]; \
+		socketContext = (PSOCKET_CONTEXT)fileObj->FsContext; \
+		so = socketContext->socket; \
+		if (so == NULL) { \
+			status = STATUS_INVALID_PARAMETER; \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#9\n"); \
+			goto done; \
+		} \
+		(events)[i] = &so->name##.sb_selEvent; \
+	} \
+} while (0)
+
 NTSTATUS
 SCTPDispatchSelectRequest(
     IN PIRP irp,
@@ -2475,7 +2622,9 @@ SCTPDispatchSelectRequest(
 	PSOCKET_FD_SET oreadfds = NULL;
 	PSOCKET_FD_SET owritefds = NULL;
 	PSOCKET_FD_SET oexceptfds = NULL;
+	PSOCKET_SELECT_REQUEST32 selectReq32 = NULL;
 	int i;
+	int isWow64 = 0;
 
 	int readIdx = 0, writeIdx = 0, exceptIdx = 0;
 	PFILE_OBJECT *fileObjs = NULL;
@@ -2495,7 +2644,6 @@ SCTPDispatchSelectRequest(
 
 #if defined(_WIN64)
 	if (IoIs32bitProcess(irp)) {
-		PSOCKET_SELECT_REQUEST32 selectReq32;
 		PSOCKET_FD_SET32 fdset32;
 		if (inBufferLen < sizeof(SOCKET_SELECT_REQUEST32) ||
 			outBufferLen < sizeof(SOCKET_SELECT_REQUEST32)) {
@@ -2515,36 +2663,14 @@ SCTPDispatchSelectRequest(
 		selectReq = localSelectReq;
 		selectReq->fd_setsize = selectReq32->fd_setsize;
 		selectReq->nfds = selectReq32->nfds;
-		selectReq->readfds = ULongToPtr((ULONG)selectReq32->readfds);
-		selectReq->writefds = ULongToPtr((ULONG)selectReq32->writefds);
-		selectReq->exceptfds = ULongToPtr((ULONG)selectReq32->exceptfds);
 		selectReq->timeout.tv_sec = selectReq32->timeout.tv_sec;
 		selectReq->timeout.tv_usec = selectReq32->timeout.tv_usec;
 		selectReq->infinite = selectReq32->infinite;
 
-		if (selectReq->readfds != NULL) {
-			fdset32 = (PSOCKET_FD_SET32)selectReq->readfds;
-			selectReq->readfds->fd_count = fdset32->fd_count;
-			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->readfds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
-			}
-		}
-
-		if (selectReq->writefds != NULL) {
-			fdset32 = (PSOCKET_FD_SET32)selectReq->writefds;
-			selectReq->writefds->fd_count = fdset32->fd_count;
-			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->writefds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
-			}
-		}
-
-		if (selectReq->exceptfds != NULL) {
-			fdset32 = (PSOCKET_FD_SET32)selectReq->exceptfds;
-			selectReq->exceptfds->fd_count = fdset32->fd_count;
-			for (i = 0; i < selectReq->fd_setsize; i++) {
-				selectReq->exceptfds->fd_array[i] = LongToHandle((LONG)fdset32->fd_array[i]);
-			}
-		}
+		getfds32(selectReq32->readfds, readfds);
+		getfds32(selectReq32->writefds, writefds);
+		getfds32(selectReq32->exceptfds, exceptfds);
+		isWow64 = 1;
 
 	} else {
 #endif
@@ -2557,66 +2683,41 @@ SCTPDispatchSelectRequest(
 
 	selectReq = (PSOCKET_SELECT_REQUEST)irp->AssociatedIrp.SystemBuffer;
 
+	/* Copy userspace fd list to kernelspace */
+	getfds64(selectReq->readfds, readfds);
+	getfds64(selectReq->writefds, writefds);
+	getfds64(selectReq->exceptfds, exceptfds);
+
 #if defined(_WIN64)
 	}
 #endif
 
-#define getfds(uaddr, kaddr, num) do { \
-	if (uaddr != NULL) { \
-		size_t len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num; \
-		kaddr = ExAllocatePoolWithTag(PagedPool, len, 'km51'); \
-		if (kaddr == NULL) { \
-			status = STATUS_INSUFFICIENT_RESOURCES; \
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#2\n"); \
-			goto done; \
-		} \
-		error = copyin(uaddr, kaddr, len); \
-		if (error != 0) { \
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
-			goto done; \
-		} \
-	} \
-} while (0)
-	getfds(selectReq->readfds, readfds, selectReq->readfds->fd_count);
-	getfds(selectReq->writefds, writefds, selectReq->writefds->fd_count);
-	getfds(selectReq->exceptfds, exceptfds, selectReq->exceptfds->fd_count);
-#undef getfds
+
 
 	fd_count = 0;
 	fd_count += readfds != NULL ? readfds->fd_count : 0;
 	fd_count += writefds != NULL ? writefds->fd_count : 0;
 	fd_count += exceptfds != NULL ? exceptfds->fd_count : 0;
-	if (fd_count > 64) {
-		status = STATUS_INSUFFICIENT_RESOURCES; \
-		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#4\n"); \
-		goto done; \
+
+	if (fd_count > MAXIMUM_WAIT_OBJECTS) {
+		status = STATUS_INSUFFICIENT_RESOURCES;
+		DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#4\n");
+		goto done;
 	}
 
 	readIdx = 0;
 	writeIdx = readfds != NULL ? readfds->fd_count : 0;
 	exceptIdx = writeIdx + (writefds != NULL ? writefds->fd_count : 0);
 
-#define allocfds(ofds, num) do { \
-	if ((num) > 0) { \
-		(ofds) = ExAllocatePoolWithTag(PagedPool, sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * (num), 'km51'); \
-		if ((ofds) == NULL) { \
-			status = STATUS_INSUFFICIENT_RESOURCES; \
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#5\n"); \
-			goto done; \
-		} \
-		RtlZeroMemory((ofds), sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * (num)); \
-	} \
-} while (0)
-	if (readfds != NULL) {
+	if (readfds != NULL)
 		allocfds(oreadfds, readfds->fd_count);
-	}
-	if (writefds!= NULL) {
+
+	if (writefds!= NULL)
 		allocfds(owritefds, writefds->fd_count);
-	}
-	if (exceptfds != NULL) {
+
+	if (exceptfds != NULL)
 		allocfds(oexceptfds, exceptfds->fd_count);
-	}
-#undef allocfds
+
 
 	if (fd_count > 0) {
 		fileObjs = ExAllocatePoolWithTag(PagedPool, sizeof(PFILE_OBJECT) * fd_count, 'km51');
@@ -2636,54 +2737,24 @@ SCTPDispatchSelectRequest(
 		RtlZeroMemory(kEvents, sizeof(PKEVENT) * fd_count);
 	}
 
-#define getobjs(fds, objs) do { \
-	for (i = 0; i < fds->fd_count; i++) { \
-		status = ObReferenceObjectByHandle(fds->fd_array[i], \
-		    (FILE_GENERIC_READ | FILE_GENERIC_WRITE), \
-		    NULL, \
-		    UserMode, \
-		    (PVOID *)&(objs)[i], \
-		    NULL); \
-		if (!NT_SUCCESS(status)) { \
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#8\n"); \
-			goto done; \
-		} \
-	} \
-} while (0)
-	if (readfds != NULL) {
-		getobjs(readfds, &fileObjs[readIdx]);
-	}
-	if (writefds != NULL) {
-		getobjs(writefds, &fileObjs[writeIdx]);
-	}
-	if (exceptfds != NULL) {
-		getobjs(exceptfds, &fileObjs[exceptIdx]);
-	}
-#undef getobjs
 
-#define getevents(fds, objs, events, name) do { \
-	for (i = 0; i < (fds)->fd_count; i++) { \
-		fileObj = (objs)[i]; \
-		socketContext = (PSOCKET_CONTEXT)fileObj->FsContext; \
-		so = socketContext->socket; \
-		if (so == NULL) { \
-			status = STATUS_INVALID_PARAMETER; \
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#9\n"); \
-			goto done; \
-		} \
-		(events)[i] = &so->name##.sb_selEvent; \
-	} \
-} while (0)
-	if (readfds != NULL) {
+	if (readfds != NULL)
+		getobjs(readfds, &fileObjs[readIdx]);
+
+	if (writefds != NULL)
+		getobjs(writefds, &fileObjs[writeIdx]);
+
+	if (exceptfds != NULL)
+		getobjs(exceptfds, &fileObjs[exceptIdx]);
+
+	if (readfds != NULL)
 		getevents(readfds, &fileObjs[readIdx], &kEvents[readIdx], so_rcv);
-	}
-	if (writefds != NULL) {
+
+	if (writefds != NULL)
 		getevents(writefds, &fileObjs[writeIdx], &kEvents[writeIdx], so_snd);
-	}
-	if (exceptfds != NULL) {
+
+	if (exceptfds != NULL)
 		getevents(exceptfds, &fileObjs[exceptIdx], &kEvents[exceptIdx], so_snd);
-	}
-#undef getevents
 
 	if (fd_count > THREAD_WAIT_OBJECTS) {
 		waitBlockArray = ExAllocatePoolWithTag(NonPagedPool, sizeof(KWAIT_BLOCK) * fd_count, 'km51');
@@ -2696,9 +2767,7 @@ SCTPDispatchSelectRequest(
 
 	if (!selectReq->infinite) {
 		if (selectReq->timeout.tv_sec || selectReq->timeout.tv_usec) {
-			microtime(&timeoutTv);
-			timevaladd(&timeoutTv, (struct timeval *)&selectReq->timeout);
-			timeout.QuadPart = 10000000 * timeoutTv.tv_sec + 10 * timeoutTv.tv_usec;
+			timeout.QuadPart = - (10000000 * selectReq->timeout.tv_sec + 10 * selectReq->timeout.tv_usec);
 		} else {
 			timeout.QuadPart = 0;
 		}
@@ -2707,17 +2776,7 @@ SCTPDispatchSelectRequest(
 	}
 
 	for (;;) {
-#define checkevents(fds, objs, ofds, flag) do { \
-	for (i = 0; i < (fds)->fd_count; i++) { \
-		fileObj = (objs)[i]; \
-		socketContext = (PSOCKET_CONTEXT)fileObj->FsContext; \
-		so = socketContext->socket; \
-		if (sopoll(so, flag, NULL, NULL)) { \
-			(ofds)->fd_array[(ofds)->fd_count] = (fds)->fd_array[i]; \
-			(ofds)->fd_count++; \
-		} \
-	} \
-} while (0)
+
 		if (readfds != NULL && oreadfds != NULL) {
 			checkevents(readfds, &fileObjs[readIdx], oreadfds, POLLRDNORM);
 			ofd_count += oreadfds->fd_count;
@@ -2730,10 +2789,9 @@ SCTPDispatchSelectRequest(
 			checkevents(exceptfds, &fileObjs[exceptIdx], oexceptfds, POLLRDBAND);
 			ofd_count += oexceptfds->fd_count;
 		}
-#undef checkevents
 
 		if (ofd_count > 0) {
-			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#11\n"); \
+			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#11\n");
 			goto done;
 		}
 
@@ -2743,7 +2801,7 @@ SCTPDispatchSelectRequest(
 		    UserRequest,
 		    UserMode,
 		    FALSE,
-		    !infinite ? &timeout : NULL,
+		    infinite ? NULL: &timeout,
 		    waitBlockArray);
 
 		if (waitStatus >= STATUS_WAIT_0 && waitStatus <= STATUS_WAIT_63) {
@@ -2756,28 +2814,33 @@ SCTPDispatchSelectRequest(
 	DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave\n");
 done:
 
-#define putfds(uaddr, kaddr, num) do { \
-	size_t len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num; \
-	error = copyout(kaddr, uaddr, len); \
-	if (error != 0) { \
-		goto done2; \
-	} \
-} while (0)
+
+
 	if (NT_SUCCESS(status)) {
+		int rc;
 		if (readfds != NULL && oreadfds != NULL) {
-			putfds(selectReq->readfds, oreadfds, selectReq->readfds->fd_count);
+			if (putfds(irp, selectReq32->readfds, selectReq->readfds, oreadfds) != 0)
+				goto done2;
 		}
 		if (writefds != NULL && owritefds != NULL) {
-			putfds(selectReq->writefds, owritefds, selectReq->writefds->fd_count);
+			if (putfds(irp, selectReq32->writefds, selectReq->writefds, owritefds) != 0)
+				goto done2;
 		}
 		if (exceptfds != NULL && oexceptfds != NULL) {
-			putfds(selectReq->exceptfds, oexceptfds, selectReq->exceptfds->fd_count);
+			if (putfds(irp, selectReq32->exceptfds, selectReq->exceptfds, oexceptfds) != 0)
+				goto done2;
 		}
 
-		selectReq->nfds = ofd_count;
-		irp->IoStatus.Information = sizeof(SOCKET_SELECT_REQUEST);
+		if (isWow64) {
+			selectReq32->nfds = ofd_count;
+			irp->IoStatus.Information = sizeof(SOCKET_SELECT_REQUEST32);
+		} else {
+			selectReq->nfds = ofd_count;
+			irp->IoStatus.Information = sizeof(SOCKET_SELECT_REQUEST);
+		}
+
 	}
-#undef putfds
+#undef putfds64
 done2:
 
 	if (fileObjs != NULL) {
