@@ -2502,44 +2502,45 @@ putfds(PIRP irp, PSOCKET_FD_SET32 uaddr32, PSOCKET_FD_SET uaddr64, PSOCKET_FD_SE
 	return error;
 }
 
-#define getfds(uaddr, kaddr, is64bit) \
-	if (uaddr != NULL) { \
-		int i; \
-		HANDLE hFd; \
-		int num; \
-		int itemlen; \
-		size_t len; \
-		error = copyin(&uaddr->fd_count, &num, sizeof(int)); \
-		if (error != 0) { \
+#define getfds(uaddr, kaddr, is64bit)												\
+	if (uaddr != NULL) {															\
+		int i;																		\
+		HANDLE hFd;																	\
+		int num;																	\
+		int itemlen;																\
+		size_t len;																	\
+		error = copyin(&uaddr->fd_count, &num, sizeof(int));						\
+		if (error != 0) {															\
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
 			goto done2; \
-		} \
-		itemlen = (is64bit)? sizeof(HANDLE) * num : sizeof(ULONG) * num; \
-		len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num; \
-		\
-		kaddr = ExAllocatePoolWithTag(PagedPool, len, 'km51'); \
-		if (kaddr == NULL) { \
-			status = STATUS_INSUFFICIENT_RESOURCES; \
+		}																			\
+		itemlen = (is64bit)? sizeof(HANDLE) : sizeof(ULONG);						\
+		len = sizeof(SOCKET_FD_SET) + sizeof(HANDLE) * num;							\
+																					\
+		kaddr = ExAllocatePoolWithTag(PagedPool, len, 'km51');						\
+		if (kaddr == NULL) {														\
+			status = STATUS_INSUFFICIENT_RESOURCES;									\
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#2\n"); \
-			goto done; \
-		} \
-		RtlZeroMemory(kaddr, len); \
-		error = copyin(&uaddr->fd_count, &kaddr->fd_count, sizeof(int)); \
-		if (error != 0) { \
+			goto done;																\
+		}																			\
+		RtlZeroMemory(kaddr, len);													\
+		error = copyin(&uaddr->fd_count, &kaddr->fd_count, sizeof(int));			\
+		if (error != 0) {															\
 			DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
-			goto done2; \
-		} \
-		for (i = 0; i < num; i++) { \
-			error = copyin(&uaddr->fd_array[i], &hFd, itemlen); \
-			if (itemlen < sizeof(HANDLE)) \
-				hFd = ULongToHandle((ULONG)hFd); \
-			error = copyin(&hFd, &kaddr->fd_array[i], itemlen); \
-			if (error != 0) { \
+			goto done2;																\
+		}																			\
+		for (i = 0; i < num; i++) {													\
+			error = copyin(&uaddr->fd_array[i], &hFd, itemlen);						\
+			if (error != 0) {														\
 				DebugPrint(DEBUG_KERN_VERBOSE, "SCTPDispatchSelectRequest - leave#3\n"); \
-				goto done; \
-			} \
-		}\
-	} \
+				goto done;															\
+			}																		\
+			if (itemlen < sizeof(HANDLE))											\
+				hFd = ULongToHandle((ULONG)hFd);									\
+																					\
+			kaddr->fd_array[i] = hFd;												\
+		}																			\
+	}																				\
 
 #define getfds32(uaddr, kaddr) do { \
 	getfds(uaddr, kaddr, 0); \

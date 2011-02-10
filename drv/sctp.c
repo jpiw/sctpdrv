@@ -1061,12 +1061,12 @@ OpenRawSctp(
 	}
 
 done:
-	if (tcp_req != NULL) {
+	if (tcp_req != NULL)
 		free(tcp_req, M_DRV);
-	}
-	if (eaInfo != NULL) {
+
+	if (eaInfo != NULL)
 		free(eaInfo, M_DRV);
-	}
+
 	return status;
 }
 
