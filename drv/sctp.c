@@ -174,6 +174,9 @@ NTSTATUS IcmpNotify(IN FWPS_CALLOUT_NOTIFY_TYPE, IN const GUID *, IN const FWPS_
 extern void (*aio_swake)(struct socket *, struct sockbuf *);
 void aio_swake_cb(struct socket *, struct sockbuf *);
 
+DWORD SctpRegisterProtocol(void);
+DWORD SctpDeregisterProtocol(void);
+
 __drv_dispatchType(IRP_MJ_CREATE)			DRIVER_DISPATCH SCTPCreate;
 __drv_dispatchType(IRP_MJ_DEVICE_CONTROL)		DRIVER_DISPATCH SCTPDispatchDeviceControl;
 __drv_dispatchType(IRP_MJ_INTERNAL_DEVICE_CONTROL)	DRIVER_DISPATCH SCTPDispatchInternalDeviceControl;
@@ -569,6 +572,8 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SCTPClose;
 	DriverObject->DriverUnload = Unload;
 
+	if (SctpRegisterProtocol() != 0)
+		goto error;
 
 	return STATUS_SUCCESS;
 error:
@@ -588,7 +593,7 @@ Unload(
 	struct sctp_inpcb *inp;
 #endif
 
-	DebugPrint(DEBUG_GENERIC_INFO, "sctp.sys: Try to unload.\n");
+	DebugPrint(DEBUG_GENERIC_INFO, "sctpdrv.sys: Try to unload.\n");
 #ifdef SCTP
 	if (sctp_initialized) {
 		LIST_FOREACH(inp, &SCTP_BASE_INFO(listhead), sctp_list) {
@@ -685,6 +690,7 @@ Unload(
 		CloseSctp(&SctpRaw6Handle, &SctpRaw6Object);
 	}
 
+	SctpDeregisterProtocol();
 
 	SctpDriverObject = NULL;
 	WPP_CLEANUP(NULL);

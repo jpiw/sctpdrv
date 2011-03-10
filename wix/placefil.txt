@@ -1,4 +1,4 @@
-sctp.sys retail
+sctpdrv.sys retail
 sctpsp.dll retail
 sctpmon.dll retail
 spinstall.exe retail

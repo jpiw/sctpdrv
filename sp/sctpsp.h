@@ -36,6 +36,9 @@
 	  {0x8b, 0x40, 0x55, 0x32, 0xd7, 0x22, 0xaf, 0xd4}}
 
 #define SCTP_SERVICE_PROVIDER_PATH	L"%ProgramFiles%\\SctpDrv\\bin\\sctpsp.dll"
+#define SCTP_INF_DIR				L"%ProgramFiles%\\SctpDrv\\bin"
+#define PROVIDER_INF				L"sctpdrv"
+#define SCTP_PNP_ID					L"BruceCran_SctpDrv"
 
 static GUID SctpProviderGuid = SCTP_PROVIDER_GUID_INIT;
 

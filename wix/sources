@@ -30,6 +30,8 @@ TARGETLIBS= $(TARGETLIBS) \
 	$(SDK_LIB_PATH)\advapi32.lib \
 	$(SDK_LIB_PATH)\Version.lib \
 	$(SDK_LIB_PATH)\shell32.lib \
+	$(SDK_LIB_PATH)\uuid.lib \
+	$(SDK_LIB_PATH)\setupapi.lib \
 	..\lib$(LIBARCHDIR)\wcautil_2010$(LIBARCHSUFFIX).lib \
 	..\lib$(LIBARCHDIR)\dutil_2010$(LIBARCHSUFFIX).lib
 
@@ -39,4 +41,6 @@ INCLUDES= $(INCLUDES); \
 	..\lib$(LIBARCHDIR)
 
 SOURCES= \
-    setup.cpp
+    setup.cpp \
+    netcfgapi.cpp \
+    protinstall.cpp

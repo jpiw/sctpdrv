@@ -33,7 +33,7 @@
 	<Fragment>
 		<?include config.wxi ?>
 
-		<ComponentGroup Id='root'>			
+		<ComponentGroup Id='root'>
 			<ComponentRef Id='README.txt'/>
 			<ComponentRef Id='CHANGES.txt'/>
 			<ComponentRef Id='SctpDrv.chm'/>
@@ -44,22 +44,17 @@
 			<ComponentRef Id='echo_client.exe'/>
 			<ComponentRef Id='echo_server.exe'/>
 			<ComponentRef Id='sctpsp32.dll'/>
-			<ComponentRef Id='sctpsp32.pdb'/>
 			<ComponentRef Id='SctpDrv.SctpSocket32.dll'/>
 			<ComponentRef Id='SctpDrv.SctpSocket32.dll_VS'/>
-			<ComponentRef Id='SctpDrv.SctpSocket32.pdb'/> 
 			<?if $(var.Platform)=x64 ?>
 			<ComponentRef Id='sctpsp64.dll'/>
-			<ComponentRef Id='sctpsp64.pdb'/>
 			<ComponentRef Id='SctpDrv.SctpSocket64.dll'/>
 			<ComponentRef Id='SctpDrv.SctpSocket64.dll_VS'/>
-			<ComponentRef Id='SctpDrv.SctpSocket64.pdb'/>
 			<?endif ?>
 			<ComponentRef Id='sctpmon.dll'/>
-			<ComponentRef Id='sctp.inf'/>
-			<ComponentRef Id='sctp.cat'/>
-			<ComponentRef Id='sctp.sys'/>
-			<ComponentRef Id='sctp.pdb'/>
+			<ComponentRef Id='sctpdrv.inf'/>
+			<ComponentRef Id='sctpdrv.cat'/>
+			<ComponentRef Id='sctpdrv.sys'/>
 		</ComponentGroup>
 
 		<ComponentGroup Id='inc'>
@@ -87,13 +82,13 @@
 					Source="..\apps\inc\ws2sctp.h" />
 			</Component>
 		</DirectoryRef>
-		
+
 		<DirectoryRef Id='netinet'>
 			<Component Id="sctp.h" Guid="f1383a3a-4711-4102-a5b2-dd19ac576a73" Win64="$(var.Win64)">
 				<File Id="sctp.h" Name="sctp.h" KeyPath="yes"
 					Source="..\netinet\sctp.h"/>
 			</Component>
-		
+
 			<Component Id="sctp_uio.h" Guid="ef7089da-3aae-4d33-9411-63a6db8009ec" Win64="$(var.Win64)">
 				<File Id="sctp_uio.h" Name="sctp_uio.h" KeyPath="yes"
 					Source="..\netinet\sctp_uio.h"/>
@@ -102,7 +97,7 @@
 
 		<DirectoryRef Id='src'>
 			<Component Id="echo_client.c" Guid="2139e483-8bd0-42f5-a645-c5ce24bdadba" Win64="$(var.Win64)">
-				<File Id="echo_client.c" Name="echo_client.c" KeyPath="yes" 
+				<File Id="echo_client.c" Name="echo_client.c" KeyPath="yes"
 					Source="..\apps\echo_client\echo_client.c" />
 			</Component>
 
@@ -137,32 +132,26 @@
 					<RegistryValue Type='string' Name='sctpmon' Value='[!sctpmon.dll]'/>
 				</RegistryKey>
 			</Component>
-			<Component Id="sctp.inf" Win64="$(var.Win64)" Guid="d799f999-2dc6-4f01-a873-d6d3b42d0f5f">
-				<File Id="sctp.inf" Name="sctp.inf" KeyPath="yes"
-					Source="bin\$(env.BUILD_ALT_DIR)\sctp.inf" />
+			<Component Id="sctpdrv.inf" Win64="$(var.Win64)" Guid="d799f999-2dc6-4f01-a873-d6d3b42d0f5f">
+				<File Id="sctpdrv.inf" Name="sctpdrv.inf" KeyPath="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctpdrv.inf" />
 			</Component>
-			<Component Id="sctp.cat" Win64="$(var.Win64)" Guid="826f42a9-ca8e-4ba1-8c8f-57e56ebbcaeb">
-				<File Id="sctp.cat" Name="sctp.cat" KeyPath="yes"
-					Source="bin\$(env.BUILD_ALT_DIR)\sctp.cat" />
+			<Component Id="sctpdrv.cat" Win64="$(var.Win64)" Guid="826f42a9-ca8e-4ba1-8c8f-57e56ebbcaeb">
+				<File Id="sctpdrv.cat" Name="sctpdrv.cat" KeyPath="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctpdrv.cat" />
 			</Component>
-			<Component Id="sctp.sys" Win64="$(var.Win64)" Guid="fa538c80-6b0b-4736-b479-a3dce8f8a6a8">
-				<File Id="sctp.sys" Name="sctp.sys" KeyPath="yes" Checksum="yes"
-					Source="bin\$(env.BUILD_ALT_DIR)\sctp.sys" />
+			<Component Id="sctpdrv.sys" Win64="$(var.Win64)" Guid="fa538c80-6b0b-4736-b479-a3dce8f8a6a8">
+				<File Id="sctpdrv.sys" Name="sctpdrv.sys" KeyPath="yes" Checksum="yes"
+					Source="bin\$(env.BUILD_ALT_DIR)\sctpdrv.sys" />
 				<RegistryKey Action='createAndRemoveOnUninstall' Id='eventlog' Root='HKLM'
-						Key='System\CurrentControlSet\Services\Eventlog\System\sctp'>
+						Key='System\CurrentControlSet\Services\Eventlog\System\sctpdrv'>
 					<RegistryValue Id='EventMessageFile' Name='EventMessageFile' Type='expandable'
-						Value='%SystemRoot%\System32\drivers\sctp.sys'/>
+						Value='%SystemRoot%\System32\drivers\sctpdrv.sys'/>
 					<RegistryValue Id='TypesSupported' Name='TypesSupported' Type='integer' Value='7'/>
 				</RegistryKey>
-				<difx:Driver AddRemovePrograms="no" DeleteFiles="yes"/>
-			</Component>
-			
-			<Component Id="sctp.pdb" Win64="$(var.Win64)" Guid="16c69324-efaf-41df-bd2f-70aa21b56af6">
-				<File Id="sctp.pdb" Name="sctp.pdb" KeyPath="yes" 
-				Source="symbol\$(env.BUILD_ALT_DIR)\private\sys\sctp.pdb"/>
 			</Component>
 		</DirectoryRef>
-		
+
 		<DirectoryRef Id='SctpDrv'>
 			<Component Id="README.txt" Win64="$(var.Win64)" Guid="26eb124f-b750-4716-b09a-9fbfe5f2e84c">
 				<File Id="README.txt" Name="README.txt" KeyPath="yes" Source="README.txt"/>
@@ -178,17 +167,21 @@
     <InstallExecuteSequence>
       <?if $(var.Platform)=x64 ?>
       <Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpInstallProtocolDriver" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
       <Custom Action="SctpInstallProviderSysWow64" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
       <Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <Custom Action="SctpUninstallProtocolDriver" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
       <Custom Action="SctpUninstallProviderSysWow64" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
       <?endif ?>
       <?if $(var.Platform)=x86 ?>
       <Custom Action="SctpInstallProvider" After="MsiProcessDrivers">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpInstallProtocolDriver" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
       <Custom Action="SctpUninstallProvider" Before="MsiProcessDrivers">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+      <Custom Action="SctpUninstallProtocolDriver" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
       <?endif ?>
 
       <?if $(env.DDK_TARGET_OS)!=WinNET and $(env.DDK_TARGET_OS)!=WinXP ?>
-      <Custom Action="SctpAddFirewallRule" After="SctpInstallProvider">NOT (REMOVE="ALL")</Custom>
+      <Custom Action="SctpAddFirewallRule" After="SctpInstallProtocolDriver">NOT (REMOVE="ALL")</Custom>
       <?endif ?>
     </InstallExecuteSequence>
 	</Fragment>

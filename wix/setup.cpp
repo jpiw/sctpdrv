@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 CO-CONV, Corp.
- * Copyright (c) 2010 Bruce Cran.
+ * Copyright (c) 2011 Bruce Cran.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include <msi.h>
 #include <msiquery.h>
 #include <wcautil.h>
+#include <shlobj.h>
 
 #import "netfw.tlb"
 
@@ -43,9 +44,14 @@
 extern "C" {
 UINT WINAPI SctpInstallProvider(__in MSIHANDLE hInstall);
 UINT WINAPI SctpUninstallProvider(__in MSIHANDLE hInstall);
+UINT WINAPI SctpInstallProtocolDriver(__in MSIHANDLE hInstall);
+UINT WINAPI SctpUninstallProtocolDriver(__in MSIHANDLE hInstall);
 UINT WINAPI SctpAddFirewallRule(__in MSIHANDLE hInstall);
 BOOL WINAPI DllMain(__in HINSTANCE hInstDLL, __in DWORD fdwReason, __in LPVOID lpvReserved);
 }
+
+DWORD InstallDriver(LPWSTR fromDirectory);
+DWORD UninstallDriver(LPWSTR fromDirectory);
 
 UINT
 WINAPI
@@ -57,7 +63,8 @@ SctpInstallProvider(
 	HRESULT hr;
 	WSADATA wsd;
 	LPWSTR providerPath;
-	(void)hInstall;
+	UINT rc = ERROR_SUCCESS;
+	int i,j;
 
 	hr = WcaInitialize(hInstall, "SctpInstallProvider");
 	if (FAILED(hr))
@@ -69,6 +76,9 @@ SctpInstallProvider(
 
 	if (ExpandEnvironmentStrings(SCTP_SERVICE_PROVIDER_PATH, providerPath, MAX_PATH) == 0) {
 		free(providerPath);
+		char msg[128];
+		StringCchPrintfA(msg, 128, "Warning: ExpandEnvironmentStrings failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
 		return WcaFinalize(ERROR_INSTALL_FAILURE);
 	}
 
@@ -91,11 +101,18 @@ SctpInstallProvider(
 		char msg[128];
 		StringCchPrintfA(msg, 128, "Warning: WSCInstallProvider failed with code %d\n", iError);
 		WcaLog(LOGMSG_STANDARD, msg);
+		j = 0;
+		for (i = 0; i < MAX_PATH; i+=2) {
+			msg[j] = (char)providerPath[i];
+			if (msg[j] == 0)
+				break;
+		}
+		WcaLog(LOGMSG_STANDARD, msg);
 	}
 
 	WSACleanup();
 	free(providerPath);
-	return ERROR_SUCCESS;
+	return WcaFinalize(rc);
 }
 
 UINT
@@ -127,7 +144,6 @@ SctpAddFirewallRule(
 	IN MSIHANDLE hInstall)
 {
 	HRESULT hr;
-	UINT rc = ERROR_SUCCESS;
 	IUnknown *pFwRuleEnumerator = NULL;
 	IEnumVARIANT *pVariant = NULL;
 	CComVariant var;
@@ -207,13 +223,147 @@ SctpAddFirewallRule(
 	pFwPolicy = NULL;
 	CoUninitialize();
 
-	if (SUCCEEDED(hr))
-		rc = ERROR_SUCCESS;
-	else
-		rc = ERROR_INSTALL_FAILURE;
+	/*
+	   Ignore any errors. If the user disables the firewall then
+	   configuration fails but shouldn't be considered an error.
+	 */
 
-	return rc;
+	return ERROR_SUCCESS;
 }
+
+UINT
+WINAPI
+SctpInstallProtocolDriver(
+	IN MSIHANDLE hInstall)
+{
+	HRESULT hr;
+	LPWSTR providerPath;
+	SC_HANDLE hSCM = NULL;
+	SC_HANDLE hSctpdrv = NULL;
+	BOOL bSuccess = FALSE;
+
+	hr = WcaInitialize(hInstall, "SctpInstallProtocolDriver");
+	if (FAILED(hr))
+		return ERROR_INSTALL_FAILURE;
+
+	providerPath = (LPWSTR) malloc(MAX_PATH*sizeof(WCHAR));
+	if (providerPath == NULL)
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+
+	if (ExpandEnvironmentStrings(SCTP_INF_DIR, providerPath, MAX_PATH) == 0) {
+		free(providerPath);
+		char msg[128];
+		StringCchPrintfA(msg, 128, "Warning: ExpandEnvironmentStrings failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+	}
+
+	InstallDriver(providerPath);
+
+	hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT | SERVICE_START | SERVICE_STOP);
+
+	if (hSCM != NULL)
+		hSctpdrv = OpenService(hSCM, L"sctpdrv", SERVICE_START | SERVICE_STOP);
+
+	if (hSctpdrv != NULL) {
+		bSuccess = StartService(hSctpdrv, 0, NULL);
+		CloseServiceHandle(hSctpdrv);
+	}
+
+	if (hSCM != NULL)
+		CloseServiceHandle(hSCM);
+
+	if (hSCM == NULL || hSctpdrv == NULL || !bSuccess)
+		return WcaFinalize(ERROR_SUCCESS_REBOOT_REQUIRED);
+
+	return WcaFinalize(ERROR_SUCCESS);
+}
+
+
+UINT
+WINAPI
+SctpUninstallProtocolDriver(
+	IN MSIHANDLE hInstall)
+{
+	HRESULT hr;
+	LPWSTR providerPath;
+	SC_HANDLE hSCM = NULL;
+	SC_HANDLE hSctpdrv = NULL;
+	SERVICE_STATUS status;
+	BOOL bSuccess = FALSE;
+	char msg[128];
+	WCHAR driverpath[MAX_PATH];
+	WCHAR systemDir[MAX_PATH];
+
+	hr = WcaInitialize(hInstall, "SctpUninstallProtocolDriver");
+	if (FAILED(hr))
+		return ERROR_INSTALL_FAILURE;
+
+	providerPath = (LPWSTR) malloc(MAX_PATH*sizeof(WCHAR));
+	if (providerPath == NULL)
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+
+	if (ExpandEnvironmentStrings(SCTP_INF_DIR, providerPath, MAX_PATH) == 0) {
+		free(providerPath);
+		StringCchPrintfA(msg, 128, "Warning: ExpandEnvironmentStrings failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+	}
+
+	UninstallDriver(providerPath);
+
+	/* Now, stop the sctpdrv service and delete the file */
+	hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT | SERVICE_START | SERVICE_STOP | DELETE);
+
+	if (hSCM == NULL) {
+		StringCchPrintfA(msg, 128, "Warning: OpenSCManager failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+	}
+
+	hSctpdrv = OpenService(hSCM, L"sctpdrv", SERVICE_START | SERVICE_STOP | DELETE);
+
+	if (hSctpdrv == NULL) {
+		StringCchPrintfA(msg, 128, "Warning: OpenService failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+		return WcaFinalize(ERROR_INSTALL_FAILURE);
+	}
+
+	bSuccess = ControlService(hSctpdrv, SERVICE_CONTROL_STOP, &status);
+	if (!bSuccess) {
+		StringCchPrintfA(msg, 128, "Warning: ControlService failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+	}
+
+	bSuccess = DeleteService(hSctpdrv);
+	if (!bSuccess) {
+		StringCchPrintfA(msg, 128, "Warning: DeleteService failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+	}
+
+	if (hSctpdrv != NULL)
+		CloseServiceHandle(hSctpdrv);
+
+	if (hSCM != NULL)
+		CloseServiceHandle(hSCM);
+
+	hr = SHGetFolderPath(NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT, systemDir);
+	if (hr == S_OK) {
+		swprintf_s(driverpath, MAX_PATH, L"%s\\drivers\\%s.sys", systemDir, PROVIDER_INF);
+		bSuccess = DeleteFile(driverpath);
+		if (!bSuccess) {
+			StringCchPrintfA(msg, 128, "Warning: DeleteFile failed\n");
+			WcaLog(LOGMSG_STANDARD, msg);
+		}
+	} else {
+		StringCchPrintfA(msg, 128, "Warning: SHGetFolderPath failed\n");
+		WcaLog(LOGMSG_STANDARD, msg);
+	}
+
+	return WcaFinalize(ERROR_SUCCESS);
+}
+
+
 
 BOOL
 WINAPI
@@ -227,11 +377,13 @@ DllMain(
 	switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hInstDLL);
+		WcaGlobalInitialize(hInstDLL);
 		break;
 
-	case DLL_THREAD_ATTACH:
 	case DLL_PROCESS_DETACH:
-	case DLL_THREAD_DETACH:
+		WcaGlobalFinalize();
+		break;
+
 	default:
 		break;
 	}

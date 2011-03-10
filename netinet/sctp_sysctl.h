@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 219397 2011-03-08 11:58:25Z rrs $");
 #endif
 
 #ifndef __sctp_sysctl_h__
@@ -106,6 +106,11 @@ struct sctp_sysctl {
 	uint32_t sctp_mobility_base;
 	uint32_t sctp_mobility_fasthandoff;
 	uint32_t sctp_inits_include_nat_friendly;
+	uint32_t sctp_rttvar_bw;
+	uint32_t sctp_rttvar_rtt;
+	uint32_t sctp_rttvar_eqret;
+	uint32_t sctp_steady_step;
+	uint32_t sctp_use_dccc_ecn;
 #if defined(SCTP_LOCAL_TRACE_BUF)
 #if defined(__Windows__)
 	struct sctp_log *sctp_log;
@@ -209,13 +214,13 @@ struct sctp_sysctl {
 #define SCTPCTL_MAXCHUNKS_MAX		0xFFFFFFFF
 #define SCTPCTL_MAXCHUNKS_DEFAULT	SCTP_ASOC_MAX_CHUNKS_ON_QUEUE
 
-/* tcbhashsize: Tuneable for Hash table sizes */
+/* tcbhashsize: Tunable for Hash table sizes */
 #define SCTPCTL_TCBHASHSIZE_DESC	L"Tunable for TCB hash table sizes"
 #define SCTPCTL_TCBHASHSIZE_MIN		1
 #define SCTPCTL_TCBHASHSIZE_MAX		0xFFFFFFFF
 #define SCTPCTL_TCBHASHSIZE_DEFAULT	SCTP_TCBHASHSIZE
 
-/* pcbhashsize: Tuneable for PCB Hash table sizes */
+/* pcbhashsize: Tunable for PCB Hash table sizes */
 #define SCTPCTL_PCBHASHSIZE_DESC	L"Tunable for PCB hash table sizes"
 #define SCTPCTL_PCBHASHSIZE_MIN		1
 #define SCTPCTL_PCBHASHSIZE_MAX		0xFFFFFFFF
@@ -227,14 +232,14 @@ struct sctp_sysctl {
 #define SCTPCTL_MIN_SPLIT_POINT_MAX	0xFFFFFFFF
 #define SCTPCTL_MIN_SPLIT_POINT_DEFAULT	SCTP_DEFAULT_SPLIT_POINT_MIN
 
-/* chunkscale: Tuneable for Scaling of number of chunks and messages */
+/* chunkscale: Tunable for Scaling of number of chunks and messages */
 #define SCTPCTL_CHUNKSCALE_DESC		L"Tunable for Scaling of number of chunks and messages"
 #define SCTPCTL_CHUNKSCALE_MIN		1
 #define SCTPCTL_CHUNKSCALE_MAX		0xFFFFFFFF
 #define SCTPCTL_CHUNKSCALE_DEFAULT	SCTP_CHUNKQUEUE_SCALE
 
-/* delayed_sack_time: Default delayed SACK timer in msec */
-#define SCTPCTL_DELAYED_SACK_TIME_DESC	L"Default delayed SACK timer in msec"
+/* delayed_sack_time: Default delayed SACK timer in ms */
+#define SCTPCTL_DELAYED_SACK_TIME_DESC	L"Default delayed SACK timer in ms"
 #define SCTPCTL_DELAYED_SACK_TIME_MIN	0
 #define SCTPCTL_DELAYED_SACK_TIME_MAX	0xFFFFFFFF
 #define SCTPCTL_DELAYED_SACK_TIME_DEFAULT	SCTP_RECV_MSEC
@@ -257,56 +262,56 @@ struct sctp_sysctl {
 #define SCTPCTL_ASOC_RESOURCE_MAX	0xFFFFFFFF
 #define SCTPCTL_ASOC_RESOURCE_DEFAULT	SCTP_DEF_ASOC_RESC_LIMIT
 
-/* heartbeat_interval: Default heartbeat interval in msec */
-#define SCTPCTL_HEARTBEAT_INTERVAL_DESC	L"Default heartbeat interval in msec"
+/* heartbeat_interval: Default heartbeat interval in ms */
+#define SCTPCTL_HEARTBEAT_INTERVAL_DESC	L"Default heartbeat interval in ms"
 #define SCTPCTL_HEARTBEAT_INTERVAL_MIN	0
 #define SCTPCTL_HEARTBEAT_INTERVAL_MAX	0xFFFFFFFF
 #define SCTPCTL_HEARTBEAT_INTERVAL_DEFAULT	SCTP_HB_DEFAULT_MSEC
 
-/* pmtu_raise_time: Default PMTU raise timer in sec */
-#define SCTPCTL_PMTU_RAISE_TIME_DESC	L"Default PMTU raise timer in sec"
+/* pmtu_raise_time: Default PMTU raise timer in seconds */
+#define SCTPCTL_PMTU_RAISE_TIME_DESC	L"Default PMTU raise timer in seconds"
 #define SCTPCTL_PMTU_RAISE_TIME_MIN	0
 #define SCTPCTL_PMTU_RAISE_TIME_MAX	0xFFFFFFFF
 #define SCTPCTL_PMTU_RAISE_TIME_DEFAULT	SCTP_DEF_PMTU_RAISE_SEC
 
-/* shutdown_guard_time: Default shutdown guard timer in sec */
-#define SCTPCTL_SHUTDOWN_GUARD_TIME_DESC	L"Default shutdown guard timer in sec"
+/* shutdown_guard_time: Default shutdown guard timer in seconds */
+#define SCTPCTL_SHUTDOWN_GUARD_TIME_DESC	L"Default shutdown guard timer in seconds"
 #define SCTPCTL_SHUTDOWN_GUARD_TIME_MIN		0
 #define SCTPCTL_SHUTDOWN_GUARD_TIME_MAX		0xFFFFFFFF
 #define SCTPCTL_SHUTDOWN_GUARD_TIME_DEFAULT	SCTP_DEF_MAX_SHUTDOWN_SEC
 
-/* secret_lifetime: Default secret lifetime in sec */
-#define SCTPCTL_SECRET_LIFETIME_DESC	L"Default secret lifetime in sec"
+/* secret_lifetime: Default secret lifetime in seconds */
+#define SCTPCTL_SECRET_LIFETIME_DESC	L"Default secret lifetime in seconds"
 #define SCTPCTL_SECRET_LIFETIME_MIN	0
 #define SCTPCTL_SECRET_LIFETIME_MAX	0xFFFFFFFF
 #define SCTPCTL_SECRET_LIFETIME_DEFAULT	SCTP_DEFAULT_SECRET_LIFE_SEC
 
-/* rto_max: Default maximum retransmission timeout in msec */
-#define SCTPCTL_RTO_MAX_DESC	L"Default maximum retransmission timeout in msec"
+/* rto_max: Default maximum retransmission timeout in ms */
+#define SCTPCTL_RTO_MAX_DESC		L"Default maximum retransmission timeout in ms"
 #define SCTPCTL_RTO_MAX_MIN		0
 #define SCTPCTL_RTO_MAX_MAX		0xFFFFFFFF
 #define SCTPCTL_RTO_MAX_DEFAULT		SCTP_RTO_UPPER_BOUND
 
-/* rto_min: Default minimum retransmission timeout in msec */
-#define SCTPCTL_RTO_MIN_DESC	L"Default minimum retransmission timeout in msec"
+/* rto_min: Default minimum retransmission timeout in ms */
+#define SCTPCTL_RTO_MIN_DESC		L"Default minimum retransmission timeout in ms"
 #define SCTPCTL_RTO_MIN_MIN		0
 #define SCTPCTL_RTO_MIN_MAX		0xFFFFFFFF
 #define SCTPCTL_RTO_MIN_DEFAULT		SCTP_RTO_LOWER_BOUND
 
-/* rto_initial: Default initial retransmission timeout in msec */
-#define SCTPCTL_RTO_INITIAL_DESC	L"Default initial retransmission timeout in msec"
+/* rto_initial: Default initial retransmission timeout in ms */
+#define SCTPCTL_RTO_INITIAL_DESC	L"Default initial retransmission timeout in ms"
 #define SCTPCTL_RTO_INITIAL_MIN		0
 #define SCTPCTL_RTO_INITIAL_MAX		0xFFFFFFFF
 #define SCTPCTL_RTO_INITIAL_DEFAULT	SCTP_RTO_INITIAL
 
-/* init_rto_max: Default maximum retransmission timeout during association setup in msec */
-#define SCTPCTL_INIT_RTO_MAX_DESC	L"Default maximum retransmission timeout during association setup in msec"
+/* init_rto_max: Default maximum retransmission timeout during association setup in ms */
+#define SCTPCTL_INIT_RTO_MAX_DESC	L"Default maximum retransmission timeout during association setup in ms"
 #define SCTPCTL_INIT_RTO_MAX_MIN	0
 #define SCTPCTL_INIT_RTO_MAX_MAX	0xFFFFFFFF
 #define SCTPCTL_INIT_RTO_MAX_DEFAULT	SCTP_RTO_UPPER_BOUND
 
 /* valid_cookie_life: Default cookie lifetime in sec */
-#define SCTPCTL_VALID_COOKIE_LIFE_DESC	L"Default cookie lifetime in sec"
+#define SCTPCTL_VALID_COOKIE_LIFE_DESC	L"Default cookie lifetime in seconds"
 #define SCTPCTL_VALID_COOKIE_LIFE_MIN	0
 #define SCTPCTL_VALID_COOKIE_LIFE_MAX	0xFFFFFFFF
 #define SCTPCTL_VALID_COOKIE_LIFE_DEFAULT	SCTP_DEFAULT_COOKIE_LIFE
@@ -329,8 +334,8 @@ struct sctp_sysctl {
 #define SCTPCTL_PATH_RTX_MAX_MAX	0xFFFFFFFF
 #define SCTPCTL_PATH_RTX_MAX_DEFAULT	SCTP_DEF_MAX_PATH_RTX
 
-/* add_more_on_output: When space wise is it worthwhile to try to add more to a socket send buffer */
-#define SCTPCTL_ADD_MORE_ON_OUTPUT_DESC	L"When space wise is it worthwhile to try to add more to a socket send buffer"
+/* add_more_on_output: When space-wise is it worthwhile to try to add more to a socket send buffer */
+#define SCTPCTL_ADD_MORE_ON_OUTPUT_DESC	L"When space-wise is it worthwhile to try to add more to a socket send buffer"
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_MIN	0
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_MAX	0xFFFFFFFF
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_DEFAULT SCTP_DEFAULT_ADD_MORE
@@ -527,6 +532,33 @@ struct sctp_sysctl {
 #define SCTPCTL_INITIAL_CWND_MAX	0xffffffff
 #define SCTPCTL_INITIAL_CWND_DEFAULT	3
 
+/* rttvar smooth avg for bw calc  */
+#define SCTPCTL_RTTVAR_BW_DESC	L"Shift amount for bw smoothing on rtt calc"
+#define SCTPCTL_RTTVAR_BW_MIN	0
+#define SCTPCTL_RTTVAR_BW_MAX	32
+#define SCTPCTL_RTTVAR_BW_DEFAULT	4
+
+/* rttvar smooth avg for bw calc  */
+#define SCTPCTL_RTTVAR_RTT_DESC	L"Shift amount for rtt smoothing on rtt calc"
+#define SCTPCTL_RTTVAR_RTT_MIN	0
+#define SCTPCTL_RTTVAR_RTT_MAX	32
+#define SCTPCTL_RTTVAR_RTT_DEFAULT	5
+
+#define SCTPCTL_RTTVAR_EQRET_DESC	L"What to return when rtt and bw are unchanged"
+#define SCTPCTL_RTTVAR_EQRET_MIN	0
+#define SCTPCTL_RTTVAR_EQRET_MAX	1
+#define SCTPCTL_RTTVAR_EQRET_DEFAULT	0
+
+#define SCTPCTL_RTTVAR_STEADYS_DESC	L"How many the sames it takes to try step down of cwnd"
+#define SCTPCTL_RTTVAR_STEADYS_MIN	0
+#define SCTPCTL_RTTVAR_STEADYS_MAX	0xFFFF
+#define SCTPCTL_RTTVAR_STEADYS_DEFAULT	20 /* 0 means disable feature */
+
+#define SCTPCTL_RTTVAR_DCCCECN_DESC	L"Enable for RTCC CC datacenter ECN"
+#define SCTPCTL_RTTVAR_DCCCECN_MIN	0
+#define SCTPCTL_RTTVAR_DCCCECN_MAX	1
+#define SCTPCTL_RTTVAR_DCCCECN_DEFAULT	1 /* 0 means disable feature */
+
 #if defined(SCTP_DEBUG)
 /* debug: Configure debug output */
 #define SCTPCTL_DEBUG_DESC	L"Configure debug output"
@@ -541,7 +573,7 @@ struct sctp_sysctl {
 #define SCTPCTL_MAIN_TIMER_MAX		0xFFFFFFFF
 #define SCTPCTL_MAIN_TIMER_DEFAULT	10
 
-#define SCTPCTL_IGNORE_VMWARE_INTERFACES_DESC		L"Ignore VMWare Interfaces"
+#define SCTPCTL_IGNORE_VMWARE_INTERFACES_DESC		L"Ignore VMware Interfaces"
 #define SCTPCTL_IGNORE_VMWARE_INTERFACES_MIN		0
 #define SCTPCTL_IGNORE_VMWARE_INTERFACES_MAX		1
 #define SCTPCTL_IGNORE_VMWARE_INTERFACES_DEFAULT	SCTPCTL_IGNORE_VMWARE_INTERFACES_MAX

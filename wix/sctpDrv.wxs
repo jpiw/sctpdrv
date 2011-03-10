@@ -58,17 +58,9 @@
 		<?endif ?>
 		
 		<?if $(env.DDK_TARGET_OS)=WinLH ?>
-		<Condition Message="This installer is for Windows Vista and Windows 2008. You can find installers for other versions of Windows on the SctpDrv web site.">
+		<Condition Message="This installer is for Windows Vista and newer. You can find installers for other versions of Windows on the SctpDrv web site.">
 			<![CDATA[
-			(VersionNT = 600)
-			]]>
-		</Condition>
-		<?endif ?>
-		
-		<?if $(env.DDK_TARGET_OS)=Win7 ?>
-		<Condition Message="This installer is for Windows 7 and Windows 2008 R2. You can find installers for other versions of Windows on the SctpDrv web site.">
-			<![CDATA[
-			(VersionNT > "600")
+			(VersionNT >= 600)
 			]]>
 		</Condition>
 		<?endif ?>

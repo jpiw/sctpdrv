@@ -61,24 +61,6 @@ copy /Y sp\dll\obj%BUILDTYPE%_wlh\amd64\sctpsp.dll sp\SctpSocket\SctpSocket
 @if %ERRORLEVEL% neq 0 goto builderror
 %WDK% x64 wlh && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
-
-REM Build the i386 Windows 7 driver
-%WDK% x86 win7 && CD /D %PROJDIR% && build/c
-@if %ERRORLEVEL% neq 0 goto builderror
-copy /Y sp\dll\obj%BUILDTYPE%_win7_x86\i386\sctpsp.dll sp\SctpSocket\SctpSocket
-%SDK% /x86 /win7 /%MSBUILDCONFIGURATION% && CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=Win32 /p:AssemblyLinkResource=sctpsp.dll"
-@if %ERRORLEVEL% neq 0 goto builderror
-%WDK% x86 win7 && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
-@if %ERRORLEVEL% neq 0 goto builderror
-
-REM Build the amd64 Windows 7 driver
-%WDK% x64 win7 && CD /D %PROJDIR% && build/c
-@if %ERRORLEVEL% neq 0 goto builderror
-copy /Y sp\dll\obj%BUILDTYPE%_win7_amd64\amd64\sctpsp.dll sp\SctpSocket\SctpSocket
-%SDK% /x64 /win7 /%MSBUILDCONFIGURATION% && CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=x64 /p:AssemblyLinkResource=sctpsp.dll"
-@if %ERRORLEVEL% neq 0 goto builderror
-%WDK% x64 win7 && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
-@if %ERRORLEVEL% neq 0 goto builderror
 @goto done
 
 :missingfiles

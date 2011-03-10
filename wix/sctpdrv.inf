@@ -1,14 +1,14 @@
 ; SctpDrv driver setup file
-; Copyright (c) 2010 Bruce Cran
+; Copyright (c) 2011 Bruce Cran
 [Version]
 Signature      = "$WINDOWS NT$"
 Class          = NetTrans
 ClassGUID      = {4D36E975-E325-11CE-BFC1-08002BE10318}
 Provider       = %BruceCran%
-DriverVer      = 11/04/2010,1.1.6
+DriverVer      = 03/08/2011,1.1.6
 DriverPackageType        = KernelService
 DriverPackageDisplayName = %SctpDesc%
-CatalogFile    = sctp.cat
+CatalogFile    = sctpdrv.cat
 
 [Manufacturer]
 %BruceCran%      = SctpDrv,NTx86,NTamd64
@@ -20,31 +20,38 @@ CatalogFile    = sctp.cat
 %SctpDesc%     = DefaultInstall, BruceCran_SctpDrv
 
 [DestinationDirs]
-DefaultDestDir = 11
-Sctp.DriverFile= 12
+DefaultDestDir  = 11
+Sctp.DriverFile = 12 ; DIRID_DRIVERS
 
 [SourceDisksNames]
 1              = %Disk1%
 
 [SourceDisksFiles]
-sctp.sys       = 1
+sctpdrv.sys       = 1,"",,
 
 [DefaultInstall]
-OptionDesc     = %SctpDesc%
-CopyFiles      = Sctp.DriverFile
+AddReg     = Install_NDI
+Characteristics = 0x0
+CopyFiles  = Sctp.DriverFile
+
+[Install_NDI]
+HKR,Ndi,Service,,"sctpdrv"
+HKR,Ndi,HelpText,,%SCTP_HelpText%
+HKR,Ndi\Interfaces, UpperRange,, noupper
+HKR,"Ndi\Interfaces","LowerRange",,"ndis5,ndis5_prot"
 
 [Sctp.DriverFile]
-sctp.sys,,,2
+sctpdrv.sys,,,2
 
 [DefaultInstall.Services]
-AddService     = Sctp,0x800,DriverService
+AddService     = sctpdrv,,DriverService
 
-; Driver specification for NT = 6 (Vista)
+; Driver specification for NT > 6 (Vista and newer)
 ; Use AutoStart StartType because BFE isn't a boot-time service
 [DriverService]
 DisplayName    = %SctpDesc%
 Description    = %SctpDesc%
-ServiceBinary  = %12%\sctp.sys
+ServiceBinary  = %12%\sctpdrv.sys
 ServiceType    = 1 ; SERVICE_KERNEL_DRIVER
 StartType      = 2 ; SERVICE_AUTO_START
 ErrorControl   = 1 ; SERVICE_ERROR_NORMAL
@@ -53,11 +60,10 @@ Dependencies   = Tcpip,BFE,Afd
 
 [DefaultUninstall]
 DelFiles       = Sctp.DriverFile
-
-[DefaultUninstall.Services]
-DelService     = Sctp,0x200
+DelService     = sctpdrv,0x200
 
 [Strings]
 BruceCran      = "Bruce Cran"
-SctpDesc       = "SCTP Driver"
+SctpDesc       = "SCTP (SctpDrv)"
 Disk1          = "SctpDrv Source Media"
+SCTP_HelpText  = "Stream Control Transmission Protocol. The SCTP protocol provides reliable, flow-controlled, two-way transmission of data."

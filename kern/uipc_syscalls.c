@@ -2820,15 +2820,15 @@ done:
 	if (NT_SUCCESS(status)) {
 		int rc;
 		if (readfds != NULL && oreadfds != NULL) {
-			if (putfds(irp, selectReq32->readfds, selectReq->readfds, oreadfds) != 0)
+			if (putfds(irp, (selectReq32 != NULL)? selectReq32->readfds : NULL, selectReq->readfds, oreadfds) != 0)
 				goto done2;
 		}
 		if (writefds != NULL && owritefds != NULL) {
-			if (putfds(irp, selectReq32->writefds, selectReq->writefds, owritefds) != 0)
+			if (putfds(irp, (selectReq32 != NULL)? selectReq32->writefds : NULL, selectReq->writefds, owritefds) != 0)
 				goto done2;
 		}
 		if (exceptfds != NULL && oexceptfds != NULL) {
-			if (putfds(irp, selectReq32->exceptfds, selectReq->exceptfds, oexceptfds) != 0)
+			if (putfds(irp, (selectReq32 != NULL)? selectReq32->exceptfds : NULL, selectReq->exceptfds, oexceptfds) != 0)
 				goto done2;
 		}
 

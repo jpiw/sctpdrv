@@ -35,7 +35,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 218757 2011-02-16 21:29:13Z bz $");
 #endif
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_pcb.h>
@@ -186,6 +186,9 @@ sctp_get_peeloff(struct socket *head, sctp_assoc_t assoc_id, int *error)
 	}
 	atomic_add_int(&stcb->asoc.refcnt, 1);
 	SCTP_TCB_UNLOCK(stcb);
+#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+	CURVNET_SET(head->so_vnet);
+#endif
 	newso = sonewconn(head, SS_ISCONNECTED
 #if defined(__APPLE__)
 	    , NULL
@@ -194,6 +197,9 @@ sctp_get_peeloff(struct socket *head, sctp_assoc_t assoc_id, int *error)
 	    , NULL, stcb->asoc.vrf_id
 #endif
 		);
+#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+	CURVNET_RESTORE();
+#endif
 	if (newso == NULL) {
 		SCTPDBG(SCTP_DEBUG_PEEL1, "sctp_peeloff:sonewconn failed\n");
 		SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTP_PEELOFF, ENOMEM);

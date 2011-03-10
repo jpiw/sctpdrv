@@ -1,10 +1,12 @@
 !include ..\sources.inc
 
-!IF ($(_NT_TARGET_VERSION) >= 0x0600)
+!IF ($(_NT_TARGET_VERSION) >= 0x600)
 C_DEFINES=$(C_DEFINES) -DNDIS60
+!ELSE
+C_DEFINES=$(C_DEFINES) -DNDIS50
 !ENDIF
 
-TARGETNAME=sctp
+TARGETNAME=sctpdrv
 TARGETTYPE=DRIVER
 MC_FLAGS=-c
 
@@ -35,8 +37,10 @@ INCLUDES= \
     $(DDK_INC_PATH)
 
 SOURCES= \
+    ndis.c \
     sctp.c \
     sctp.rc \
     eventlog.mc
+
 
 RUN_WPP= sctp.c -km
