@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 Copyright (C) 2008 by CO-CONV, Corp., Kyoto, Japan.
-Copyright (C) 2010 Bruce Cran.
+Copyright (C) 2011 Bruce Cran.
 
 Developed by co-research between CO-CONV, Corp. and WIDE Project.
 --------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ Windows Operating System on which you can execute WDK
 
 How to get the latest code:
 You can get the code from the Subversion repository at:
-	https://svn.bluestop.org/svn/sctpDrv/
+	https://code.bluestop.org/sctpdrv/
 
 How to build:
 

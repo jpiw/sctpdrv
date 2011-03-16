@@ -371,12 +371,13 @@ ClientPnPDelNetAddress(
 	    RtlCompareMemory(DeviceName->Buffer, PREFIX_TCPIP, PREFIX_TCPIP_SIZE) == PREFIX_TCPIP_SIZE) {
 		RtlInitUnicodeString(&guidStr, &DeviceName->Buffer[PREFIX_TCPIP_LEN]);
 	} else {
+		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#1\n");
 		return;
 	}
 
 	status = RtlGUIDFromString(&guidStr, &guid);
 	if (!NT_SUCCESS(status)) {
-		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#1\n");
+		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#2\n");
 		return;
 	}
 
@@ -388,7 +389,7 @@ ClientPnPDelNetAddress(
 	}
 	if (ifp == NULL) {
 		IFNET_RUNLOCK();
-		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#2\n");
+		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#3\n");
 		return;
 	}
 
@@ -424,7 +425,7 @@ ClientPnPDelNetAddress(
 	}
 	if (ifa == NULL) {
 		IF_UNLOCK(ifp);
-		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#3\n");
+		DebugPrint(DEBUG_NET_VERBOSE, "ClientPnPDelNetAddress - leave#4\n");
 		return;
 	}
 
@@ -1161,7 +1162,7 @@ done:
 		ExFreePool(ifEntry);
 	if (ifInfo != NULL)
 		ExFreePool(ifInfo);
-		
+
 	return ifp;
 }
 #else
@@ -1200,7 +1201,7 @@ ifnet_create_by_guid(
 		goto done;
 	}
 	pIfEntry = &pIfTable->Table[i];
-	
+
 	status = RtlStringFromGUID(guid, &usGuid);
 	if (NT_SUCCESS(status)) {
 		status = RtlUnicodeStringToAnsiString(&asGuid, &usGuid, TRUE);
@@ -1234,7 +1235,7 @@ ifnet_create_by_guid(
 
 		ifp->if_type = pIfEntry->Type;
 		ifp->if_mtu = pIfEntry->Mtu;
-		
+
 		if (xname_tmp != NULL)
 			RtlCopyMemory(ifp->if_xname, xname_tmp, sz);
 
@@ -1249,7 +1250,7 @@ done:
 
 	if (xname_tmp != NULL)
 		ExFreePoolWithTag(xname_tmp, 'km51');
-		
+
 	return ifp;
 }
 
@@ -1277,7 +1278,7 @@ ifnet_create_by_index(
 		DebugPrint(DEBUG_NET_VERBOSE, "ifnet_create_by_index - leave#1,status=%08x\n", status);
 		return NULL;
 	}
-	
+
 	status = RtlStringFromGUID(&ifEntry.InterfaceGuid, &usGuid);
 	if (NT_SUCCESS(status)) {
 		status = RtlUnicodeStringToAnsiString(&asGuid, &usGuid, TRUE);
@@ -1314,7 +1315,7 @@ ifnet_create_by_index(
 
 		ifp->if_type = ifEntry.Type;
 		ifp->if_mtu = ifEntry.Mtu;
-		
+
 		if (xname_tmp != NULL)
 			RtlCopyMemory(ifp->if_xname, xname_tmp, sz);
 
@@ -1322,7 +1323,7 @@ ifnet_create_by_index(
 	}
 	IFREF(ifp);
 	IFNET_WUNLOCK();
-	
+
 	if (xname_tmp != NULL)
 		ExFreePoolWithTag(xname_tmp, 'km51');
 
