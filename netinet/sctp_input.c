@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 219397 2011-03-08 11:58:25Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 221627 2011-05-08 09:11:59Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -201,7 +201,11 @@ sctp_handle_init(struct mbuf *m, int iphlen, int offset, struct sctphdr *sh,
  */
 
 int
-sctp_is_there_unsent_data(struct sctp_tcb *stcb)
+sctp_is_there_unsent_data(struct sctp_tcb *stcb, int so_locked
+#if !defined(__APPLE__) && !defined(SCTP_SO_LOCK_TESTING)
+	SCTP_UNUSED
+#endif
+)
 {
 	int unsent_data = 0;
 	unsigned int i;
@@ -248,7 +252,7 @@ sctp_is_there_unsent_data(struct sctp_tcb *stcb)
 					sctp_m_freem(sp->data);
 					sp->data = NULL;
 				}
-				sctp_free_a_strmoq(stcb, sp);
+				sctp_free_a_strmoq(stcb, sp, so_locked);
 			} else {
 				unsent_data++;
 				break;
@@ -308,7 +312,7 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb,
 						chk->data = NULL;
 					}
 				}
-				sctp_free_a_chunk(stcb, chk);
+				sctp_free_a_chunk(stcb, chk, SCTP_SO_NOT_LOCKED);
 				/*sa_ignore FREED_MEMORY*/
 			}
 		}
@@ -330,7 +334,7 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb,
 						sp->net = NULL;
 					}
 					/* Free the chunk */
-					sctp_free_a_strmoq(stcb, sp);
+					sctp_free_a_strmoq(stcb, sp, SCTP_SO_NOT_LOCKED);
 					/*sa_ignore FREED_MEMORY*/
 				}
 			}
@@ -539,42 +543,59 @@ sctp_handle_heartbeat_ack(struct sctp_heartbeat_chunk *cp,
     struct sctp_tcb *stcb, struct sctp_nets *net)
 {
 	struct sockaddr_storage store;
-	struct sockaddr_in *sin;
-	struct sockaddr_in6 *sin6;
 	struct sctp_nets *r_net, *f_net;
 	struct timeval tv;
 	int req_prim = 0;
+#ifdef INET
+	struct sockaddr_in *sin;
+#endif
+#ifdef INET6
+	struct sockaddr_in6 *sin6;
+#endif
 
 	if (ntohs(cp->ch.chunk_length) != sizeof(struct sctp_heartbeat_chunk)) {
 		/* Invalid length */
 		return;
 	}
-	sin = (struct sockaddr_in *)&store;
-	sin6 = (struct sockaddr_in6 *)&store;
 
 	memset(&store, 0, sizeof(store));
-	if (cp->heartbeat.hb_info.addr_family == AF_INET &&
-	    cp->heartbeat.hb_info.addr_len == sizeof(struct sockaddr_in)) {
-		sin->sin_family = cp->heartbeat.hb_info.addr_family;
+	switch (cp->heartbeat.hb_info.addr_family) {
+#ifdef INET
+	case AF_INET:
+		if (cp->heartbeat.hb_info.addr_len == sizeof(struct sockaddr_in)) {
+			sin = (struct sockaddr_in *)&store;
+			sin->sin_family = cp->heartbeat.hb_info.addr_family;
 #if ! (defined(__Windows__) || defined(__Userspace_os_Linux))
-		sin->sin_len = cp->heartbeat.hb_info.addr_len;
+			sin->sin_len = cp->heartbeat.hb_info.addr_len;
 #endif
-		sin->sin_port = stcb->rport;
-		memcpy(&sin->sin_addr, cp->heartbeat.hb_info.address,
-		    sizeof(sin->sin_addr));
-	} else if (cp->heartbeat.hb_info.addr_family == AF_INET6 &&
-	    cp->heartbeat.hb_info.addr_len == sizeof(struct sockaddr_in6)) {
-		sin6->sin6_family = cp->heartbeat.hb_info.addr_family;
+			sin->sin_port = stcb->rport;
+			memcpy(&sin->sin_addr, cp->heartbeat.hb_info.address,
+			       sizeof(sin->sin_addr));
+		} else {
+			return;
+		}
+		break;
+#endif
+#ifdef INET6
+	case AF_INET6:
+		if (cp->heartbeat.hb_info.addr_len == sizeof(struct sockaddr_in6)) {
+			sin6 = (struct sockaddr_in6 *)&store;
+			sin6->sin6_family = cp->heartbeat.hb_info.addr_family;
 #if !(defined(__Windows__) || defined(__Userspace_os_Linux))
-		sin6->sin6_len = cp->heartbeat.hb_info.addr_len;
+			sin6->sin6_len = cp->heartbeat.hb_info.addr_len;
 #endif
-		sin6->sin6_port = stcb->rport;
-		memcpy(&sin6->sin6_addr, cp->heartbeat.hb_info.address,
-		    sizeof(sin6->sin6_addr));
-	} else {
+			sin6->sin6_port = stcb->rport;
+			memcpy(&sin6->sin6_addr, cp->heartbeat.hb_info.address,
+			       sizeof(sin6->sin6_addr));
+		} else {
+			return;
+		}
+		break;
+#endif
+	default:
 		return;
 	}
-	r_net = sctp_findnet(stcb, (struct sockaddr *)sin);
+	r_net = sctp_findnet(stcb, (struct sockaddr *)&store);
 	if (r_net == NULL) {
 		SCTPDBG(SCTP_DEBUG_INPUT1, "Huh? I can't find the address I sent it to, discard\n");
 		return;
@@ -881,7 +902,7 @@ sctp_handle_shutdown(struct sctp_shutdown_chunk *cp,
 		sctp_timer_stop(SCTP_TIMER_TYPE_SHUTDOWN, stcb->sctp_ep, stcb, net, SCTP_FROM_SCTP_INPUT+SCTP_LOC_8);
 	}
 	/* Now is there unsent data on a stream somewhere? */
-	some_on_streamwheel = sctp_is_there_unsent_data(stcb);
+	some_on_streamwheel = sctp_is_there_unsent_data(stcb, SCTP_SO_NOT_LOCKED);
 
 	if (!TAILQ_EMPTY(&asoc->send_queue) ||
 	    !TAILQ_EMPTY(&asoc->sent_queue) ||
@@ -1926,8 +1947,6 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 	struct sctp_init_ack_chunk *initack_cp, initack_buf;
 	struct sockaddr_storage sa_store;
 	struct sockaddr *initack_src = (struct sockaddr *)&sa_store;
-	struct sockaddr_in *sin;
-	struct sockaddr_in6 *sin6;
 	struct sctp_association *asoc;
 	int chk_length;
 	int init_offset, initack_offset, initack_limit;
@@ -1935,6 +1954,12 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 	int error = 0;
 	uint32_t old_tag;
 	uint8_t auth_chunk_buf[SCTP_PARAM_BUFFER_SIZE];
+#ifdef INET
+	struct sockaddr_in *sin;
+#endif
+#ifdef INET6
+	struct sockaddr_in6 *sin6;
+#endif
 #if defined (__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
 	struct socket *so;
 
@@ -2160,7 +2185,9 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 
 	/* warning, we re-use sin, sin6, sa_store here! */
 	/* pull in local_address (our "from" address) */
-	if (cookie->laddr_type == SCTP_IPV4_ADDRESS) {
+	switch (cookie->laddr_type) {
+#ifdef INET
+	case SCTP_IPV4_ADDRESS:
 		/* source addr is IPv4 */
 		sin = (struct sockaddr_in *)initack_src;
 		memset(sin, 0, sizeof(*sin));
@@ -2169,7 +2196,10 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 		sin->sin_len = sizeof(struct sockaddr_in);
 #endif
 		sin->sin_addr.s_addr = cookie->laddress[0];
-	} else if (cookie->laddr_type == SCTP_IPV6_ADDRESS) {
+		break;
+#endif
+#ifdef INET6
+	case SCTP_IPV6_ADDRESS:
 		/* source addr is IPv6 */
 		sin6 = (struct sockaddr_in6 *)initack_src;
 		memset(sin6, 0, sizeof(*sin6));
@@ -2180,7 +2210,9 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 		sin6->sin6_scope_id = cookie->scope_id;
 		memcpy(&sin6->sin6_addr, cookie->laddress,
 		    sizeof(sin6->sin6_addr));
-	} else {
+		break;
+#endif
+	default:
 		atomic_add_int(&stcb->asoc.refcnt, 1);
 #if defined (__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
 		SCTP_TCB_UNLOCK(stcb);
@@ -2290,8 +2322,6 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
     struct sctp_tcb **locked_tcb, uint32_t vrf_id, uint16_t port)
 {
 	struct sctp_state_cookie *cookie;
-	struct sockaddr_in6 sin6;
-	struct sockaddr_in sin;
 	struct sctp_tcb *l_stcb = *stcb;
 	struct sctp_inpcb *l_inp;
 	struct sockaddr *to;
@@ -2312,6 +2342,12 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 	struct sctp_nets *netl;
 	int had_a_existing_tcb = 0;
 	int send_int_conf = 0;
+#ifdef INET
+	struct sockaddr_in sin;
+#endif
+#ifdef INET6
+	struct sockaddr_in6 sin6;
+#endif
 
 	SCTPDBG(SCTP_DEBUG_INPUT2,
 		"sctp_handle_cookie: handling COOKIE-ECHO\n");
@@ -2322,6 +2358,7 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 	/* First get the destination address setup too. */
 	iph = mtod(m, struct ip *);
 	switch (iph->ip_v) {
+#ifdef INET
 	case IPVERSION:
 	{
 		/* its IPv4 */
@@ -2338,6 +2375,7 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 		size_of_pkt = SCTP_GET_IPV4_LENGTH(iph);
 		break;
 	}
+#endif
 #ifdef INET6
 	case IPV6_VERSION >> 4:
 	{
@@ -2537,7 +2575,9 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 	 * up.
 	 */
 	to = NULL;
-	if (cookie->addr_type == SCTP_IPV6_ADDRESS) {
+	switch (cookie->addr_type) {
+#ifdef INET6
+	case SCTP_IPV6_ADDRESS:
 		memset(&sin6, 0, sizeof(sin6));
 		sin6.sin6_family = AF_INET6;
 #if !defined(__Windows__) && !defined(__Userspace_os_Linux)
@@ -2548,7 +2588,10 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 		memcpy(&sin6.sin6_addr.s6_addr, cookie->address,
 		    sizeof(sin6.sin6_addr.s6_addr));
 		to = (struct sockaddr *)&sin6;
-	} else if (cookie->addr_type == SCTP_IPV4_ADDRESS) {
+		break;
+#endif
+#ifdef INET
+	case SCTP_IPV4_ADDRESS:
 		memset(&sin, 0, sizeof(sin));
 		sin.sin_family = AF_INET;
 #if !defined(__Windows__) && !defined(__Userspace_os_Linux)
@@ -2557,7 +2600,9 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 		sin.sin_port = sh->src_port;
 		sin.sin_addr.s_addr = cookie->address[0];
 		to = (struct sockaddr *)&sin;
-	} else {
+		break;
+#endif
+	default:
 		/* This should not happen */
 		return (NULL);
 	}
@@ -3100,7 +3145,7 @@ sctp_handle_ecn_cwr(struct sctp_cwr_chunk *cp, struct sctp_tcb *stcb, struct sct
 				chk->data = NULL;
 			}
 			stcb->asoc.ctrl_queue_cnt--;
-			sctp_free_a_chunk(stcb, chk);
+			sctp_free_a_chunk(stcb, chk, SCTP_SO_NOT_LOCKED);
 			if (override == 0) {
 				break;
 			}
@@ -3338,13 +3383,13 @@ process_chunk_drop(struct sctp_tcb *stcb, struct sctp_chunk_desc *desc,
 	case SCTP_SELECTIVE_ACK:
 	case SCTP_NR_SELECTIVE_ACK:
 		/* resend the sack */
-		sctp_send_sack(stcb);
+		sctp_send_sack(stcb, SCTP_SO_NOT_LOCKED);
 		break;
 	case SCTP_HEARTBEAT_REQUEST:
 		/* resend a demand HB */
 		if ((stcb->asoc.overall_error_count + 3) < stcb->asoc.max_send_times) {
 			/* Only retransmit if we KNOW we wont destroy the tcb */
-			(void)sctp_send_hb(stcb, 1, net);
+			(void)sctp_send_hb(stcb, 1, net, SCTP_SO_NOT_LOCKED);
 		}
 		break;
 	case SCTP_SHUTDOWN:
@@ -3515,7 +3560,7 @@ sctp_clean_up_stream_reset(struct sctp_tcb *stcb)
 		chk->data = NULL;
 	}
 	asoc->ctrl_queue_cnt--;
-	sctp_free_a_chunk(stcb, chk);
+	sctp_free_a_chunk(stcb, chk, SCTP_SO_NOT_LOCKED);
         /*sa_ignore NO_NULL_CHK*/
 	stcb->asoc.str_reset = NULL;
 }
@@ -3957,7 +4002,7 @@ sctp_handle_stream_reset(struct sctp_tcb *stcb, struct mbuf *m, int offset,
 			sctp_m_freem(chk->data);
 			chk->data = NULL;
 		}
-		sctp_free_a_chunk(stcb, chk);
+		sctp_free_a_chunk(stcb, chk, SCTP_SO_NOT_LOCKED);
 		return (ret_code);
 	}
 	SCTP_BUF_RESV_UF(chk->data, SCTP_MIN_OVERHEAD);
@@ -5714,6 +5759,7 @@ sctp_print_mbuf_chain(struct mbuf *m)
 }
 #endif
 
+#ifdef INET
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__) || defined(__Userspace__)
 void
 sctp_input_with_port(struct mbuf *i_pak, int off, uint16_t port)
@@ -6103,3 +6149,4 @@ sctp_input(struct mbuf *m, int off)
 #endif
 	sctp_input_with_port(m, off, 0);
 }
+#endif

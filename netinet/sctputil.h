@@ -35,7 +35,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.h 222459 2011-05-29 18:41:06Z tuexen $");
 #endif
 #ifndef __sctputil_h__
 #define __sctputil_h__
@@ -324,11 +324,19 @@ do { \
 	} \
 } while (0)
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
-/* new functions to start/stop udp tunneling */
+/* functions to start/stop udp tunneling */
+#if defined(__APPLE__)
 void sctp_over_udp_stop(void);
 int sctp_over_udp_start(void);
-#elif defined(__Windows__)
+#endif
+#if defined(__FreeBSD__)
+/* XXX: Remove the #ifdef after tunneling over IPv6 works also on FreeBSD. */
+#ifdef INET
+void sctp_over_udp_stop(void);
+int sctp_over_udp_start(void);
+#endif
+#endif
+#if defined(__Windows__)
 void sctp_over_udp_restart(void);
 #endif
 
@@ -338,19 +346,6 @@ sctp_soreceive(struct socket *so, struct sockaddr **psa,
     struct mbuf **mp0,
     struct mbuf **controlp,
     int *flagsp);
-
-
-/* For those not passing mbufs, this does the
- * translations for you. Caller owns memory
- * of size controllen returned in controlp.
- */
-int sctp_l_soreceive(struct socket *so,
-		     struct sockaddr **name,
-		     struct uio *uio,
-		     char **controlp,
-		     int *controllen,
-		     int *flag);
-
 
 void
 sctp_misc_ints(uint8_t from, uint32_t a, uint32_t b, uint32_t c, uint32_t d);

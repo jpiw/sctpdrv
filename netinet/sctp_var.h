@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 221627 2011-05-08 09:11:59Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_VAR_H_
@@ -91,9 +91,9 @@ extern struct pr_usrreqs sctp_usrreqs;
 	} \
 }
 
-#define sctp_free_a_strmoq(_stcb, _strmoq) { \
+#define sctp_free_a_strmoq(_stcb, _strmoq, _so_locked) { \
 	if ((_strmoq)->holds_key_ref) { \
-		sctp_auth_key_release(stcb, sp->auth_keyid); \
+		sctp_auth_key_release(stcb, sp->auth_keyid, _so_locked); \
 		(_strmoq)->holds_key_ref = 0; \
 	} \
 	SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_strmoq), (_strmoq)); \
@@ -109,9 +109,9 @@ extern struct pr_usrreqs sctp_usrreqs;
  	} \
 }
 
-#define sctp_free_a_chunk(_stcb, _chk) { \
+#define sctp_free_a_chunk(_stcb, _chk, _so_locked) { \
 	if ((_chk)->holds_key_ref) {\
-		sctp_auth_key_release((_stcb), (_chk)->auth_keyid); \
+		sctp_auth_key_release((_stcb), (_chk)->auth_keyid, _so_locked); \
 		(_chk)->holds_key_ref = 0; \
 	} \
         if (_stcb) { \
@@ -378,13 +378,17 @@ int sctp_disconnect(struct socket *so);
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__)
 void sctp_ctlinput __P((int, struct sockaddr *, void *));
 int sctp_ctloutput __P((struct socket *, struct sockopt *));
+#ifdef INET
 void sctp_input_with_port __P((struct mbuf *, int, uint16_t));
+#endif
 #if defined(__APPLE__)
 #if defined(INET6)
 int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
 #endif
 #endif
+#ifdef INET
 void sctp_input __P((struct mbuf *, int));
+#endif
 void sctp_pathmtu_adjustment __P((struct sctp_inpcb *, struct sctp_tcb *, struct sctp_nets *, uint16_t));
 #else
 #if defined(__Panda__)
