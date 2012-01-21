@@ -1587,16 +1587,16 @@ _WSARecvMsg(
 		bytesTransferred = malloc(sizeof(DWORD));
 		byteCount = sizeof(DWORD);
 		bSuccess = ConfigureOverlapped(lpOverlapped, s, bytesTransferred, lpCompletionRoutine, &threadId, &iErrno);
-
-		bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECVMSG,
-				(PVOID)&recvMsgReq, sizeof(recvMsgReq),
-				bytesTransferred, sizeof(*bytesTransferred),
-				&bytesReturned, lpOverlapped);
 	} else {
 		bytesTransferred = lpdwNumberOfBytesRecvd;
 		if (bytesTransferred != NULL)
 			byteCount = sizeof(DWORD);
 	}
+
+	bSuccess = DeviceIoControl((HANDLE)s, IOCTL_SOCKET_RECVMSG,
+        (PVOID)&recvMsgReq, sizeof(recvMsgReq),
+        bytesTransferred, sizeof(*bytesTransferred),
+        &bytesReturned, lpOverlapped);
 
 	DBGPRINT("IOCTL_SOCKET_RECVMSG: bSuccess=%d,bytesReturned=%d\n", bSuccess, bytesReturned);
 	if (lpOverlapped != NULL && lpCompletionRoutine != NULL &&
