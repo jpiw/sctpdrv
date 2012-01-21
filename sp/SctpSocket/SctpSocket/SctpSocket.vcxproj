@@ -103,7 +103,7 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q -Ra  "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -125,7 +125,7 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q -Ra  "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -147,7 +147,7 @@
       </AssemblyLinkResource>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q -Ra  "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,7 +165,7 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q -Ra  "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -39,7 +39,8 @@ REM Build the i386 Windows XP driver
 %WDK% x86 wxp && CD /D %PROJDIR% && build/c"
 @if %ERRORLEVEL% neq 0 goto builderror
 copy /Y sp\dll\obj%BUILDTYPE%_wxp_x86\i386\sctpsp.dll sp\SctpSocket\SctpSocket
-%SDK% /x86 /xp /%MSBUILDCONFIGURATION% && CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=Win32 /p:AssemblyLinkResource=sctpsp.dll"
+cd /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=Win32 /p:AssemblyLinkResource=sctpsp.dll"
+cd ..\..
 @if %ERRORLEVEL% neq 0 goto builderror
 %WDK% x86 wxp && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
@@ -48,7 +49,8 @@ REM Build the i386 Windows Vista driver
 %WDK% x86 wlh && CD /D %PROJDIR% && build/c"
 @if %ERRORLEVEL% neq 0 goto builderror
 copy /Y sp\dll\obj%BUILDTYPE%_wlh_x86\i386\sctpsp.dll sp\SctpSocket\SctpSocket
-%SDK% /x86 /vista /%MSBUILDCONFIGURATION% && CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=Win32 /p:AssemblyLinkResource=sctpsp.dll"
+CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=Win32 /p:AssemblyLinkResource=sctpsp.dll"
+cd ..\..
 @if %ERRORLEVEL% neq 0 goto builderror
 %WDK% x86 wlh && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
@@ -57,7 +59,8 @@ REM Build the amd64 Windows Vista driver
 %WDK% x64 wlh && CD /D %PROJDIR% && build/c
 @if %ERRORLEVEL% neq 0 goto builderror
 copy /Y sp\dll\obj%BUILDTYPE%_wlh\amd64\sctpsp.dll sp\SctpSocket\SctpSocket
-%SDK% /x64 /vista /%MSBUILDCONFIGURATION% && CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=x64 /p:AssemblyLinkResource=sctpsp.dll"
+CD /D sp\SctpSocket && msbuild /p:Configuration=%MSBUILDCONFIGURATION% /p:Platform=x64 /p:AssemblyLinkResource=sctpsp.dll"
+cd ..\..
 @if %ERRORLEVEL% neq 0 goto builderror
 %WDK% x64 wlh && CD /D %PROJDIR% && CD /D wix && set MSICULTURE=en-us&& nmake -f Makefile.wix && set MSICULTURE=ja-jp&& nmake -f Makefile.wix"
 @if %ERRORLEVEL% neq 0 goto builderror
