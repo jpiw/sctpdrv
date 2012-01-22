@@ -7,11 +7,11 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * a) Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * b) Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *   the documentation and/or other materials provided with the distribution.
+ *    the documentation and/or other materials provided with the distribution.
  *
  * c) Neither the name of Cisco Systems, Inc. nor the names of its
  *    contributors may be used to endorse or promote products derived
@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 221627 2011-05-08 09:11:59Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 228907 2011-12-27 10:16:24Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_VAR_H_
@@ -54,6 +54,31 @@ extern struct pr_usrreqs sctp_usrreqs;
 #define sctp_is_feature_on(inp, feature) ((inp->sctp_features & feature) == feature)
 #define sctp_is_feature_off(inp, feature) ((inp->sctp_features & feature) == 0)
 
+#define sctp_stcb_feature_on(inp, stcb, feature) {\
+	if (stcb) { \
+		stcb->asoc.sctp_features |= feature; \
+	} else if (inp) { \
+		inp->sctp_features |= feature; \
+	} \
+}
+#define sctp_stcb_feature_off(inp, stcb, feature) {\
+	if (stcb) { \
+		stcb->asoc.sctp_features &= ~feature; \
+	} else if (inp) { \
+		inp->sctp_features &= ~feature; \
+	} \
+}
+#define sctp_stcb_is_feature_on(inp, stcb, feature) \
+	(((stcb != NULL) && \
+	  ((stcb->asoc.sctp_features & feature) == feature)) || \
+	 ((stcb == NULL) && (inp != NULL) && \
+	  ((inp->sctp_features & feature) == feature)))
+#define sctp_stcb_is_feature_off(inp, stcb, feature) \
+	(((stcb != NULL) && \
+	  ((stcb->asoc.sctp_features & feature) == 0)) || \
+	 ((stcb == NULL) && (inp != NULL) && \
+	  ((inp->sctp_features & feature) == 0)) || \
+         ((stcb == NULL) && (inp == NULL)))
 
 /* managing mobility_feature in inpcb (by micchie) */
 #define sctp_mobility_feature_on(inp, feature)  (inp->sctp_mobility_features |= feature)
@@ -160,7 +185,6 @@ extern struct pr_usrreqs sctp_usrreqs;
 		if (SCTP_DECREMENT_AND_CHECK_REFCOUNT(&(__net)->ref_count)) { \
 			(void)SCTP_OS_TIMER_STOP(&(__net)->rxt_timer.timer); \
 			(void)SCTP_OS_TIMER_STOP(&(__net)->pmtu_timer.timer); \
-			(void)SCTP_OS_TIMER_STOP(&(__net)->fr_timer.timer); \
                         if ((__net)->ro.ro_rt) { \
 				RTFREE((__net)->ro.ro_rt); \
 				(__net)->ro.ro_rt = NULL; \
@@ -170,7 +194,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 				(__net)->ro._s_addr = NULL; \
 			} \
                         (__net)->src_addr_selected = 0; \
-			(__net)->dest_state = SCTP_ADDR_NOT_REACHABLE; \
+			(__net)->dest_state &= ~SCTP_ADDR_REACHABLE; \
 			SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_net), (__net)); \
 			SCTP_DECR_RADDR_COUNT(); \
 		} \
@@ -208,7 +232,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 		if (SCTP_DECREMENT_AND_CHECK_REFCOUNT(&(__net)->ref_count)) { \
 			(void)SCTP_OS_TIMER_STOP(&(__net)->rxt_timer.timer); \
 			(void)SCTP_OS_TIMER_STOP(&(__net)->pmtu_timer.timer); \
-			(void)SCTP_OS_TIMER_STOP(&(__net)->fr_timer.timer); \
+			(void)SCTP_OS_TIMER_STOP(&(__net)->hb_timer.timer); \
                         if ((__net)->ro.ro_rt) { \
 				RTFREE((__net)->ro.ro_rt); \
 				(__net)->ro.ro_rt = NULL; \
@@ -218,7 +242,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 				(__net)->ro._s_addr = NULL; \
 			} \
                         (__net)->src_addr_selected = 0; \
-			(__net)->dest_state = SCTP_ADDR_NOT_REACHABLE; \
+			(__net)->dest_state &=~SCTP_ADDR_REACHABLE; \
 			SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_net), (__net)); \
 			SCTP_DECR_RADDR_COUNT(); \
 		} \
@@ -285,7 +309,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 #define sctp_mbuf_crush(data) do { \
 	struct mbuf *_m; \
 	_m = (data); \
-	while(_m && (SCTP_BUF_LEN(_m) == 0)) { \
+	while (_m && (SCTP_BUF_LEN(_m) == 0)) { \
 		(data)  = SCTP_BUF_NEXT(_m); \
 		SCTP_BUF_NEXT(_m) = NULL; \
 		sctp_m_free(_m); \
@@ -361,6 +385,8 @@ extern struct pr_usrreqs sctp_usrreqs;
 
 #endif
 
+#define SCTP_PF_ENABLED(_net) (_net->pf_threshold < _net->failure_threshold)
+#define SCTP_NET_IS_PF(_net) (_net->pf_threshold < _net->error_count)
 
 struct sctp_nets;
 struct sctp_inpcb;
@@ -381,7 +407,7 @@ int sctp_ctloutput __P((struct socket *, struct sockopt *));
 #ifdef INET
 void sctp_input_with_port __P((struct mbuf *, int, uint16_t));
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__Userspace__)
 #if defined(INET6)
 int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
 #endif
@@ -389,14 +415,17 @@ int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
 #ifdef INET
 void sctp_input __P((struct mbuf *, int));
 #endif
-void sctp_pathmtu_adjustment __P((struct sctp_inpcb *, struct sctp_tcb *, struct sctp_nets *, uint16_t));
+void sctp_pathmtu_adjustment __P((struct sctp_tcb *, uint16_t));
 #else
 #if defined(__Panda__)
 void sctp_input __P((pakhandle_type i_pak));
 #elif defined(__Userspace__)
 void sctp_input_with_port __P((struct mbuf *, int, uint16_t));
+#if defined(INET6)
+int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
+#endif
 void sctp_input __P((struct mbuf *, int));
-void sctp_pathmtu_adjustment __P((struct sctp_inpcb *, struct sctp_tcb *, struct sctp_nets *, uint16_t));
+void sctp_pathmtu_adjustment __P((struct sctp_tcb *, uint16_t));
 #else
 void sctp_input __P((struct mbuf *,...));
 #endif
@@ -405,11 +434,15 @@ int sctp_ctloutput __P((int, struct socket *, int, int, struct mbuf **));
 
 #endif
 void sctp_drain __P((void));
+#if defined(__Userspace__)
+void sctp_init __P((uint16_t));
+#else
 void sctp_init __P((void));
+#endif
 
 void sctp_finish(void);
 
-#if defined(__FreeBSD__) || defined(__Windows__)
+#if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
 int sctp_flush(struct socket *, int);
 #endif
 int sctp_shutdown __P((struct socket *));

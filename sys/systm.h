@@ -49,6 +49,7 @@ static __inline int imin(int a, int b) { return (a < b ? a : b); }
 #define	bzero		RtlZeroMemory
 #define bcopy(a, b, c)	RtlCopyMemory(b, a, c)
 #define bcmp(a, b, c)	((RtlCompareMemory((a), (b), (c)) == (c)) ? 0 : 1)
+#define snprintf RtlStringCbPrintfA
 
 #if !defined(_KERNEL)
 #define malloc(size)			HeapAlloc(GetProcessHeap(), 0, (size))

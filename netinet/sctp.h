@@ -7,11 +7,11 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * a) Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * b) Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *   the documentation and/or other materials provided with the distribution.
+ *    the documentation and/or other materials provided with the distribution.
  *
  * c) Neither the name of Cisco Systems, Inc. nor the names of its
  *    contributors may be used to endorse or promote products derived
@@ -33,7 +33,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 221460 2011-05-04 21:27:05Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 228653 2011-12-17 19:21:40Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_H_
@@ -45,7 +45,12 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp.h 221460 2011-05-04 21:27:05Z tuexen $
 #include <sys/types.h>
 
 
+#if !defined (__Userspace_os_Windows)
 #define SCTP_PACKED __attribute__((packed))
+#else
+#pragma pack (push, 1)
+#define SCTP_PACKED
+#endif
 
 /*
  * SCTP protocol - RFC2960.
@@ -56,7 +61,7 @@ struct sctphdr {
 	uint32_t v_tag;		/* verification tag of packet */
 	uint32_t checksum;	/* Adler32 C-Sum */
 	/* chunks follow... */
-} SCTP_PACKED ;
+} SCTP_PACKED;
 
 /*
  * SCTP Chunks
@@ -96,7 +101,7 @@ struct sctp_paramhdr {
 #define SCTP_PEER_ADDR_PARAMS 		0x0000000a
 #define SCTP_DEFAULT_SEND_PARAM		0x0000000b
 /* ancillary data/notification interest options */
-#define SCTP_EVENTS			0x0000000c
+#define SCTP_EVENTS			0x0000000c /* deprecated */
 /* Without this applied we will give V4 and V6 addresses on a V6 socket */
 #define SCTP_I_WANT_MAPPED_V4_ADDR	0x0000000d
 #define SCTP_MAXSEG 			0x0000000e
@@ -119,6 +124,13 @@ struct sctp_paramhdr {
 #define SCTP_EXPLICIT_EOR               0x0000001b
 #define SCTP_REUSE_PORT                 0x0000001c /* rw */
 #define SCTP_AUTH_DEACTIVATE_KEY	0x0000001d
+#define SCTP_EVENT                      0x0000001e
+#define SCTP_RECVRCVINFO                0x0000001f
+#define SCTP_RECVNXTINFO                0x00000020
+#define SCTP_DEFAULT_SNDINFO            0x00000021
+#define SCTP_DEFAULT_PRINFO             0x00000022
+#define SCTP_PEER_ADDR_THLDS            0x00000023
+#define SCTP_REMOTE_UDP_ENCAPS_PORT     0x00000024
 
 /*
  * read-only options
@@ -358,7 +370,7 @@ struct sctp_error_cause {
 	uint16_t code;
 	uint16_t length;
 	/* optional cause-specific info may follow */
-}  SCTP_PACKED;
+} SCTP_PACKED;
 
 struct sctp_error_invalid_stream {
 	struct sctp_error_cause cause;	/* code=SCTP_ERROR_INVALID_STREAM */
@@ -498,7 +510,8 @@ struct sctp_error_unrecognized_chunk {
 /*
  * PCB Features (in sctp_features bitmask)
  */
-#define SCTP_PCB_FLAGS_EXT_RCVINFO      0x00000002
+#define SCTP_PCB_FLAGS_DO_NOT_PMTUD     0x00000001
+#define SCTP_PCB_FLAGS_EXT_RCVINFO      0x00000002 /* deprecated */
 #define SCTP_PCB_FLAGS_DONOT_HEARTBEAT  0x00000004
 #define SCTP_PCB_FLAGS_FRAG_INTERLEAVE  0x00000008
 #define SCTP_PCB_FLAGS_INTERLEAVE_STRMS	0x00000010
@@ -508,7 +521,7 @@ struct sctp_error_unrecognized_chunk {
 /* socket options */
 #define SCTP_PCB_FLAGS_NODELAY		0x00000100
 #define SCTP_PCB_FLAGS_AUTOCLOSE	0x00000200
-#define SCTP_PCB_FLAGS_RECVDATAIOEVNT	0x00000400
+#define SCTP_PCB_FLAGS_RECVDATAIOEVNT	0x00000400 /* deprecated */
 #define SCTP_PCB_FLAGS_RECVASSOCEVNT	0x00000800
 #define SCTP_PCB_FLAGS_RECVPADDREVNT	0x00001000
 #define SCTP_PCB_FLAGS_RECVPEERERR	0x00002000
@@ -524,6 +537,9 @@ struct sctp_error_unrecognized_chunk {
 #define SCTP_PCB_FLAGS_MULTIPLE_ASCONFS	0x01000000
 #define SCTP_PCB_FLAGS_PORTREUSE        0x02000000
 #define SCTP_PCB_FLAGS_DRYEVNT          0x04000000
+#define SCTP_PCB_FLAGS_RECVRCVINFO      0x08000000
+#define SCTP_PCB_FLAGS_RECVNXTINFO      0x10000000
+
 /*-
  * mobility_features parameters (by micchie).Note
  * these features are applied against the
@@ -563,7 +579,6 @@ struct sctp_error_unrecognized_chunk {
 #define SCTP_BLK_LOGGING_ENABLE				0x00000001
 #define SCTP_CWND_MONITOR_ENABLE			0x00000002
 #define SCTP_CWND_LOGGING_ENABLE			0x00000004
-#define SCTP_EARLYFR_LOGGING_ENABLE			0x00000010
 #define SCTP_FLIGHT_LOGGING_ENABLE			0x00000020
 #define SCTP_FR_LOGGING_ENABLE				0x00000040
 #define SCTP_LOCK_LOGGING_ENABLE			0x00000080
@@ -571,23 +586,23 @@ struct sctp_error_unrecognized_chunk {
 #define SCTP_MBCNT_LOGGING_ENABLE			0x00000200
 #define SCTP_MBUF_LOGGING_ENABLE			0x00000400
 #define SCTP_NAGLE_LOGGING_ENABLE			0x00000800
-#define SCTP_RECV_RWND_LOGGING_ENABLE		0x00001000
+#define SCTP_RECV_RWND_LOGGING_ENABLE			0x00001000
 #define SCTP_RTTVAR_LOGGING_ENABLE			0x00002000
 #define SCTP_SACK_LOGGING_ENABLE			0x00004000
-#define SCTP_SACK_RWND_LOGGING_ENABLE		0x00008000
+#define SCTP_SACK_RWND_LOGGING_ENABLE			0x00008000
 #define SCTP_SB_LOGGING_ENABLE				0x00010000
 #define SCTP_STR_LOGGING_ENABLE				0x00020000
 #define SCTP_WAKE_LOGGING_ENABLE			0x00040000
 #define SCTP_LOG_MAXBURST_ENABLE			0x00080000
 #define SCTP_LOG_RWND_ENABLE    			0x00100000
-#define SCTP_LOG_SACK_ARRIVALS_ENABLE       0x00200000
-#define SCTP_LTRACE_CHUNK_ENABLE            0x00400000
-#define SCTP_LTRACE_ERROR_ENABLE            0x00800000
-#define SCTP_LAST_PACKET_TRACING            0x01000000
-#define SCTP_THRESHOLD_LOGGING              0x02000000
-#define SCTP_LOG_AT_SEND_2_SCTP             0x04000000
-#define SCTP_LOG_AT_SEND_2_OUTQ             0x08000000
-#define SCTP_LOG_TRY_ADVANCE                0x10000000
+#define SCTP_LOG_SACK_ARRIVALS_ENABLE			0x00200000
+#define SCTP_LTRACE_CHUNK_ENABLE			0x00400000
+#define SCTP_LTRACE_ERROR_ENABLE			0x00800000
+#define SCTP_LAST_PACKET_TRACING			0x01000000
+#define SCTP_THRESHOLD_LOGGING				0x02000000
+#define SCTP_LOG_AT_SEND_2_SCTP				0x04000000
+#define SCTP_LOG_AT_SEND_2_OUTQ				0x08000000
+#define SCTP_LOG_TRY_ADVANCE				0x10000000
 
 
 #undef SCTP_PACKED

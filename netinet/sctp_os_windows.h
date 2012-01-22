@@ -29,7 +29,6 @@
 #define __sctp_os_windows_h__
 
 #include <ntifs.h>
-
 #include <ndis.h>
 
 #include <tdi.h>
@@ -67,6 +66,7 @@
 #include <netinet/sctp_constants.h>
 #include <netinet6/in6.h>
 
+#include <ntstrsafe.h>
 
 struct proc {
 	uint8_t dummy;

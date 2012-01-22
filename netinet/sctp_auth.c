@@ -7,11 +7,11 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * a) Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * b) Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *   the documentation and/or other materials provided with the distribution.
+ *    the documentation and/or other materials provided with the distribution.
  *
  * c) Neither the name of Cisco Systems, Inc. nor the names of its
  *    contributors may be used to endorse or promote products derived
@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 221627 2011-05-08 09:11:59Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 228907 2011-12-27 10:16:24Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -471,7 +471,6 @@ sctp_compute_hashkey(sctp_key_t *key1, sctp_key_t *key2, sctp_key_t *shared)
 		}
 		if (sctp_get_keylen(key2)) {
 			bcopy(key2->key, key_ptr, key2->keylen);
-			key_ptr += key2->keylen;
 		}
 	} else {
 		/* key is shared + key2 + key1 */
@@ -485,7 +484,6 @@ sctp_compute_hashkey(sctp_key_t *key1, sctp_key_t *key2, sctp_key_t *shared)
 		}
 		if (sctp_get_keylen(key1)) {
 			bcopy(key1->key, key_ptr, key1->keylen);
-			key_ptr += key1->keylen;
 		}
 	}
 	return (new_key);
@@ -718,7 +716,7 @@ sctp_auth_add_hmacid(sctp_hmaclist_t *list, uint16_t hmac_id)
 		return (-1);
 	}
 	/* Now is it already in the list */
-	for (i=0; i<list->num_algo; i++) {
+	for (i = 0; i < list->num_algo; i++) {
 		if (list->hmac[i] == hmac_id) {
 			/* already in list */
 			return (-1);
@@ -1874,7 +1872,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 		return;
 	}
 
-	if (sctp_is_feature_off(stcb->sctp_ep, SCTP_PCB_FLAGS_AUTHEVNT))
+	if (sctp_stcb_is_feature_off(stcb->sctp_ep, stcb, SCTP_PCB_FLAGS_AUTHEVNT))
 		/* event not enabled */
 		return;
 
@@ -1899,7 +1897,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 
 	/* append to socket */
 	control = sctp_build_readq_entry(stcb, stcb->asoc.primary_destination,
-	    0, 0, 0, 0, 0, 0, m_notify);
+	    0, 0, stcb->asoc.context, 0, 0, 0, m_notify);
 	if (control == NULL) {
 		/* no memory */
 		sctp_m_freem(m_notify);
@@ -1927,8 +1925,8 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 	int peer_supports_asconf = 0;
 	int peer_supports_auth = 0;
 	int got_random = 0, got_hmacs = 0, got_chklist = 0;
-	uint8_t saw_asconf=0;
-	uint8_t saw_asconf_ack=0;
+	uint8_t saw_asconf = 0;
+	uint8_t saw_asconf_ack = 0;
 
 	/* go through each of the params. */
 	phdr = sctp_get_next_param(m, offset, &parm_buf, sizeof(parm_buf));

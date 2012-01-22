@@ -6,11 +6,11 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * a) Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * b) Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *   the documentation and/or other materials provided with the distribution.
+ *    the documentation and/or other materials provided with the distribution.
  *
  * c) Neither the name of Cisco Systems, Inc. nor the names of its
  *    contributors may be used to endorse or promote products derived
@@ -33,7 +33,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 228653 2011-12-17 19:21:40Z tuexen $");
 #endif
 
 #ifndef __sctp_pcb_h__
@@ -212,11 +212,11 @@ struct sctp_epinfo {
 	struct mtx ipi_pktlog_mtx;
 	struct mtx wq_addr_mtx;
 #elif defined(SCTP_PROCESS_LEVEL_LOCKS)
-	pthread_mutex_t ipi_ep_mtx;
-	pthread_mutex_t ipi_addr_mtx;
-	pthread_mutex_t ipi_count_mtx;
-	pthread_mutex_t ipi_pktlog_mtx;
-	pthread_mutex_t wq_addr_mtx;
+	userland_mutex_t ipi_ep_mtx;
+	userland_mutex_t ipi_addr_mtx;
+	userland_mutex_t ipi_count_mtx;
+	userland_mutex_t ipi_pktlog_mtx;
+	userland_mutex_t wq_addr_mtx;
 #elif defined(__APPLE__)
 #ifdef _KERN_LOCKS_H_
 	lck_grp_attr_t *mtx_grp_attr;
@@ -349,6 +349,8 @@ struct sctp_pcb {
 
 	uint16_t def_net_failure;
 
+	uint16_t def_net_pf_threshold;
+
 	/* number of streams to pre-open on a association */
 	uint16_t pre_open_stream_count;
 	uint16_t max_open_streams_intome;
@@ -376,8 +378,13 @@ struct sctp_pcb {
 	uint32_t store_at;
 	uint32_t max_burst;
 	uint32_t fr_max_burst;
+#ifdef INET6
+	uint32_t default_flowlabel;
+#endif
+	uint8_t default_dscp;
 	char current_secret_number;
 	char last_secret_number;
+	uint16_t port; /* remote UDP encapsulation port */
 };
 
 #ifndef SCTP_ALIGNMENT
@@ -484,9 +491,9 @@ struct sctp_inpcb {
 	struct mtx inp_rdata_mtx;
 	int32_t refcount;
 #elif defined(SCTP_PROCESS_LEVEL_LOCKS)
-	pthread_mutex_t inp_mtx;
-	pthread_mutex_t inp_create_mtx;
-	pthread_mutex_t inp_rdata_mtx;
+	userland_mutex_t inp_mtx;
+	userland_mutex_t inp_create_mtx;
+	userland_mutex_t inp_rdata_mtx;
 	int32_t refcount;
 #elif defined(__APPLE__)
 #if defined(SCTP_APPLE_RWLOCK)
@@ -543,8 +550,19 @@ struct sctp_inpcb {
 	struct sctp_pcbtsn_rlog readlog[SCTP_READ_LOG_SIZE];
 	uint32_t readlog_index;
 #endif
+#if defined (CALLBACK_API)
+	int (*recv_callback)(struct socket*, struct sctp_queued_to_read*);
+	uint32_t send_sb_threshold;
+	uint32_t prev_send_sb_free;
+	int (*send_callback)(struct socket*, uint32_t);
+#endif
 };
 
+#if defined (CALLBACK_API)
+int register_recv_cb (struct socket*, int (*)(struct socket *, struct sctp_queued_to_read*));
+int register_send_cb (struct socket*, uint32_t, int (*)(struct socket *, uint32_t));
+
+#endif
 struct sctp_tcb {
 	struct socket *sctp_socket;	/* back pointer to socket */
 	struct sctp_inpcb *sctp_ep;	/* back pointer to ep */
@@ -574,8 +592,8 @@ struct sctp_tcb {
 	struct mtx tcb_mtx;
 	struct mtx tcb_send_mtx;
 #elif defined(SCTP_PROCESS_LEVEL_LOCKS)
-	pthread_mutex_t tcb_mtx;
-	pthread_mutex_t tcb_send_mtx;
+	userland_mutex_t tcb_mtx;
+	userland_mutex_t tcb_send_mtx;
 #elif defined(__APPLE__)
 	lck_mtx_t* tcb_mtx;
 	lck_mtx_t* tcb_send_mtx;
@@ -696,7 +714,7 @@ int sctp_inpcb_bind(struct socket *, struct sockaddr *,
 #endif
 
 struct sctp_tcb *
-sctp_findassociation_addr(struct mbuf *, int, int,
+sctp_findassociation_addr(struct mbuf *, int,
     struct sctphdr *, struct sctp_chunkhdr *, struct sctp_inpcb **,
     struct sctp_nets **, uint32_t vrf_id);
 
@@ -727,7 +745,7 @@ sctp_findassociation_ep_asocid(struct sctp_inpcb *,
     sctp_assoc_t, int);
 
 struct sctp_tcb *
-sctp_findassociation_ep_asconf(struct mbuf *, int, int,
+sctp_findassociation_ep_asconf(struct mbuf *, int,
 			       struct sctphdr *, struct sctp_inpcb **, struct sctp_nets **, uint32_t vrf_id);
 
 int sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id);
@@ -754,7 +772,7 @@ sctp_aloc_assoc(struct sctp_inpcb *, struct sockaddr *,
 int sctp_free_assoc(struct sctp_inpcb *, struct sctp_tcb *, int, int);
 
 
-void sctp_delete_from_timewait(uint32_t, uint16_t, uint16_t );
+void sctp_delete_from_timewait(uint32_t, uint16_t, uint16_t);
 
 int sctp_is_in_timewait(uint32_t tag, uint16_t lport, uint16_t rport);
 
@@ -769,7 +787,7 @@ void sctp_remove_laddr(struct sctp_laddr *);
 
 void sctp_del_local_addr_ep(struct sctp_inpcb *, struct sctp_ifa *);
 
-int sctp_add_remote_addr(struct sctp_tcb *, struct sockaddr *, int, int);
+int sctp_add_remote_addr(struct sctp_tcb *, struct sockaddr *, struct sctp_nets **, int, int);
 
 void sctp_remove_net(struct sctp_tcb *, struct sctp_nets *);
 
@@ -783,14 +801,14 @@ void sctp_add_local_addr_restricted(struct sctp_tcb *, struct sctp_ifa *);
 void sctp_del_local_addr_restricted(struct sctp_tcb *, struct sctp_ifa *);
 
 int
-sctp_load_addresses_from_init(struct sctp_tcb *, struct mbuf *, int, int,
+sctp_load_addresses_from_init(struct sctp_tcb *, struct mbuf *, int,
     int, struct sctphdr *, struct sockaddr *);
 
 int
 sctp_set_primary_addr(struct sctp_tcb *, struct sockaddr *,
     struct sctp_nets *);
 
-int sctp_is_vtag_good(struct sctp_inpcb *, uint32_t, uint16_t lport, uint16_t rport, struct timeval *, int);
+int sctp_is_vtag_good(uint32_t, uint16_t lport, uint16_t rport, struct timeval *);
 
 /* void sctp_drain(void); */
 

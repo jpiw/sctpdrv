@@ -6,11 +6,11 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * a) Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * b) Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
- *   the documentation and/or other materials provided with the distribution.
+ *    the documentation and/or other materials provided with the distribution.
  *
  * c) Neither the name of Cisco Systems, Inc. nor the names of its
  *    contributors may be used to endorse or promote products derived
@@ -30,7 +30,7 @@
  */
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_dtrace_define.h 219397 2011-03-08 11:58:25Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_dtrace_define.h 228653 2011-12-17 19:21:40Z tuexen $");
 #endif
 #ifndef __sctp_dtrace_define_h__
 #if defined(__FreeBSD__) && __FreeBSD_version >= 900000
@@ -231,7 +231,7 @@ SDT_PROBE_ARGTYPE(sctp, flightsize, assoc, val, 3, "int");
 #else /* to #if Freebsd */
 /* All other platforms not defining dtrace probes */
 #ifndef SDT_PROBE
-#define SDT_PROBE(a, b, c, d, e, f, g, h, i) 
+#define SDT_PROBE(a, b, c, d, e, f, g, h, i)
 #endif
 
 #endif
