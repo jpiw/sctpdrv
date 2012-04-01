@@ -43,13 +43,7 @@
 	<CustomAction Id='SctpInstallProvider' BinaryKey='Setup' DllEntry='SctpInstallProvider'
 		Execute='deferred' Impersonate='no' Return='check'/>
 
-	<CustomAction Id='SctpInstallProtocolDriver' BinaryKey='Setup' DllEntry='SctpInstallProtocolDriver'
-		Execute='deferred' Impersonate='no' Return='check'/>
-
 	<CustomAction Id='SctpUninstallProvider' BinaryKey='Setup' DllEntry='SctpUninstallProvider'
-		Execute='deferred' Impersonate='no' Return='check'/>
-
-	<CustomAction Id='SctpUninstallProtocolDriver' BinaryKey='Setup' DllEntry='SctpUninstallProtocolDriver'
 		Execute='deferred' Impersonate='no' Return='check'/>
 
 	<CustomAction Id='SctpAddFirewallRule' BinaryKey='Setup' DllEntry='SctpAddFirewallRule'
