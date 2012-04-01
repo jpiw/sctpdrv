@@ -2,7 +2,5 @@ LIBRARY		SETUP
 
 EXPORTS
 	SctpInstallProvider
-	SctpInstallProtocolDriver
 	SctpUninstallProvider
-	SctpUninstallProtocolDriver
 	SctpAddFirewallRule

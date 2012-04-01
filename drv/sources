@@ -37,7 +37,6 @@ INCLUDES= \
     $(DDK_INC_PATH)
 
 SOURCES= \
-    ndis.c \
     sctp.c \
     sctp.rc \
     eventlog.mc

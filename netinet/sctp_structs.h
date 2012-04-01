@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 228653 2011-12-17 19:21:40Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 233660 2012-03-29 13:36:53Z rrs $");
 #endif
 
 #ifndef __sctp_structs_h__
@@ -463,7 +463,7 @@ TAILQ_HEAD(sctpchunk_listhead, sctp_tmit_chunk);
 #define CHUNK_FLAGS_PR_SCTP_BUF	        SCTP_PR_SCTP_BUF
 #define CHUNK_FLAGS_PR_SCTP_RTX         SCTP_PR_SCTP_RTX
 
-/* The upper byte is used a a bit mask */
+/* The upper byte is used as a bit mask */
 #define CHUNK_FLAGS_FRAGMENT_OK	        0x0100
 
 struct chk_id {
@@ -1139,6 +1139,7 @@ struct sctp_association {
 	uint16_t streamincnt;
 	uint16_t streamoutcnt;
 	uint16_t strm_realoutsize;
+	uint16_t strm_pending_add_size;
 	/* my maximum number of retrans of INIT and SEND */
 	/* copied from SCTP but should be individually setable */
 	uint16_t max_init_times;
@@ -1200,6 +1201,9 @@ struct sctp_association {
 	/* Flag to tell if ECN is allowed */
 	uint8_t ecn_allowed;
 
+	/* Did the peer make the stream config (add out) request */
+	uint8_t peer_req_out;
+
 	/* flag to indicate if peer can do asconf */
 	uint8_t peer_supports_asconf;
 	/* EY - flag to indicate if peer can do nr_sack*/
@@ -1210,6 +1214,7 @@ struct sctp_association {
 	uint8_t peer_supports_auth;
 	/* stream resets are supported by the peer */
 	uint8_t peer_supports_strreset;
+	uint8_t local_strreset_support;
 
         uint8_t peer_supports_nat;
 	/*

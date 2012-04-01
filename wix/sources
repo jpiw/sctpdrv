@@ -41,6 +41,4 @@ INCLUDES= $(INCLUDES); \
 	..\lib$(LIBARCHDIR)
 
 SOURCES= \
-    setup.cpp \
-    netcfgapi.cpp \
-    protinstall.cpp
+    setup.cpp

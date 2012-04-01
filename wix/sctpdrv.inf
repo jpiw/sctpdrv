@@ -1,17 +1,18 @@
 ; SctpDrv driver setup file
-; Copyright (c) 2011 Bruce Cran
+; Copyright (c) 2010-2012 Bruce Cran
+
 [Version]
 Signature      = "$WINDOWS NT$"
 Class          = NetTrans
 ClassGUID      = {4D36E975-E325-11CE-BFC1-08002BE10318}
 Provider       = %BruceCran%
-DriverVer      = 03/08/2011,1.1.6
+DriverVer      = 04/01/2012,12.4.0
 DriverPackageType        = KernelService
 DriverPackageDisplayName = %SctpDesc%
 CatalogFile    = sctpdrv.cat
 
 [Manufacturer]
-%BruceCran%      = SctpDrv,NTx86,NTamd64
+%BruceCran%      = sctpdrv,NTx86,NTamd64
 
 [SctpDrv.NTx86]
 %SctpDesc%     = DefaultInstall, BruceCran_SctpDrv
@@ -20,31 +21,24 @@ CatalogFile    = sctpdrv.cat
 %SctpDesc%     = DefaultInstall, BruceCran_SctpDrv
 
 [DestinationDirs]
-DefaultDestDir  = 11
-Sctp.DriverFile = 12 ; DIRID_DRIVERS
+DefaultDestDir = 11
+Sctp.DriverFile= 12
 
 [SourceDisksNames]
 1              = %Disk1%
 
 [SourceDisksFiles]
-sctpdrv.sys       = 1,"",,
+sctpdrv.sys       = 1
 
 [DefaultInstall]
-AddReg     = Install_NDI
-Characteristics = 0x0
-CopyFiles  = Sctp.DriverFile
-
-[Install_NDI]
-HKR,Ndi,Service,,"sctpdrv"
-HKR,Ndi,HelpText,,%SCTP_HelpText%
-HKR,Ndi\Interfaces, UpperRange,, noupper
-HKR,"Ndi\Interfaces","LowerRange",,"ndis5,ndis5_prot"
+OptionDesc     = %SctpDesc%
+CopyFiles      = Sctp.DriverFile
 
 [Sctp.DriverFile]
 sctpdrv.sys,,,2
 
 [DefaultInstall.Services]
-AddService     = sctpdrv,,DriverService
+AddService     = sctpdrv,0x800,DriverService
 
 ; Driver specification for NT > 6 (Vista and newer)
 ; Use AutoStart StartType because BFE isn't a boot-time service
@@ -60,10 +54,12 @@ Dependencies   = Tcpip,BFE,Afd
 
 [DefaultUninstall]
 DelFiles       = Sctp.DriverFile
+
+[DefaultUninstall.Services]
 DelService     = sctpdrv,0x200
 
 [Strings]
 BruceCran      = "Bruce Cran"
-SctpDesc       = "SCTP (SctpDrv)"
-Disk1          = "SctpDrv Source Media"
-SCTP_HelpText  = "Stream Control Transmission Protocol. The SCTP protocol provides reliable, flow-controlled, two-way transmission of data."
+SctpDesc       = "SCTP Driver"
+SctpDrv        = "sctpdrv"
+Disk1          = "sctpdrv source media"
