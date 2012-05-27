@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_crc32.c,v 1.12 2005/03/06 16:04:17 itojun Exp $	 */
-
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.c 218319 2011-02-05 12:12:51Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.c 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -797,7 +794,9 @@ void
 sctp_delayed_cksum(struct mbuf *m, uint32_t offset)
 {
 #if defined(SCTP_WITH_NO_CSUM)
+#ifdef INVARIANTS
 	panic("sctp_delayed_cksum() called when using no SCTP CRC.");
+#endif
 #else
 	uint32_t checksum;
 
@@ -807,8 +806,8 @@ sctp_delayed_cksum(struct mbuf *m, uint32_t offset)
 	offset += offsetof(struct sctphdr, checksum);
 
 	if (offset + sizeof(uint32_t) > (uint32_t) (m->m_len)) {
-		printf("sctp_delayed_cksum(): m->len: %d,  off: %d.\n",
-		       (uint32_t) m->m_len, offset);
+		SCTP_PRINTF("sctp_delayed_cksum(): m->len: %d,  off: %d.\n",
+		            (uint32_t) m->m_len, offset);
 		/*
 		 * XXX this shouldn't happen, but if it does, the correct
 		 * behavior may be to insert the checksum in the appropriate

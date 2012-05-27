@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,11 +29,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*	$KAME: sctp6_usrreq.c,v 1.38 2005/08/24 08:08:56 suz Exp $	*/
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 233005 2012-03-15 14:22:05Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_usrreq.c 236087 2012-05-26 09:16:33Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -96,7 +95,7 @@ in6_sin6_2_sin(struct sockaddr_in *sin, struct sockaddr_in6 *sin6)
 	temp = temp << 16;
 	temp = temp | sin6->sin6_addr.s6_addr16[6];
 	sin->sin_addr.s_addr = temp;
-	sctp_print_address((struct sockaddr*)sin); 
+	sctp_print_address((struct sockaddr*)sin);
 #else
 	sin->sin_addr.s_addr = sin6->sin6_addr.s6_addr32[3];
 #endif
@@ -264,11 +263,13 @@ sctp6_input(struct mbuf **i_pak, int *offp, int proto)
 	}
 #endif
 	check = sh->checksum;	/* save incoming checksum */
+#if !(defined(__FreeBSD__) && __FreeBSD_version >= 800000)
 	if ((check == 0) && (SCTP_BASE_SYSCTL(sctp_no_csum_on_loopback)) &&
 	    (IN6_ARE_ADDR_EQUAL(&ip6->ip6_src, &ip6->ip6_dst))) {
 		SCTP_STAT_INCR(sctps_recvnocrc);
 		goto sctp_skip_csum;
 	}
+#endif
 	sh->checksum = 0;	/* prepare for calc */
 	calc_check = sctp_calculate_cksum(m, iphlen);
 	SCTP_STAT_INCR(sctps_recvswcrc);
@@ -524,10 +525,8 @@ sctp6_notify(struct sctp_inpcb *inp,
 	struct socket *so;
 
 #endif
+
 	/* protection */
-	int reason;
-
-
 	if ((inp == NULL) || (stcb == NULL) || (net == NULL) ||
 	    (sh == NULL) || (to == NULL)) {
 		if (stcb)
@@ -564,12 +563,11 @@ sctp6_notify(struct sctp_inpcb *inp,
 		 * it a OOTB abort.
 		 */
 		if (net->dest_state & SCTP_ADDR_REACHABLE) {
-			/* Ok that destination is NOT reachable */			
+			/* Ok that destination is NOT reachable */
 			net->dest_state &= ~SCTP_ADDR_REACHABLE;
 			net->dest_state &= ~SCTP_ADDR_PF;
 			sctp_ulp_notify(SCTP_NOTIFY_INTERFACE_DOWN,
-					stcb, SCTP_FAILED_THRESHOLD,
-					(void *)net, SCTP_SO_NOT_LOCKED);
+					stcb, 0, (void *)net, SCTP_SO_NOT_LOCKED);
 		}
 		SCTP_TCB_UNLOCK(stcb);
 	} else  if ((icmph->icmp6_code == ICMP_UNREACH_PROTOCOL) ||
@@ -582,8 +580,7 @@ sctp6_notify(struct sctp_inpcb *inp,
 		 * either case treat it like a OOTB abort with no
 		 * TCB
 		 */
-		reason = SCTP_PEER_FAULTY;
-		sctp_abort_notification(stcb, reason, SCTP_SO_NOT_LOCKED);
+		sctp_abort_notification(stcb, 1, 0, NULL, SCTP_SO_NOT_LOCKED);
 #if defined (__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
 		so = SCTP_INP_SO(inp);
 		atomic_add_int(&stcb->asoc.refcnt, 1);
@@ -1801,7 +1798,7 @@ struct pr_usrreqs sctp6_usrreqs = {
 	.pru_close = sctp6_close,
 	.pru_detach = sctp6_close,
 	.pru_sopoll = sopoll_generic,
-	.pru_flush = sctp_flush,	
+	.pru_flush = sctp_flush,
 #else
 	.pru_detach = sctp6_detach,
 	.pru_sopoll = sopoll,

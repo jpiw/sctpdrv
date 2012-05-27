@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2008, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 228907 2011-12-27 10:16:24Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -286,16 +286,16 @@ sctp_print_key(sctp_key_t *key, const char *str)
 	uint32_t i;
 
 	if (key == NULL) {
-		printf("%s: [Null key]\n", str);
+		SCTP_PRINTF("%s: [Null key]\n", str);
 		return;
 	}
-	printf("%s: len %u, ", str, key->keylen);
+	SCTP_PRINTF("%s: len %u, ", str, key->keylen);
 	if (key->keylen) {
 		for (i = 0; i < key->keylen; i++)
-			printf("%02x", key->key[i]);
-		printf("\n");
+			SCTP_PRINTF("%02x", key->key[i]);
+		SCTP_PRINTF("\n");
 	} else {
-		printf("[Null key]\n");
+		SCTP_PRINTF("[Null key]\n");
 	}
 }
 
@@ -305,16 +305,16 @@ sctp_show_key(sctp_key_t *key, const char *str)
 	uint32_t i;
 
 	if (key == NULL) {
-		printf("%s: [Null key]\n", str);
+		SCTP_PRINTF("%s: [Null key]\n", str);
 		return;
 	}
-	printf("%s: len %u, ", str, key->keylen);
+	SCTP_PRINTF("%s: len %u, ", str, key->keylen);
 	if (key->keylen) {
 		for (i = 0; i < key->keylen; i++)
-			printf("%02x", key->key[i]);
-		printf("\n");
+			SCTP_PRINTF("%02x", key->key[i]);
+		SCTP_PRINTF("\n");
 	} else {
-		printf("[Null key]\n");
+		SCTP_PRINTF("[Null key]\n");
 	}
 }
 
@@ -584,10 +584,10 @@ void
 sctp_auth_key_acquire(struct sctp_tcb *stcb, uint16_t key_id)
 {
 	sctp_sharedkey_t *skey;
-	
+
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
- 	
+
 	/* bump the ref count */
 	if (skey) {
 		atomic_add_int(&skey->refcount, 1);
@@ -605,10 +605,10 @@ sctp_auth_key_release(struct sctp_tcb *stcb, uint16_t key_id, int so_locked
 )
 {
 	sctp_sharedkey_t *skey;
-	
+
 	/* find the shared key */
 	skey = sctp_find_sharedkey(&stcb->asoc.shared_keys, key_id);
-	
+
 	/* decrement the ref count */
 	if (skey) {
 		sctp_free_sharedkey(skey);
@@ -1808,7 +1808,7 @@ sctp_handle_auth(struct sctp_tcb *stcb, struct sctp_auth_chunk *auth,
 			 * shared_key_id, (void
 			 * *)stcb->asoc.authinfo.recv_keyid);
 			 */
-			sctp_notify_authentication(stcb, SCTP_AUTH_NEWKEY,
+			sctp_notify_authentication(stcb, SCTP_AUTH_NEW_KEY,
 			    shared_key_id, stcb->asoc.authinfo.recv_keyid,
 			    SCTP_SO_NOT_LOCKED);
 		/* compute a new recv assoc key and cache it */
@@ -2141,12 +2141,12 @@ sctp_print_digest(uint8_t *digest, uint32_t digestlen, const char *str)
 {
 	uint32_t i;
 
-	printf("\n%s: 0x", str);
+	SCTP_PRINTF("\n%s: 0x", str);
 	if (digest == NULL)
 		return;
 
 	for (i = 0; i < digestlen; i++)
-		printf("%02x", digest[i]);
+		SCTP_PRINTF("%02x", digest[i]);
 }
 
 static int
@@ -2156,15 +2156,15 @@ sctp_test_hmac(const char *str, uint16_t hmac_id, uint8_t *key,
 {
 	uint8_t computed_digest[SCTP_AUTH_DIGEST_LEN_MAX];
 
-	printf("\n%s:", str);
+	SCTP_PRINTF("\n%s:", str);
 	sctp_hmac(hmac_id, key, keylen, text, textlen, computed_digest);
 	sctp_print_digest(digest, digestlen, "Expected digest");
 	sctp_print_digest(computed_digest, digestlen, "Computed digest");
 	if (memcmp(digest, computed_digest, digestlen) != 0) {
-		printf("\nFAILED");
+		SCTP_PRINTF("\nFAILED");
 		return (-1);
 	} else {
-		printf("\nPASSED");
+		SCTP_PRINTF("\nPASSED");
 		return (0);
 	}
 }
@@ -2306,9 +2306,9 @@ sctp_test_hmac_sha1(void)
 
 	/* done with all tests */
 	if (failed)
-		printf("\nSHA1 test results: %d cases failed", failed);
+		SCTP_PRINTF("\nSHA1 test results: %d cases failed", failed);
 	else
-		printf("\nSHA1 test results: all test cases passed");
+		SCTP_PRINTF("\nSHA1 test results: all test cases passed");
 }
 
 /*
@@ -2327,10 +2327,10 @@ sctp_test_key_concatenation(sctp_key_t *key1, sctp_key_t *key2,
 	sctp_show_key(expected_key, "\nExpected");
 	sctp_show_key(key, "\nComputed");
 	if (memcmp(key, expected_key, expected_key->keylen) != 0) {
-		printf("\nFAILED");
+		SCTP_PRINTF("\nFAILED");
 		ret_val = -1;
 	} else {
-		printf("\nPASSED");
+		SCTP_PRINTF("\nPASSED");
 		ret_val = 0;
 	}
 	sctp_free_key(key1);
@@ -2398,9 +2398,9 @@ sctp_test_authkey(void)
 
 	/* done with all tests */
 	if (failed)
-		printf("\nKey concatenation test results: %d cases failed", failed);
+		SCTP_PRINTF("\nKey concatenation test results: %d cases failed", failed);
 	else
-		printf("\nKey concatenation test results: all test cases passed");
+		SCTP_PRINTF("\nKey concatenation test results: all test cases passed");
 }
 
 

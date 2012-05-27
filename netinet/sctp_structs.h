@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2008, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,15 +30,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_structs.h,v 1.13 2005/03/06 16:04:18 itojun Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 233660 2012-03-29 13:36:53Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
-#ifndef __sctp_structs_h__
-#define __sctp_structs_h__
+#ifndef _NETINET_SCTP_STRUCTS_H_
+#define _NETINET_SCTP_STRUCTS_H_
 
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_header.h>
@@ -199,14 +197,14 @@ struct iterator_control {
 	pthread_mutex_t it_mtx;
 	pthread_cond_t iterator_wakeup;
 #endif
-#elif defined(__Windows__)  
+#elif defined(__Windows__)
 	struct spinlock it_lock;
-	struct spinlock ipi_iterator_wq_lock;  
+	struct spinlock ipi_iterator_wq_lock;
 	KEVENT iterator_wakeup[2];
 	PFILE_OBJECT iterator_thread_obj;
 #else
 	void *it_mtx;
-#endif  
+#endif
 #if !defined(__Windows__)
 #if !defined(__Userspace__)
 	SCTP_PROCESS_STRUCT thread_proc;
@@ -387,7 +385,7 @@ struct sctp_nets {
 	uint16_t error_count;
 	/* UDP port number in case of UDP tunneling */
 	uint16_t port;
-	
+
 	uint8_t fast_retran_loss_recovery;
 	uint8_t will_exit_fast_recovery;
 	/* Flags that probably can be combined into dest_state */
@@ -726,13 +724,13 @@ struct sctp_cc_functions {
 			uint32_t *bottle_bw, uint32_t *on_queue);
 	void (*sctp_cwnd_update_after_output)(struct sctp_tcb *stcb,
 			struct sctp_nets *net, int burst_limit);
-	void (*sctp_cwnd_update_packet_transmitted)(struct sctp_tcb *stcb, 
+	void (*sctp_cwnd_update_packet_transmitted)(struct sctp_tcb *stcb,
 			struct sctp_nets *net);
-	void (*sctp_cwnd_update_tsn_acknowledged)(struct sctp_nets *net, 
+	void (*sctp_cwnd_update_tsn_acknowledged)(struct sctp_nets *net,
 			struct sctp_tmit_chunk *);
-	void (*sctp_cwnd_new_transmission_begins)(struct sctp_tcb *stcb, 
+	void (*sctp_cwnd_new_transmission_begins)(struct sctp_tcb *stcb,
 			struct sctp_nets *net);
-	void (*sctp_cwnd_prepare_net_for_sack)(struct sctp_tcb *stcb, 
+	void (*sctp_cwnd_prepare_net_for_sack)(struct sctp_tcb *stcb,
 			struct sctp_nets *net);
 	int (*sctp_cwnd_socket_option)(struct sctp_tcb *stcb, int set, struct sctp_cc_option *);
 	void (*sctp_rtt_calculated)(struct sctp_tcb *, struct sctp_nets *, struct timeval *);
@@ -975,7 +973,7 @@ struct sctp_association {
 	 * mapping array.
 	 */
 	uint32_t highest_tsn_inside_map;
-	
+
 	/* EY - new NR variables used for nr_sack based on mapping_array*/
 	uint8_t *nr_mapping_array;
 	uint32_t highest_tsn_inside_nr_map;
@@ -1207,7 +1205,7 @@ struct sctp_association {
 	/* flag to indicate if peer can do asconf */
 	uint8_t peer_supports_asconf;
 	/* EY - flag to indicate if peer can do nr_sack*/
-	uint8_t peer_supports_nr_sack;	
+	uint8_t peer_supports_nr_sack;
 	/* pr-sctp support flag */
 	uint8_t peer_supports_prsctp;
 	/* peer authentication support flag */

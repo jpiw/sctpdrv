@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,11 +32,11 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 229805 2012-01-08 09:56:24Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 236087 2012-05-26 09:16:33Z tuexen $");
 #endif
 
-#ifndef __sctp_sysctl_h__
-#define __sctp_sysctl_h__
+#ifndef _NETINET_SCTP_SYSCTL_H_
+#define _NETINET_SCTP_SYSCTL_H_
 
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_constants.h>
@@ -49,8 +49,10 @@ struct sctp_sysctl {
 	uint32_t sctp_ecn_enable;
 	uint32_t sctp_fr_max_burst_default;
 	uint32_t sctp_strict_sacks;
+#if !(defined(__FreeBSD__) && __FreeBSD_version >= 800000)
 #if !defined(SCTP_WITH_NO_CSUM)
 	uint32_t sctp_no_csum_on_loopback;
+#endif
 #endif
 	uint32_t sctp_peer_chunk_oh;
 	uint32_t sctp_max_burst_default;
@@ -389,7 +391,7 @@ struct sctp_sysctl {
 #define SCTPCTL_ABC_L_VAR_DESC		L"SCTP ABC max increase per SACK (L)"
 #define SCTPCTL_ABC_L_VAR_MIN		0
 #define SCTPCTL_ABC_L_VAR_MAX		0xFFFFFFFF
-#define SCTPCTL_ABC_L_VAR_DEFAULT	1
+#define SCTPCTL_ABC_L_VAR_DEFAULT	2
 
 /* max_chained_mbufs: Default max number of small mbufs on a chain */
 #define SCTPCTL_MAX_CHAINED_MBUFS_DESC	L"Default max number of small mbufs on a chain"

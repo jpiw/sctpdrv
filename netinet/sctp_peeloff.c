@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,13 +30,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-/* $KAME: sctp_peeloff.c,v 1.13 2005/03/06 16:04:18 itojun Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 233660 2012-03-29 13:36:53Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
+
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_pcb.h>
 #include <netinet/sctputil.h>
@@ -62,7 +60,7 @@ sctp_can_peel_off(struct socket *head, sctp_assoc_t assoc_id)
 
 	if (head == NULL) {
 		SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP_PEELOFF, EBADF);
-		return (EBADF);		
+		return (EBADF);
 	}
 	inp = (struct sctp_inpcb *)head->so_pcb;
 	if (inp == NULL) {
@@ -72,7 +70,7 @@ sctp_can_peel_off(struct socket *head, sctp_assoc_t assoc_id)
 	if ((inp->sctp_flags & SCTP_PCB_FLAGS_TCPTYPE) ||
 	    (inp->sctp_flags & SCTP_PCB_FLAGS_IN_TCPPOOL)) {
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PEELOFF, EOPNOTSUPP);
-		return (EOPNOTSUPP);		
+		return (EOPNOTSUPP);
 	}
 	stcb = sctp_findassociation_ep_asocid(inp, assoc_id, 1);
 	if (stcb == NULL) {
@@ -147,6 +145,12 @@ sctp_do_peeloff(struct socket *head, struct socket *so, sctp_assoc_t assoc_id)
 	    sctp_copy_chunklist(inp->sctp_ep.local_auth_chunks);
 	(void)sctp_copy_skeylist(&inp->sctp_ep.shared_keys,
 	    &n_inp->sctp_ep.shared_keys);
+#if defined(__Userspace__)
+	n_inp->ulp_info = inp->ulp_info;
+	n_inp->recv_callback = inp->recv_callback;
+	n_inp->send_callback = inp->send_callback;
+	n_inp->send_sb_threshold = inp->send_sb_threshold;
+#endif
 	/*
 	 * Now we must move it from one hash table to another and get the
 	 * stcb in the right place.
@@ -239,6 +243,12 @@ sctp_get_peeloff(struct socket *head, sctp_assoc_t assoc_id, int *error)
 	n_inp->sctp_context = inp->sctp_context;
 	n_inp->local_strreset_support = inp->local_strreset_support;
 	n_inp->inp_starting_point_for_iterator = NULL;
+#if defined(__Userspace__)
+	n_inp->ulp_info = inp->ulp_info;
+	n_inp->recv_callback = inp->recv_callback;
+	n_inp->send_callback = inp->send_callback;
+	n_inp->send_sb_threshold = inp->send_sb_threshold;
+#endif
 
 	/* copy in the authentication parameters from the original endpoint */
 	if (n_inp->sctp_ep.local_hmacs)

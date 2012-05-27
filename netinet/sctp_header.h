@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,15 +30,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_header.h,v 1.14 2005/03/06 16:04:17 itojun Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 233660 2012-03-29 13:36:53Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
-#ifndef __sctp_header_h__
-#define __sctp_header_h__
+#ifndef _NETINET_SCTP_HEADER_H_
+#define _NETINET_SCTP_HEADER_H_
 
 #if defined(__Windows__) && !defined (__Userspace_os_Windows)
 #include <packon.h>
@@ -510,12 +508,13 @@ struct sctp_stream_reset_add_strm {
   uint16_t reserved;
 } SCTP_PACKED;
 
-#define SCTP_STREAM_RESET_NOTHING   0x00000000	/* Nothing for me to do */
-#define SCTP_STREAM_RESET_PERFORMED 0x00000001	/* Did it */
-#define SCTP_STREAM_RESET_REJECT    0x00000002	/* refused to do it */
-#define SCTP_STREAM_RESET_ERROR_STR 0x00000003	/* bad Stream no */
-#define SCTP_STREAM_RESET_TRY_LATER 0x00000004	/* collision, try again */
-#define SCTP_STREAM_RESET_BAD_SEQNO 0x00000005	/* bad str-reset seq no */
+#define SCTP_STREAM_RESET_RESULT_NOTHING_TO_DO   0x00000000 /* XXX: unused */
+#define SCTP_STREAM_RESET_RESULT_PERFORMED       0x00000001
+#define SCTP_STREAM_RESET_RESULT_DENIED          0x00000002
+#define SCTP_STREAM_RESET_RESULT_ERR__WRONG_SSN  0x00000003 /* XXX: unused */
+#define SCTP_STREAM_RESET_RESULT_ERR_IN_PROGRESS 0x00000004
+#define SCTP_STREAM_RESET_RESULT_ERR_BAD_SEQNO   0x00000005
+#define SCTP_STREAM_RESET_RESULT_IN_PROGRESS     0x00000006 /* XXX: unused */
 
 /*
  * convience structures, note that if you are making a request for specific
@@ -635,6 +634,9 @@ struct sctp_auth_invalid_hmac {
 
 #if defined(__Windows__)
 #include <packoff.h>
+#endif
+#if defined (__Userspace_os_Windows)
+#pragma pack ()
 #endif
 #undef SCTP_PACKED
 #endif				/* !__sctp_header_h__ */

@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,11 +30,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_timer.c,v 1.29 2005/03/06 16:04:18 itojun Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 228907 2011-12-27 10:16:24Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
 #define _IP_VHL
@@ -111,8 +109,7 @@ sctp_threshold_management(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 				net->dest_state &= ~SCTP_ADDR_REQ_PRIMARY;
 				net->dest_state &= ~SCTP_ADDR_PF;
 				sctp_ulp_notify(SCTP_NOTIFY_INTERFACE_DOWN,
-				    stcb,
-				    SCTP_FAILED_THRESHOLD,
+				    stcb, 0,
 				    (void *)net, SCTP_SO_NOT_LOCKED);
 			}
 		} else if ((net->pf_threshold < net->failure_threshold) &&
@@ -177,13 +174,13 @@ sctp_threshold_management(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 			*ippp = htonl(SCTP_FROM_SCTP_TIMER+SCTP_LOC_1);
 		}
 		inp->last_abort_code = SCTP_FROM_SCTP_TIMER+SCTP_LOC_1;
-		sctp_abort_an_association(inp, stcb, SCTP_FAILED_THRESHOLD, oper, SCTP_SO_NOT_LOCKED);
+		sctp_abort_an_association(inp, stcb, oper, SCTP_SO_NOT_LOCKED);
 		return (1);
 	}
 	return (0);
 }
 
-/* 
+/*
  * sctp_find_alternate_net() returns a non-NULL pointer as long
  * the argument net is non-NULL.
  */
@@ -618,7 +615,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 					if (chk->data) {
 						(void)sctp_release_pr_sctp_chunk(stcb,
 										 chk,
-										 (SCTP_RESPONSE_TO_USER_REQ | SCTP_NOTIFY_DATAGRAM_SENT),
+										 1,
 										 SCTP_SO_NOT_LOCKED);
 						cnt_abandoned++;
 					}
@@ -631,7 +628,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 					if (chk->data) {
 						(void)sctp_release_pr_sctp_chunk(stcb,
 										 chk,
-										 (SCTP_RESPONSE_TO_USER_REQ | SCTP_NOTIFY_DATAGRAM_SENT),
+										 1,
 										 SCTP_SO_NOT_LOCKED);
 						cnt_abandoned++;
 					}
@@ -761,7 +758,7 @@ sctp_mark_all_for_resend(struct sctp_tcb *stcb,
 		cnt_mk++;
 		could_be_sent->sent = SCTP_DATAGRAM_RESEND;
 	}
-#endif	
+#endif
 	if (stcb->asoc.sent_queue_retran_cnt != cnt_mk) {
 #ifdef INVARIANTS
 		SCTP_PRINTF("Local Audit says there are %d for retran asoc cnt:%d we marked:%d this time\n",
@@ -903,14 +900,14 @@ sctp_t3rxt_timer(struct sctp_inpcb *inp,
 
 	num_mk = 0;
 	num_abandoned = 0;
-	(void)sctp_mark_all_for_resend(stcb, net, alt, win_probe, 
+	(void)sctp_mark_all_for_resend(stcb, net, alt, win_probe,
 				      &num_mk, &num_abandoned);
 	/* FR Loss recovery just ended with the T3. */
 	stcb->asoc.fast_retran_loss_recovery = 0;
 
 	/* CMT FR loss recovery ended with the T3 */
 	net->fast_retran_loss_recovery = 0;
-	if ((stcb->asoc.cc_functions.sctp_cwnd_new_transmission_begins) && 
+	if ((stcb->asoc.cc_functions.sctp_cwnd_new_transmission_begins) &&
 	    (net->flight_size == 0)) {
 		(*stcb->asoc.cc_functions.sctp_cwnd_new_transmission_begins)(stcb, net);
 	}
@@ -1073,8 +1070,7 @@ sctp_cookie_timer(struct sctp_inpcb *inp,
 				*ippp = htonl(SCTP_FROM_SCTP_TIMER+SCTP_LOC_3);
 			}
 			inp->last_abort_code = SCTP_FROM_SCTP_TIMER+SCTP_LOC_4;
-			sctp_abort_an_association(inp, stcb, SCTP_INTERNAL_ERROR,
-			    oper, SCTP_SO_NOT_LOCKED);
+			sctp_abort_an_association(inp, stcb, oper, SCTP_SO_NOT_LOCKED);
 		} else {
 #ifdef INVARIANTS
 			panic("Cookie timer expires in wrong state?");
@@ -1441,7 +1437,30 @@ sctp_heartbeat_timer(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	    !((net_was_pf == 0) && (net->dest_state & SCTP_ADDR_PF))) {
 		/* when move to PF during threshold mangement, a HB has been
 		   queued in that routine */
-		sctp_send_hb(stcb, net, SCTP_SO_NOT_LOCKED);
+		uint32_t ms_gone_by;
+
+		if ((net->last_sent_time.tv_sec > 0) ||
+		    (net->last_sent_time.tv_usec > 0)) {
+#ifdef __FreeBSD__
+			struct timeval diff;
+
+			SCTP_GETTIME_TIMEVAL(&diff);
+			timevalsub(&diff, &net->last_sent_time);
+#else
+			struct timeval diff, now;
+
+			SCTP_GETTIME_TIMEVAL(&now);
+			timersub(&now, &net->last_sent_time, &diff);
+#endif
+			ms_gone_by = (uint32_t)(diff.tv_sec * 1000) +
+			             (uint32_t)(diff.tv_usec / 1000);
+		} else {
+			ms_gone_by = 0xffffffff;
+		}
+		if ((ms_gone_by >= net->heart_beat_delay) ||
+		    (net->dest_state & SCTP_ADDR_PF)) {
+			sctp_send_hb(stcb, net, SCTP_SO_NOT_LOCKED);
+		}
 	}
 	return (0);
 }

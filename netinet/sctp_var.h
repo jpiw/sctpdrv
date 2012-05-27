@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 2001-2008, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,11 +30,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_var.h,v 1.24 2005/03/06 16:04:19 itojun Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 228907 2011-12-27 10:16:24Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_var.h 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_VAR_H_
@@ -161,7 +159,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 }
 
 #define sctp_alloc_a_chunk(_stcb, _chk) { \
-	if (TAILQ_EMPTY(&(_stcb)->asoc.free_chunks))  { \
+	if (TAILQ_EMPTY(&(_stcb)->asoc.free_chunks)) { \
 		(_chk) = SCTP_ZONE_GET(SCTP_BASE_INFO(ipi_zone_chunk), struct sctp_tmit_chunk); \
 		if ((_chk)) { \
 			SCTP_INCR_CHK_COUNT(); \

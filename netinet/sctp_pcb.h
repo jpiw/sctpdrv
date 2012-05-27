@@ -1,7 +1,8 @@
 /*-
  * Copyright (c) 2001-2007, by Cisco Systems, Inc. All rights reserved.
- * Copyright (c) 2008-2011, by Randall Stewart. All rights reserved.
- * Copyright (c) 2008-2011, by Michael Tuexen. All rights reserved.
+ * Copyright (c) 2008-2012, by Randall Stewart. All rights reserved.
+ * Copyright (c) 2008-2012, by Michael Tuexen. All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -29,15 +30,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* $KAME: sctp_pcb.h,v 1.21 2005/07/16 01:18:47 suz Exp $	 */
-
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 233660 2012-03-29 13:36:53Z rrs $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 235828 2012-05-23 11:26:28Z tuexen $");
 #endif
 
-#ifndef __sctp_pcb_h__
-#define __sctp_pcb_h__
+#ifndef _NETINET_SCTP_PCB_H_
+#define _NETINET_SCTP_PCB_H_
 
 #include <netinet/sctp_os.h>
 #include <netinet/sctp.h>
@@ -309,6 +308,29 @@ struct sctp_base_info {
 #if defined(__APPLE__)
 	int sctp_main_timer_ticks;
 #endif
+#if defined(__Userspace__)
+	userland_mutex_t timer_mtx;
+	userland_thread_t timer_thread;
+	uint8_t timer_thread_should_exit;
+#if !defined(__Userspace_os_Windows)
+#if defined(INET) || defined(INET6)
+	int userspace_route;
+	userland_thread_t recvthreadroute;
+#endif
+#endif
+#ifdef INET
+	int userspace_rawsctp;
+	int userspace_udpsctp;
+	userland_thread_t recvthreadraw;
+	userland_thread_t recvthreadudp;
+#endif
+#ifdef INET6
+	int userspace_rawsctp6;
+	int userspace_udpsctp6;
+	userland_thread_t recvthreadraw6;
+	userland_thread_t recvthreadudp6;
+#endif
+#endif
 };
 
 /*-
@@ -551,17 +573,21 @@ struct sctp_inpcb {
 	struct sctp_pcbtsn_rlog readlog[SCTP_READ_LOG_SIZE];
 	uint32_t readlog_index;
 #endif
-#if defined (CALLBACK_API)
-	int (*recv_callback)(struct socket*, struct sctp_queued_to_read*);
+#if defined(__Userspace__)
+	void *ulp_info;
+	int (*recv_callback)(struct socket *, union sctp_sockstore, void *, size_t,
+                             struct sctp_rcvinfo, int, void *);
 	uint32_t send_sb_threshold;
-	uint32_t prev_send_sb_free;
-	int (*send_callback)(struct socket*, uint32_t);
+	int (*send_callback)(struct socket *, uint32_t);
 #endif
 };
 
-#if defined (CALLBACK_API)
-int register_recv_cb (struct socket*, int (*)(struct socket *, struct sctp_queued_to_read*));
-int register_send_cb (struct socket*, uint32_t, int (*)(struct socket *, uint32_t));
+#if defined(__Userspace__)
+int register_recv_cb (struct socket *,
+                      int (*)(struct socket *, union sctp_sockstore, void *, size_t,
+                              struct sctp_rcvinfo, int, void *));
+int register_send_cb (struct socket *, uint32_t, int (*)(struct socket *, uint32_t));
+int register_ulp_info (struct socket *, void *);
 
 #endif
 struct sctp_tcb {
