@@ -1,11 +1,11 @@
 <Include>
 	<?define VersionMajor = 12 ?>
-	<?define VersionMinor = 04 ?>
+	<?define VersionMinor = 05 ?>
 	<?define VersionRev   = 00 ?>
 
 	<?if $(var.Platform)=x64 ?>
 
-	<?define ProductId="b6591148-670d-4d18-bcc2-89fa47fac32b"?>
+	<?define ProductId="B10BC4DB-14AC-4909-BE97-5581911229D1"?>
 	<?define UpgradeCode="5ac22676-703e-4b34-9789-1bba695329a1"?>
 	<?define Win64 = "yes" ?>
 	<?define ARCHDIR = amd64 ?>
