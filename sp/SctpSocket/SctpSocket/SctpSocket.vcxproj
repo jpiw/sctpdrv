@@ -70,18 +70,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <LinkKeyFile>..\..\..\drv\sctpdrv.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <LinkKeyFile>..\..\..\drv\sctpdrv.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <LinkKeyFile>..\..\..\drv\sctpdrv.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <LinkKeyFile>..\..\..\drv\sctpdrv.snk</LinkKeyFile>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,7 +107,8 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -125,7 +130,8 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -147,7 +153,8 @@
       </AssemblyLinkResource>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,7 +172,8 @@
       <DelaySign>true</DelaySign>
     </Link>
     <PostBuildEvent>
-      <Command>sn.exe -q "$(TargetPath)" ..\..\..\drv\sctpdrv.snk</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
