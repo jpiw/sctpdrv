@@ -6,6 +6,5 @@ DIRS= \
 	netinet6 \
 	drv \
 	sp \
-	wix \
 	apps \
 	netsh

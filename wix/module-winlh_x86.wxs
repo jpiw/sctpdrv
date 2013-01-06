@@ -30,7 +30,7 @@
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
   <?include config.wxi ?>
-  
+
   <Module Id='SctpDrv'
           Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)"
           Language="$(var.Language)"
@@ -67,7 +67,7 @@
       </Component>
 
       <Component Id="SctpDrv.SctpSocket32.dll" Guid="bf9d6d37-e6b3-4acb-903d-c0537a9b89c8">
-        <File Id="SctpDrv.SctpSocket32.dll" Source="bin\$(env.BUILD_ALT_DIR)\SctpDrv.SctpSocket.dll" Checksum="yes"/>
+        <File Id="SctpDrv.SctpSocket32.dll" Source="$(var.Configuration)\x86\SctpDrv.SctpSocket.dll" Checksum="yes"/>
       </Component>
 
       <Component Id="SctpDrv.SctpSocket32.dll_VS" Guid="201c0f45-aa31-4108-927e-bad61c19a73a" Win64="no">
@@ -84,5 +84,5 @@
       </Component>
     </DirectoryRef>
 
-</Module>
+  </Module>
 </Wix>

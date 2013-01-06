@@ -1,18 +1,19 @@
 --------------------------------------------------------------------------------
 Copyright (C) 2008 by CO-CONV, Corp., Kyoto, Japan.
-Copyright (C) 2010 by Bruce Cran.
+Copyright (C) 2010-2013 Bruce Cran.
 
 Developed by co-research between CO-CONV, Corp. and WIDE Project.
 --------------------------------------------------------------------------------
 
 Operating System:
  - Windows XP
- - Windows Vista
- - Windows 7
+ - Windows Vista / Server 2008
+ - Windows 7 / Server 2008 R2
+ - Windows 8 / Server 2012
 
 
 Install:
-Double click SctpDrv-1.1.x.msi, which is a Windows Installer package for SctpDrv.
+Double click SctpDrv.exe, which is a Windows Installer package for SctpDrv.
 A kernel driver (sctpdrv.sys) and DLLs (sctpsp.dll and sctpmon.dll) are installed
 into your system.
 There is no need to reboot your system.
@@ -59,7 +60,6 @@ c:\Program Files\SctpDrv\
 	\bin
 		\echo_client.exe	Sample application
 		\echo_server.exe	Sample application
-		\iperf.exe		Performance measurement tool - not installed on XP
 		\sctpsp.dll		SCTP API DLL and Winsock provider
 		\sptpmon.dll		NetShell helper DLL
 		\sctp.sys		SCTP kernel driver
@@ -92,10 +92,9 @@ Limitations and known bugs:
 Development of SctpDrv:
 You can access the SctpDrv source code under the modified BSD license.
 	Main SctpDrv web page: http://www.bluestop.org/SctpDrv
-	Subversion repository: https://svn.bluestop.org/svn/sctpDrv/
-	Web interface to the repository: https://svn.bluestop.org/viewvc/repos/sctpDrv/
-	Bug Tracker, Forums etc. are on the Sourceforce project page:
-		http://www.sourceforge.net/projects/sctpdrv
+	Git repository: https://code.bluestop.org/sctpdrv/
+	The Bug Tracker is available on BitBucket:
+		https://bitbucket.org/brucec/sctpdrv/issues
 
 If you encounter a trouble with SctpDrv, please contact Bruce Cran at sctpdrv@bluestop.org
 

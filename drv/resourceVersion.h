@@ -14,5 +14,5 @@
     Other stuff the template didn't think was important
 */
 
-#define VER_LEGALCOPYRIGHT_YEARS    "2010"
+#define VER_LEGALCOPYRIGHT_YEARS    "2010-2013"
 #define VER_LEGALCOPYRIGHT_STR "(C) " VER_LEGALCOPYRIGHT_YEARS

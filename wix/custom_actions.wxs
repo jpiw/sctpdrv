@@ -28,7 +28,7 @@
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 <Fragment Id="Setup">
 	<?include config.wxi?>
-	<?if $(var.Platform)=x64 ?>
+	<?if $(var.TargetArch)=amd64 ?>
 
 	<CustomAction Id='SctpInstallProviderSysWow64' BinaryKey='SetupSysWow64' DllEntry='SctpInstallProvider'
 		Execute='deferred' Impersonate='no' Return='check'/>
@@ -36,7 +36,7 @@
 	<CustomAction Id='SctpUninstallProviderSysWow64' BinaryKey='SetupSysWow64' DllEntry='SctpUninstallProvider'
 		Execute='deferred' Impersonate='no' Return='check'/>
 
-	<Binary Id='SetupSysWow64' SourceFile='obj$(env.DDKBUILDENV)_wxp_x86\i386\setup.dll' />
+	<Binary Id='SetupSysWow64' SourceFile="$(var.StageDir32)\custom_actions.dll" />
 
 	<?endif ?>
 
@@ -49,6 +49,6 @@
 	<CustomAction Id='SctpAddFirewallRule' BinaryKey='Setup' DllEntry='SctpAddFirewallRule'
 		Execute='deferred' Impersonate='no' Return='check'/>
 
-	<Binary Id='Setup' SourceFile='obj$(env.BUILD_ALT_DIR)\$(var.ARCHDIR)\setup.dll' />
+	<Binary Id='Setup' SourceFile="$(var.StageDir)\custom_actions.dll" />
 </Fragment>
 </Wix>

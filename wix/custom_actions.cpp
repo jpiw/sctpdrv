@@ -36,6 +36,7 @@
 #include <msiquery.h>
 #include <wcautil.h>
 #include <shlobj.h>
+#include <atlbase.h>
 
 #import "netfw.tlb"
 

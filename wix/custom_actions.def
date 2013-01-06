@@ -1,4 +1,4 @@
-LIBRARY		SETUP
+LIBRARY		custom_actions
 
 EXPORTS
 	SctpInstallProvider

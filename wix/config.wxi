@@ -1,30 +1,26 @@
 <Include>
-	<?define VersionMajor = 12 ?>
-	<?define VersionMinor = 05 ?>
-	<?define VersionRev   = 00 ?>
+	<?define VersionMajor = 13 ?>
+	<?define VersionMinor = 1 ?>
+	<?define VersionRev   = 0 ?>
+  
+  <?if locale=ja-jp?>
+  <?define Language = 1042 ?>
+  <?define Codepage = 932 ?>
+  <?else?>
+  <?define Language = 1033 ?>
+  <?define Codepage = 1252 ?>
+  <?endif?>
+  
+	<?if $(var.TargetArch)=amd64 ?>
+	<?define ProductId="25127825-BB04-413F-BF0B-3339D327E8D9"?>
+	<?define UpgradeCode="5AC22676-703E-4B34-9789-1BBA695329A1"?>
+  <?define TargetArchIntel=x64 ?>
+	<?else?>
+	<?define ProductId="B8FB40C5-9314-47CA-93F4-8FF10A7BAA0E"?>
+	<?define UpgradeCode="CCDEDCA2-CC58-449D-80AB-86655678C4CE"?>
+  <?define TargetArchIntel=x86 ?>
+  <?endif?>
 
-	<?if $(var.Platform)=x64 ?>
-
-	<?define ProductId="B10BC4DB-14AC-4909-BE97-5581911229D1"?>
-	<?define UpgradeCode="5ac22676-703e-4b34-9789-1bba695329a1"?>
-	<?define Win64 = "yes" ?>
-	<?define ARCHDIR = amd64 ?>
-	<?define MSIARCH = x64 ?>
-	<?define PlatformProgramFilesFolder="ProgramFiles64Folder"?>
-
-	<?elseif $(var.Platform)=x86 ?>
-
-	<?define ProductId="2b453398-e116-4501-9b00-23666ddb2a99"?>
-	<?define UpgradeCode="ccdedca2-cc58-449d-80ab-86655678c4ce"?>
-	<?define Win64 = "no" ?>
-	<?define ARCHDIR = i386 ?>
-	<?define MSIARCH = x86 ?>
-	<?define PlatformProgramFilesFolder="ProgramFilesFolder"?>
-
-	<?else ?>
-
-	<?define ARCHDIR=unsupported_arch ?>
-	<?define MSIARCH=unsupported_arch ?>
-
-	<?endif ?>
+  <?define StageDir   = ..\stage\$(var.OS)_$(var.TargetArch)?>
+  <?define StageDir32 = ..\stage\$(var.OS)_x86?>
 </Include>

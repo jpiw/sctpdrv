@@ -2,7 +2,7 @@
 <!--
 /*
  * Copyright (c) 2008 CO-CONV, Corp.
- * Copyright (C) 2010-2012 Bruce Cran.
+ * Copyright (C) 2010-2013 Bruce Cran.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,85 +27,141 @@
  * SUCH DAMAGE.
  */
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
 
-    <?include config.wxi ?>
+  <?include config.wxi ?>
 
-    <Product Id="$(var.ProductId)" UpgradeCode="$(var.UpgradeCode)" Name="SctpDrv"
-		Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)" Manufacturer="Bruce Cran"
-		Language="$(var.Language)" Codepage="$(var.Codepage)">
+  <Product Id="$(var.ProductId)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Name="SctpDrv"
+           Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)"
+           Manufacturer="Bruce Cran"
+           Language="$(var.Language)"
+           Codepage="$(var.Codepage)">
 
-        <Package
-			Description="SctpDrv" InstallPrivileges="elevated" InstallScope="perMachine"
-			Comments="SCTP Driver" InstallerVersion="301"
-			Platform="$(var.Platform)" Manufacturer="Bruce Cran"
-			Keywords="Installer,MSI,Database" Languages="$(var.Language)" Compressed="yes" SummaryCodepage="$(var.Codepage)" />
+    <Package
+      Description="SctpDrv"
+      InstallPrivileges="elevated"
+      InstallScope="perMachine"
+      Comments="SCTP Driver"
+      InstallerVersion="301"
+      Platform="$(var.TargetArchIntel)"
+      Manufacturer="Bruce Cran"
+      Languages="$(var.Language)"
+      SummaryCodepage="$(var.Codepage)"
+      Compressed="yes" />
 
-        <Condition Message='SctpDrv runs only on Windows XP SP2 and newer'>
-            <![CDATA[
+    <Condition Message='SctpDrv runs only on Windows XP SP2 and newer'>
+      <![CDATA[
 			(VersionNT = 501 AND ServicePackLevel >= "2") OR
 			(VersionNT   AND (VersionNT   >  "501")) OR
 			(VersionNT64 AND (VersionNT64 > "501"))
 			]]>
-        </Condition>
+    </Condition>
 
-        <?if $(env.DDK_TARGET_OS)=WinXP ?>
-        <Condition Message="This installer is for Windows XP and Windows 2003. You can find installers for other versions of Windows on the SctpDrv web site.">
-            <![CDATA[
+    <?if $(var.OS)=xp ?>
+    <Condition Message="This installer is for Windows XP and Windows 2003. You can find installers for other versions of Windows on the SctpDrv web site.">
+      <![CDATA[
 			(VersionNT > "500") AND (VersionNT < "600")
 			]]>
-        </Condition>
-        <?endif ?>
+    </Condition>
+    <?endif ?>
 
-        <?if $(env.DDK_TARGET_OS)=WinLH ?>
-        <Condition Message="This installer is for Windows Vista and newer. You can find installers for other versions of Windows on the SctpDrv web site.">
-            <![CDATA[
+    <?if $(var.OS)=xp ?>
+    <Condition Message="This installer is for Windows Vista and newer. You can find installers for other versions of Windows on the SctpDrv web site.">
+      <![CDATA[
 			(VersionNT >= 600)
 			]]>
-        </Condition>
-        <?endif ?>
+    </Condition>
+    <?endif ?>
 
-        <?if $(var.Platform)=x86 ?>
-        <CustomAction Id="CA_Err32BitMsiOn64BitOS" Error="This installer is for 32-bit Windows, but the computer is running 64-bit Windows. You can find installers for 64-bit Windows on the SctpDrv web site."/>
-        <?endif ?>
+    <?if $(var.TargetArch)=x86 ?>
+    <CustomAction Id="CA_Err32BitMsiOn64BitOS" Error="This installer is for 32-bit Windows, but the computer is running 64-bit Windows. You can find installers for 64-bit Windows on the SctpDrv web site."/>
+    <?endif ?>
 
-        <Media Id="1" Cabinet="Product.cab" EmbedCab="yes" />
-        <UIRef Id="WixUI_Minimal" />
-        <Property Id='ARPCONTACT'>sctpdrv@bluestop.org</Property>
-        <Property Id='ARPHELPLINK'>http://www.bluestop.org/SctpDrv/doc/</Property>
-        <Property Id='ARPURLINFOABOUT'>http://www.bluestop.org/SctpDrv/</Property>
-        <Property Id='ARPURLUPDATEINFO'>http://www.bluestop.org/SctpDrv/releases/</Property>
+    <Media Id="1" Cabinet="Product.cab" EmbedCab="yes" />
+    <UIRef Id="WixUI_Minimal" />
+    <Property Id='ARPCONTACT'>sctpdrv@bluestop.org</Property>
+    <Property Id='ARPHELPLINK'>http://www.bluestop.org/SctpDrv/doc/</Property>
+    <Property Id='ARPURLINFOABOUT'>http://www.bluestop.org/SctpDrv/</Property>
+    <Property Id='ARPURLUPDATEINFO'>http://www.bluestop.org/SctpDrv/releases/</Property>
 
-        <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
-        <MajorUpgrade DowngradeErrorMessage="A newer version of this product is already installed. Please remove it before downgrading."/>
+    <MajorUpgrade DowngradeErrorMessage="A newer version of this product is already installed. Please remove it before downgrading."/>
 
-        <Directory Id="TARGETDIR" Name="SourceDir">
-            <Merge Id="SctpDrv"
-                   Language="$(var.Language)"
-                   SourceFile="$(env.MSICULTURE)\SctpDrv-$(env.DDK_TARGET_OS)-$(env._BUILDARCH).msm"
-                   DiskId="1" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+
+      <?if $(var.TargetArch)=amd64?>
+      <Merge Id="VCRedist64" SourceFile="$(env.CommonProgramFiles(x86))\Merge Modules\Microsoft_VC100_CRT_x64.msm" Language="0" DiskId="1"/>
+      <?endif?>
+
+      <Merge Id="VCRedist32" SourceFile="$(env.CommonProgramFiles(x86))\Merge Modules\Microsoft_VC100_CRT_x86.msm" Language="0" DiskId="1"/>
+
+      <?if $(var.TargetArch)=x86?>
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="SctpDrv" Name="SctpDrv">
+          <Directory Id="bin" Name="bin"/>
+          <Directory Id='lib' Name='lib'/>
+          <Directory Id='src' Name='src'/>
+          <Directory Id='inc' Name='inc'>
+            <Directory Id='netinet' Name='netinet'/>
+          </Directory>
         </Directory>
+      </Directory>
+      <?endif?>
 
-        <Feature Id="Complete" Title='SctpDrv' Description='The complete package.' Display='expand' Level='1'>
-            <MergeRef Id='SctpDrv'/>
-        </Feature>
+      <?if $(var.TargetArch)=amd64?>
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="SctpDrv32" Name="SctpDrv">
+          <Directory Id="bin32" Name="bin"/>
+          <Directory Id='lib32' Name='lib'/>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="SctpDrv" Name="SctpDrv">
+          <Directory Id="bin" Name="bin"/>
+          <Directory Id="lib" Name="lib"/>
+          <Directory Id='inc' Name='inc'>
+            <Directory Id='netinet' Name='netinet'/>
+          </Directory>
+          <Directory Id='src' Name='src'/>
+        </Directory>
+      </Directory>
+      <?endif?>
+    </Directory>
 
-        <InstallExecuteSequence>
-            <?if $(var.Platform)=x86 ?>
-            <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
-                <![CDATA[MsiAMD64 OR Intel64]]>
-            </Custom>
-            <?endif ?>
-        </InstallExecuteSequence>
+    <Feature Id="Complete" Title='SctpDrv' Description='The complete package.' Display='expand' Level='1'>
 
-        <InstallUISequence>
-            <!-- Only schedule this custom action for the 32-bit MSI.-->
-            <?if $(var.Platform)=x86 ?>
-            <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
-                <![CDATA[MsiAMD64 OR Intel64]]>
-            </Custom>
-            <?endif ?>
-        </InstallUISequence>
-    </Product>
+      <ComponentGroupRef Id="root"/>
+      <ComponentGroupRef Id="inc"/>
+      <ComponentGroupRef Id="lib"/>
+      <ComponentGroupRef Id="bin"/>
+      <ComponentGroupRef Id="src"/>
+
+      <?if $(var.TargetArch)=amd64?>
+      <MergeRef Id="VCRedist64"/>
+      <?endif?>
+      
+      <MergeRef Id="VCRedist32"/>
+    </Feature>
+
+    <InstallExecuteSequence>
+      <?if $(var.TargetArch)=x86 ?>
+      <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
+        <![CDATA[MsiAMD64 OR Intel64]]>
+      </Custom>
+      <?endif ?>
+    </InstallExecuteSequence>
+
+    <InstallUISequence>
+      <!-- Only schedule this custom action for the 32-bit MSI.-->
+      <?if $(var.TargetArch)=x86 ?>
+      <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">
+        <![CDATA[MsiAMD64 OR Intel64]]>
+      </Custom>
+      <?endif ?>
+    </InstallUISequence>
+  </Product>
 </Wix>

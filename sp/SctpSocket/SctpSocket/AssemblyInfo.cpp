@@ -11,8 +11,8 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("Bruce Cran")];
 [assembly:AssemblyProductAttribute("SctpDrv")];
-[assembly:AssemblyCopyrightAttribute("Copyright © Bruce Cran 2010")];
-[assembly:AssemblyVersionAttribute("1.1.6.0")];
+[assembly:AssemblyCopyrightAttribute("Copyright © Bruce Cran 2010-2013")];
+[assembly:AssemblyVersionAttribute("13.1.0")];
 
 [assembly:ComVisible(false)];
 [assembly:CLSCompliantAttribute(true)];

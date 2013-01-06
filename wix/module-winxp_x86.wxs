@@ -30,12 +30,12 @@
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
   <?include config.wxi ?>
-  
+
   <Module Id='SctpDrv'
         Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)"
         Language="$(var.Language)"
         Codepage="$(var.Codepage)">
-    
+
 
     <Package Id="9ecb7c5c-03eb-4c5d-aa52-e7a10eff4147"
         Description="SctpDrv" InstallPrivileges="elevated" InstallScope="perMachine"
@@ -62,20 +62,20 @@
     <ComponentGroupRef Id="bin"/>
     <ComponentGroupRef Id="src"/>
 
-	  <DirectoryRef Id='bin'>
+    <DirectoryRef Id='bin'>
       <Component Id="sctpsp32.dll" Guid="22408cd8-b619-4b67-aa74-528b51806b30">
         <File Id="sctpsp32.dll" Source="bin\$(env.BUILD_ALT_DIR)\sctpsp.dll" Checksum="yes" />
       </Component>
 
       <Component Id="SctpDrv.SctpSocket32.dll" Guid="bf9d6d37-e6b3-4acb-903d-c0537a9b89c8">
-        <File Id="SctpDrv.SctpSocket32.dll" Source="bin\$(env.BUILD_ALT_DIR)\SctpDrv.SctpSocket.dll" Checksum="yes"/>
+        <File Id="SctpDrv.SctpSocket32.dll" Source="$(var.Configuration)\x86\SctpDrv.SctpSocket.dll" Checksum="yes"/>
       </Component>
 
       <Component Id="SctpDrv.SctpSocket32.dll_VS" Guid="fabae250-9a7c-405e-8eb8-44fd773064e8" Win64="no">
         <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\.NETFramework\v4.0.30319\AssemblyFoldersEx\[ProductName] x86" Value="[$SctpDrv.SctpSocket32.dll]" Type="string"/>
       </Component>
 
-	  </DirectoryRef>
+    </DirectoryRef>
 
     <DirectoryRef Id="lib">
       <Component Id="sctpsp32.lib" Guid="63f68af6-ee77-49a9-84f6-7027611c55b7">
@@ -86,5 +86,5 @@
       </Component>
     </DirectoryRef>
 
-</Module>
+  </Module>
 </Wix>
