@@ -92,13 +92,6 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of this product is already installed. Please remove it before downgrading."/>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
-
-      <?if $(var.TargetArch)=amd64?>
-      <Merge Id="VCRedist64" SourceFile="$(env.CommonProgramFiles(x86))\Merge Modules\Microsoft_VC100_CRT_x64.msm" Language="0" DiskId="1"/>
-      <?endif?>
-
-      <Merge Id="VCRedist32" SourceFile="$(env.CommonProgramFiles(x86))\Merge Modules\Microsoft_VC100_CRT_x86.msm" Language="0" DiskId="1"/>
-
       <?if $(var.TargetArch)=x86?>
       <Directory Id="ProgramFilesFolder">
         <Directory Id="SctpDrv" Name="SctpDrv">
@@ -139,14 +132,25 @@
       <ComponentGroupRef Id="lib"/>
       <ComponentGroupRef Id="bin"/>
       <ComponentGroupRef Id="src"/>
-
-      <?if $(var.TargetArch)=amd64?>
-      <MergeRef Id="VCRedist64"/>
-      <?endif?>
-      
-      <MergeRef Id="VCRedist32"/>
     </Feature>
 
+    <Property Id="VCREDIST_X64">
+      <RegistrySearch Id="VCREDIST_X64" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x64" Name="Installed" Type="raw" Win64="no"/>
+    </Property>
+    <Property Id="VCREDIST_X86">
+      <RegistrySearch Id="VCREDIST_X86" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86" Name="Installed" Type="raw" Win64="no"/>
+    </Property>
+    <Property Id="DOTNET_40">
+      <RegistrySearch Id="DOTNET_40" Root="HKLM" Key="SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Client" Name="Install" Type="raw" Win64="no"/>
+    </Property>
+
+    <?if $(var.TargetArch)=amd64?>
+    <Condition Message="Microsoft Visual C++ 2010 Redistributable Package (x64) must be installed before installation can continue.">VCREDIST_X64</Condition>
+    <?endif?>
+
+    <Condition Message="Microsoft Visual C++ 2010 Redistributable Package (x86) must be installed before installation can continue.">VCREDIST_X86</Condition>
+    <Condition Message="Microsoft .NET Framework 4.0 must be installed before installation can continue.">DOTNET_40</Condition>
+    
     <InstallExecuteSequence>
       <?if $(var.TargetArch)=x86 ?>
       <Custom Action="CA_Err32BitMsiOn64BitOS" After="LaunchConditions">

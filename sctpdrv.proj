@@ -233,10 +233,6 @@
     <Copy SourceFiles="@(Apps64)" DestinationFolder="stage\vista_amd64"/>
   </Target>
 
-  <Target Name="SignInstallers">
-    <Exec Condition=" '$(RELEASE_SIGN)' != '' " Command="signtool sign /ac drv\MSCV-GlobalSign.cer /d &quot;SctpDrv&quot; /s my /n &quot;Bruce Cran&quot; $(Timestamp) $(ProjectRoot)\stage\installer\*.*"/>
-  </Target>
-
   <Target Name="Build">
     <RemoveDir Directories="$(ProjectRoot)\stage"/>
     <CallTarget Targets="GetDependentFiles"/>
@@ -253,6 +249,5 @@
     <CallTarget Targets="BuildApps"/>
     <CallTarget Targets="en_installer"/>
     <CallTarget Targets="jp_installer"/>
-    <CallTarget Targets="SignInstallers"/>
   </Target>
 </Project>

@@ -1,5 +1,5 @@
-Version 2013.1.0
-Bug fixes and new features since 2012.05.0
+Version 13.1.0
+Bug fixes and new features since 12.5.0
     * Moved to new build system based on MSBuild.
     * Userspace binaries are now built using Visual Studio.
     * The bootstrapper no longer blocks installation on Windows 8.
