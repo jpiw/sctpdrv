@@ -135,7 +135,6 @@ main(
 {
 	int error = 0;
 	FILE *fp = NULL;
-	struct servent *servent;
 	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
 	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];

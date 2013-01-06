@@ -151,7 +151,6 @@ main(
     char *argv[])
 {
 	int error = 0;
-	struct servent *servent;
 	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
 	SOCKET s = INVALID_SOCKET;

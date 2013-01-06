@@ -68,7 +68,6 @@ ShowSctpLog(
 
 static
 DWORD
-WINAPI
 HandleShowSysctl(
     __in LPCWSTR pwszMachine,
     __inout_ecount(dwArgCount) LPWSTR *ppwcArguments,
@@ -193,7 +192,6 @@ HandleShowSysctl(
 
 static
 DWORD
-WINAPI
 HandleShowSysctlDesc(
     __in LPCWSTR pwszMachine,
     __inout_ecount(dwArgCount) LPWSTR *ppwcArguments,
@@ -266,7 +264,6 @@ HandleShowSysctlDesc(
 
 static
 DWORD
-WINAPI
 HandleShowAssociation(
     __in LPCWSTR pwszMachine,
     __inout_ecount(dwArgCount) LPWSTR *ppwcArguments,
@@ -458,7 +455,6 @@ done:
 
 static
 DWORD
-WINAPI
 HandleShowLockprof(
     IN LPCWSTR pwszMachine,
     __inout_ecount(dwArgCount) LPWSTR *ppwcArguments,
@@ -555,7 +551,6 @@ done:
 
 static
 DWORD
-WINAPI
 HandleSetSysctl(
     IN LPCWSTR pwszMachine,
     __inout_ecount(dwArgCount) LPWSTR *ppwcArguments,

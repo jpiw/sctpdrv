@@ -140,7 +140,6 @@ main(
     char *argv[])
 {
 	int error = 0;
-	struct servent *servent;
 	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
 	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
@@ -148,7 +147,6 @@ main(
 	struct sockaddr_storage from;
 	socklen_t fromlen;
 	char buf[BUFSIZE];
-	int n, len, i;
 	struct sctp_sndrcvinfo srcv;
 	int flags;
 

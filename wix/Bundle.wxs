@@ -27,7 +27,8 @@
  * SUCH DAMAGE.
  */
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include config.wxi ?>
 	<Bundle Name="SctpDrv" Version="$(var.VersionMajor).$(var.VersionMinor).$(var.VersionRev)"
           Manufacturer="Bruce Cran"
@@ -37,13 +38,15 @@
     <WixVariable Id="WixStdbaLicenseRtf" Value="License.rtf" />
 
     <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles6432Folder][WixBundleName]"/>
-    
-		<Chain>
+
+    <Chain>
+      <PackageGroupRef Id="vcredist"/>
       <PackageGroupRef Id="NetFx40Web"/>
       <MsiPackage Id="SctpDrv32_XP"
                   SourceFile="bin\x86\$(var.Configuration)\SctpDrv_XP_x86.msi"
                   ForcePerMachine="yes"
                   Vital="yes"
+                  Cache="yes"
                   InstallCondition="VersionNT &lt; v6.0 AND (NOT VersionNT64)">
         <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]"/>
       </MsiPackage>
@@ -51,6 +54,7 @@
                   SourceFile="bin\x86\$(var.Configuration)\SctpDrv_Vista_x86.msi"
                   ForcePerMachine="yes"
                   Vital="yes"
+                  Cache="yes"
                   InstallCondition="NOT VersionNT64 AND VersionNT &gt;= v6.0">
         <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]"/>
       </MsiPackage>
@@ -58,6 +62,7 @@
                   SourceFile="bin\x64\$(var.Configuration)\SctpDrv_Vista_x64.msi"
                   ForcePerMachine="yes"
                   Vital="yes"
+                  Cache="yes"
                   InstallCondition="VersionNT64 &gt;= v6.0">
         <MsiProperty Name="APPLICATIONFOLDER" Value="[InstallFolder]"/>
       </MsiPackage>

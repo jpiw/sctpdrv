@@ -137,15 +137,13 @@ main(
     TCHAR *argv[])
 {
 	int error = 0;
-	struct servent *servent;
 	struct addrinfo hints, *res, *res0;
 	SOCKET sfd = INVALID_SOCKET;
 	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 	struct sctp_event_subscribe events;
 	struct sockaddr_storage addr;
-	socklen_t addrlen;
 	char buf[BUFSIZE];
-	int n, len, i;
+	int len;
 #if defined(__Windows__)
 	DWORD bytes;
 

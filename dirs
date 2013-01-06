@@ -4,7 +4,4 @@ DIRS= \
 	net \
 	netinet \
 	netinet6 \
-	drv \
-	sp \
-	apps \
-	netsh
+	drv

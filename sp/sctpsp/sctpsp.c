@@ -26,12 +26,12 @@
  */
 #define UNICODE
 
-#include <windows.h>
-#include <windef.h>
-#include <guiddef.h>
+//#include <windows.h>
+//#include <windef.h>
+//#include <guiddef.h>
 #include <winsock2.h>
-#include <winerror.h>
-#include <io.h>
+//#include <winerror.h>
+//#include <io.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <ws2spi.h>
@@ -42,7 +42,7 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-#include <sys/systm.h>
+//include <sys/systm.h>
 
 #include <netinet/sctp.h>
 #include <netinet/sctp_peeloff.h>
@@ -183,7 +183,7 @@ ClearSocketInfo(struct SocketInfo *info)
 }
 
 static
-void
+void WSPAPI
 SetErrorCode(LPINT lpErrno)
 {
 	DWORD winsockErr;
@@ -381,7 +381,6 @@ WSPAccept(
 	struct sockaddr_storage remoteAddress;
 	int remoteAddressLen;
 	WSABUF callerId;
-	WSABUF callerData;
 	WSABUF calleeId;
 	WSABUF calleeData;
 	GROUP g;
@@ -732,14 +731,12 @@ WSPDuplicateSocket(
     LPINT lpErrno)
 {
 	int ret = 0;
-	WSAPROTOCOL_INFO protocolInfo;
 	struct SocketInfo *socketInfo;
 	HANDLE hDuplicate;
 	HANDLE hTargetProcess = NULL;
 	SOCKET hModifiedSocket = INVALID_SOCKET;
 	struct SocketInfo *sockInfo;
 	BOOL bSuccess;
-	DWORD bytesReturned;
 
 	DBGPRINT("WSPDuplicateSocket - enter\n");
 
@@ -1236,7 +1233,6 @@ WSPIoctl(
 		
 		BOOL bSuccess;
 		DWORD bytesReturned;
-		DWORD *bytesTransferred;
 		SOCKET_IOCTL_REQUEST ioctlReq;
 
 		RtlZeroMemory(&ioctlReq, sizeof(ioctlReq));

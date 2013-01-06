@@ -31,6 +31,8 @@
 #define BIG_ENDIAN	1
 #define BYTE_ORDER	LITTLE_ENDIAN
 
+#ifdef _KERNEL
+
 __inline unsigned short
 ntohs(unsigned short x)
 {
@@ -51,5 +53,7 @@ ntohl(unsigned long x)
 
 #define NTOHL(x) \
 	(x) = ntohl(x)
+
+#endif /* _KERNEL */
 
 #endif	/* _SYS_ENDIAN_H_ */

@@ -584,7 +584,7 @@ internal_sctp_freeladdrs(struct sockaddr *addrs)
 }
 
 
-int sctp_generic_sendmsg(SOCKET, const void *, size_t, const struct sockaddr *,
+int WSPAPI sctp_generic_sendmsg(SOCKET, const void *, size_t, const struct sockaddr *,
     int, const struct sctp_sndrcvinfo *, int);
 
 ssize_t
